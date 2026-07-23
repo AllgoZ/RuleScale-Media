@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+:root {
+  --color-paper: #f3f2f2;
+  --color-surface: #eae8e6;
+  --color-ink: #201e1d;
+  --color-ink-soft: #6f6b68;
+  --color-accent: #ec3013;
+  --color-hairline: rgba(32, 30, 29, 0.1);
+
+  --font-heading: var(--font-archivo);
+  --font-body: var(--font-archivo);
+  --font-hand: var(--font-caveat);
+
+  --shadow-soft: 0 1px 2px rgba(32, 30, 29, 0.04), 0 8px 20px rgba(32, 30, 29, 0.05);
+  --shadow-lift: 0 4px 10px rgba(32, 30, 29, 0.06), 0 20px 44px rgba(32, 30, 29, 0.1);
+
+  --vh: 1dvh;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+
+@theme inline {
+  --color-paper: var(--color-paper);
+  --color-surface: var(--color-surface);
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-accent: var(--color-accent);
+  --color-hairline: var(--color-hairline);
+
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
+  --font-hand: var(--font-hand);
+
+  --shadow-soft: var(--shadow-soft);
+  --shadow-lift: var(--shadow-lift);
+
+  --animate-float: float 8s ease-in-out infinite;
+  --animate-float-slow: float 12s ease-in-out infinite;
+  --animate-marquee: marquee 42s linear infinite;
+  --animate-draw: draw 1.4s ease forwards;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(var(--tw-rotate, 0deg));
+    }
+    50% {
+      transform: translateY(-6px) rotate(var(--tw-rotate, 0deg));
+    }
+  }
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  position: relative;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-paper);
+}
+
+/* Global atmosphere: soft ambient light + vignette, sits under all content */
+.bg-atmosphere {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(60rem 40rem at 12% -10%, rgba(236, 48, 19, 0.05), transparent 60%),
+    radial-gradient(50rem 36rem at 110% 10%, rgba(32, 30, 29, 0.05), transparent 60%),
+    radial-gradient(80rem 60rem at 50% 120%, rgba(32, 30, 29, 0.04), transparent 60%);
+}
+
+.bg-vignette {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 61;
+  box-shadow: inset 0 0 12rem rgba(32, 30, 29, 0.06);
+}
+
+/* subtle paper grain, applied as a fixed full-page overlay */
+.grain-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  opacity: 0.3;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.03 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.font-hand {
+  font-family: var(--font-hand);
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+/* Editorial display type — the hero headline is the hero, not a card */
+.text-display {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.96;
+  font-size: clamp(2.75rem, 3.2rem + 4vw, 7.5rem);
+}
+
+.text-editorial {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.03;
+  font-size: clamp(2rem, 1.4rem + 3vw, 4rem);
+}
+
+.text-mega {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  font-size: clamp(3.5rem, 2rem + 14vw, 13rem);
+}
+
+/* A cursor-follow glow. Set --mx / --my (0-100) via inline style on the host. */
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--spotlight-opacity, 0);
+  transition: opacity 0.4s ease;
+  background: radial-gradient(
+    28rem circle at var(--mx, 50%) var(--my, 50%),
+    var(--spotlight-color, rgba(236, 48, 19, 0.1)),
+    transparent 70%
+  );
+}
+
+.hairline {
+  border: 1px solid var(--color-hairline);
+}
+
+.svh {
+  min-height: 100svh;
+}
+
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(243, 242, 242, 0.09) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
