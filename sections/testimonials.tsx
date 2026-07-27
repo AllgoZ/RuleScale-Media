@@ -4,29 +4,29 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
-import { TESTIMONIALS } from "@/lib/constants";
+import type { TestimonialsData } from "@/lib/cms/types";
 import { cn } from "@/lib/utils";
 
-export function Testimonials() {
+export function Testimonials({ data }: { data: TestimonialsData }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     if (paused) return;
     const id = setInterval(() => {
-      setIndex((i) => (i + 1) % TESTIMONIALS.length);
+      setIndex((i) => (i + 1) % data.items.length);
     }, 5200);
     return () => clearInterval(id);
-  }, [paused]);
+  }, [paused, data.items.length]);
 
-  const active = TESTIMONIALS[index];
+  const active = data.items[index];
 
   return (
     <section className="py-28 md:py-40">
       <Container className="max-w-3xl">
         <Reveal className="text-center">
           <span className="font-hand -rotate-1 inline-block text-base text-accent">
-            kind words
+            {data.eyebrow}
           </span>
         </Reveal>
 
@@ -57,7 +57,7 @@ export function Testimonials() {
         </div>
 
         <div className="mt-10 flex items-center justify-center gap-2">
-          {TESTIMONIALS.map((testimonial, i) => (
+          {data.items.map((testimonial, i) => (
             <button
               key={testimonial.name}
               type="button"

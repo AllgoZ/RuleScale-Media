@@ -3,18 +3,18 @@ import { HandArrow } from "@/components/doodles/hand-arrow";
 import { PaperClip } from "@/components/doodles/paper-clip";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
-import { PROBLEM_CARDS } from "@/lib/constants";
+import type { ProblemData } from "@/lib/cms/types";
 
-export function Problem() {
+export function Problem({ data }: { data: ProblemData }) {
   return (
     <section className="py-28 md:py-40">
       <Container>
         <Reveal className="text-center">
           <span className="font-hand -rotate-1 inline-block text-lg text-[#F97316]">
-            The problem
+            {data.eyebrow}
           </span>
           <h2 className="mt-3 font-heading text-4xl font-extrabold tracking-tight text-ink text-balance md:text-5xl">
-            Sound familiar?
+            {data.heading}
           </h2>
         </Reveal>
 
@@ -24,7 +24,7 @@ export function Problem() {
             aria-hidden="true"
           />
 
-          {PROBLEM_CARDS.map((card, index) => (
+          {data.cards.map((card, index) => (
             <Reveal key={card.title} delay={index * 0.12}>
               <div className="relative">
                 <PaperClip className="absolute -top-4 left-1/2 z-10 -translate-x-1/2" />
@@ -44,7 +44,7 @@ export function Problem() {
                   <p className="mt-3 text-sm text-ink-soft">{card.note}</p>
                 </div>
 
-                {index < PROBLEM_CARDS.length - 1 ? (
+                {index < data.cards.length - 1 ? (
                   <HandArrow
                     variant="curveRight"
                     className="absolute -right-8 top-1/2 hidden h-10 w-16 -translate-y-1/2 text-ink-soft md:block"

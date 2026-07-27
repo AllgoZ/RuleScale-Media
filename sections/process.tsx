@@ -5,11 +5,11 @@ import { Compass, Hammer, Rocket, Search, TrendingUp, type LucideIcon } from "lu
 import { useRef } from "react";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
-import { PROCESS_STEPS } from "@/lib/constants";
+import type { ProcessData } from "@/lib/cms/types";
 
 const ICONS: LucideIcon[] = [Search, Compass, Hammer, Rocket, TrendingUp];
 
-export function Process() {
+export function Process({ data }: { data: ProcessData }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: trackRef,
@@ -23,18 +23,16 @@ export function Process() {
         <Reveal>
           <div className="max-w-lg">
             <span className="font-hand -rotate-1 inline-block text-base text-[#F97316]">
-              here&apos;s how we think
+              {data.eyebrow}
             </span>
-            <h2 className="text-editorial mt-3 text-ink text-balance">A plan, not a guess.</h2>
-            <p className="mt-4 max-w-md text-base text-ink-soft">
-              Five steps, every time — so you always know what happens next and why.
-            </p>
+            <h2 className="text-editorial mt-3 text-ink text-balance">{data.heading}</h2>
+            <p className="mt-4 max-w-md text-base text-ink-soft">{data.description}</p>
           </div>
         </Reveal>
 
         {/* Mobile: simple vertical stack */}
         <div ref={trackRef} className="mt-16 flex flex-col gap-10 md:hidden">
-          {PROCESS_STEPS.map((step, index) => {
+          {data.steps.map((step, index) => {
             const Icon = ICONS[index];
             return (
               <Reveal key={step.step} delay={index * 0.08}>
@@ -81,7 +79,7 @@ export function Process() {
           </svg>
 
           <div className="grid grid-cols-5 gap-4">
-            {PROCESS_STEPS.map((step, index) => {
+            {data.steps.map((step, index) => {
               const Icon = ICONS[index];
               const raised = index % 2 === 1;
               return (

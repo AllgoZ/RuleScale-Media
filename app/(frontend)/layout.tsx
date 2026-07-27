@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Caveat } from "next/font/google";
 import { MobileCTA } from "@/components/mobile-cta";
+import { getFooter } from "@/lib/cms/footer";
+import { getNavigation } from "@/lib/cms/navigation";
+import { getSiteSettings } from "@/lib/cms/settings";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
@@ -96,7 +99,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -108,6 +111,12 @@ export default function RootLayout({
     faqSchema(),
     breadcrumbSchema(),
   ];
+
+  const [navigation, footer, siteSettings] = await Promise.all([
+    getNavigation(),
+    getFooter(),
+    getSiteSettings(),
+  ]);
 
   return (
     <html
@@ -126,9 +135,14 @@ export default function RootLayout({
         <div className="grain-overlay" aria-hidden="true" />
         <div className="bg-vignette" aria-hidden="true" />
         <div className="relative z-10 flex min-h-full flex-1 flex-col">
-          <Header />
+          <Header navigation={navigation} siteName={siteSettings.siteName} />
           {children}
-          <Footer />
+          <Footer
+            footer={footer}
+            companyLinks={navigation.links}
+            siteName={siteSettings.siteName}
+            contactEmail={siteSettings.contactEmail}
+          />
         </div>
         <MobileCTA />
       </body>

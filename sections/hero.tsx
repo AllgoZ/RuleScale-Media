@@ -8,8 +8,9 @@ import { ScribbleUnderline } from "@/components/doodles/scribble-underline";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { Spotlight } from "@/components/ui/spotlight";
+import type { HeroData } from "@/lib/cms/types";
 
-export function Hero() {
+export function Hero({ data }: { data: HeroData }) {
   return (
     <section id="top" className="relative overflow-hidden pb-16 pt-8 md:pb-28 md:pt-14">
       <Spotlight color="rgba(236, 48, 19, 0.07)">
@@ -22,7 +23,7 @@ export function Hero() {
               className="inline-flex items-center gap-2 rounded-full border border-hairline bg-paper px-4 py-2 shadow-soft"
             >
               <Sparkle className="text-accent" size={16} />
-              <span className="font-hand text-lg text-ink">Hi, we&apos;re RuleScale Media</span>
+              <span className="font-hand text-lg text-ink">{data.eyebrow}</span>
             </motion.div>
 
             <motion.h1
@@ -31,9 +32,9 @@ export function Hero() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="mt-7 font-heading text-5xl font-extrabold leading-[1.05] tracking-tight text-ink text-balance sm:text-6xl lg:text-[3.75rem]"
             >
-              We grow brands{" "}
+              {data.headingPrefix}{" "}
               <span className="relative inline-block sm:whitespace-nowrap">
-                people remember.
+                {data.headingHighlight}
                 <ScribbleUnderline className="-bottom-1 h-3" delay={0.7} />
               </span>
             </motion.h1>
@@ -44,9 +45,7 @@ export function Hero() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="mt-6 max-w-xl text-lg text-ink-soft"
             >
-              Marketing that actually moves businesses. We pair sharp strategy with website
-              design, SEO, social, influencer, and video production — so growth isn&apos;t left
-              to chance.
+              {data.subheading}
             </motion.p>
 
             <motion.div
@@ -56,13 +55,13 @@ export function Hero() {
               className="mt-9 flex flex-wrap items-center gap-4"
             >
               <Button variant="accent" size="lg" asChild>
-                <Link href="#final-cta">
-                  Start Growing
+                <Link href={data.primaryCta.href}>
+                  {data.primaryCta.label}
                   <ArrowRight size={18} />
                 </Link>
               </Button>
               <Button variant="ghost" size="lg" asChild>
-                <Link href="#case-studies">See Our Work</Link>
+                <Link href={data.secondaryCta.href}>{data.secondaryCta.label}</Link>
               </Button>
             </motion.div>
 
@@ -72,7 +71,7 @@ export function Hero() {
               transition={{ duration: 0.6, delay: 0.5 }}
               className="mt-8 text-sm text-ink-soft"
             >
-              Trusted by 250+ brands across DTC, hospitality, SaaS, and retail.
+              {data.trustLine}
             </motion.p>
           </div>
 

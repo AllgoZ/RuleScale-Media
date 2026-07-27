@@ -1,24 +1,23 @@
-You are an award-winning UI/UX designer (think Awwwards + Linear + Stripe + Notion quality) and a senior Next.js engineer.
+You are an award-winning UI/UX designer (think Awwwards + Linear + Stripe + Notion quality) and
+a senior Next.js engineer, working on the RuleScale Media marketing landing page.
 
-Your task is to build a premium marketing agency landing page.
+> **Status: built and live** on `main` (https://github.com/AllgoZ/RuleScale-Media). This file is
+> the creative brief and brand direction the project was built from — the philosophy here still
+> governs any future work. For the current technical architecture, section-by-section
+> implementation, and engineering gotchas, read `Architecture files/systemstatus.md` and
+> `Architecture files/CHANGELOG.md` first. This file explains the *why*; those explain *what's
+> actually there*. For quick technical/operational reference, see `AGENT.md`.
 
-The agency specializes in:
+The agency specializes in: Website Design & Development, SEO, Digital Media Planning, Social
+Media Marketing, Influencer Marketing, Programmatic Advertising, Video Production & Marketing,
+Content Marketing, Content & SEO Strategy, Multi-Lingual Marketing, Marketing Strategy
+Consulting.
 
-• Website Design & Development
-• SEO
-• Digital Media Planning
-• Social Media Marketing
-• Influencer Marketing
-• Programmatic Advertising
-• Video Production & Marketing
-• Content Marketing
-• Content & SEO Strategy
-• Multi-Lingual Marketing
-• Marketing Strategy Consulting
+-----------------------------------
+CREATIVE DIRECTION
+-----------------------------------
 
-The website should NOT look like another corporate marketing agency.
-
-Instead it should feel:
+The site should NOT look like another corporate marketing agency. It should feel:
 
 - Human
 - Creative
@@ -27,501 +26,139 @@ Instead it should feel:
 - Modern
 - Trustworthy
 - Playful without being childish
-- Designed by people who actually understand branding.
+- Designed by people who actually understand branding
 
-The inspiration is the feeling of hand-crafted work.
+Two influences are blended, in this priority order:
 
-The visual language should heavily use:
+1. **Premium editorial minimalism** (Apple / Linear / Arc Browser / Stripe Sessions) — large
+   typography, massive whitespace, intentional asymmetry, restrained color, spring-physics
+   motion. This is the dominant ~90% of the visual language.
+2. **Hand-crafted warmth** — hand-drawn scribbles, doodles, sketch arrows, sticky notes,
+   paper-clip accents, Caveat handwritten labels — used deliberately sparingly (~10%) as accents,
+   not as the whole aesthetic. Nothing should read as a craft-fair template; the hand-drawn
+   touches exist to feel human, not childish.
 
-• Hand drawn scribbles
-• Sketch lines
-• Doodles
-• Pencil underlines
-• Marker circles
-• Handwritten annotations
-• Rough arrows
-• Floating sticky notes
-• Slight paper texture
-• Organic imperfect spacing
-• Soft shadows
-• Sketch animations
-• Tiny floating illustrations
-• Curved section separators
-• Wavy divider lines
-
-The overall feeling should be:
-
-"We're experts...
-but we're approachable."
-
-The attached inspiration image captures the direction.
-"claude files\image.png"
-DO NOT COPY IT.
-
-Only take inspiration from:
-
-- personality
-- softness
-- whitespace
-- playful illustrations
-- organic layouts
-- welcoming atmosphere
+The emotional response on landing should be: **"These people clearly know marketing. I trust
+them."** — followed by "I want to keep scrolling." Do not stop at a first version — keep
+refining spacing, typography, motion, responsiveness, and accessibility until it feels premium
+and production-ready.
 
 -----------------------------------
-BRAND STYLE
------------------------------------
-Attached a PDF "claude files\RuleScale Media logo design with color.pdf"
-
-where it has logo, colors use that too if needed
-
-
-Primary Background:
-Warm Off White (#FCFBF8)
-
-Primary Text:
-#111827
-
-Secondary Text:
-#6B7280
-
-Accent:
-#2563EB
-
-Secondary Accent:
-#F97316
-
-Highlight:
-#FDE68A
-
-Success:
-#22C55E
-
-Avoid loud gradients.
-
-Use mostly flat colors with subtle shadows.
-
-Everything should breathe.
-
-Lots of whitespace.
-
-Rounded corners everywhere.
-
-Use modern typography.
-
-Font pairing:
-
-Headings:
-Plus Jakarta Sans
-
-Body:
-Inter
-
-Handwritten Labels:
-Caveat
-
-Animations should be subtle.
-
-Examples:
-
-- Scribbles drawing themselves
-- Underlines animating
-- Doodles floating
-- Arrow paths drawing
-- Cards lifting slightly
-- Marquee logos
-- Smooth scroll animations
-- Framer Motion throughout
-
-No excessive motion.
-
------------------------------------
-PAGE STRUCTURE
+BRAND SYSTEM (the real one — use this)
 -----------------------------------
 
-1. HERO
+From the actual RuleScale Media brand mark (ring + lightning-bolt "S" monogram, in
+`claude files/RuleScale Media logo design with color.pdf` and `claude files/logo.png`):
 
-Huge headline.
+- **Ink** `#201e1d` — primary text, dark section backgrounds
+- **Paper** `#f3f2f2` — primary background
+- **Accent Red** `#ec3013` — the *only* accent color. CTAs, active states, scribble doodles.
+  Restraint is the brand's whole point — do not add a second accent color to the token system.
+- **Ink-soft** `#6f6b68` — secondary text
+- **Hairline** `rgba(32,30,29,0.1)` — all borders/dividers
 
-Something like
+Typography: **Archivo** for everything — headings and body, one typeface, weight does the work.
+**Caveat** only for small hand-drawn labels/accents (eyebrows, margin notes) — never for body
+copy or headings.
 
-"We grow brands people remember."
+Rounded corners, soft shadows (`--shadow-soft` / `--shadow-lift`, the only two presets used),
+generous whitespace, flat color otherwise. No loud gradients.
 
-or
+A small number of sections intentionally reintroduce one-off colors outside this system (an
+orange, a yellow, a blue) to match specific approved reference screenshots — that's a deliberate,
+scoped exception, not a change to the token system. See `Architecture files/systemstatus.md` §2
+for exactly which sections and why before assuming it's a mistake to "fix."
 
-"Marketing that actually moves businesses."
+<details>
+<summary>Historical: the original placeholder palette (superseded — kept for provenance only)</summary>
 
-Large supporting copy.
+The project started with a placeholder brand style before the real logo/brand PDF was
+incorporated. Do not use this for new work:
 
-CTA:
-Start Growing
+Primary Background: Warm Off White (#FCFBF8) · Primary Text: #111827 · Secondary Text: #6B7280 ·
+Accent: #2563EB · Secondary Accent: #F97316 · Highlight: #FDE68A · Success: #22C55E
+Headings: Plus Jakarta Sans · Body: Inter · Handwritten Labels: Caveat
 
-Secondary CTA:
-See Our Work
-
-On the right:
-
-Instead of a boring illustration...
-
-Create a playful collage using:
-
-sticky notes
-
-hand drawn arrows
-
-analytics cards
-
-SEO chart
-
-Instagram post
-
-Google search result
-
-video icon
-
-camera doodle
-
-coffee cup doodle
-
-paper clips
-
-Everything connected with sketch lines.
+</details>
 
 -----------------------------------
-
-2. TRUST SECTION
-
-"Our clients have been featured on"
-
-Animated logo strip
-
-Google
-Meta
-LinkedIn
-Shopify
-HubSpot
-TikTok
-YouTube
-
-(placeholder monochrome logos)
-
+VISUAL LANGUAGE
 -----------------------------------
 
-3. THE PROBLEM
-
-Large title:
-
-Sound familiar?
-
-Three hanging paper cards like pinned notes.
-
-Card 1
-
-"My website gets traffic...
-but nobody converts."
-
-Card 2
-
-"I've tried agencies before."
-
-Card 3
-
-"We post on social media...
-but nothing happens."
-
-Cards should appear clipped with paper clips.
-
-Have hand drawn arrows between them.
+Heavily, but sparingly, use: hand-drawn scribbles, sketch lines, doodles, pencil underlines,
+marker-circle highlights, handwritten annotations, rough arrows, floating sticky-note accents,
+slight paper texture/grain, organic imperfect spacing (1-3° rotations, never perfectly
+geometric), soft shadows, sketch-style draw-in animations, curved/wavy dividers where used.
+Animations should be subtle — Framer Motion throughout, spring physics, nothing that feels
+gimmicky or excessive.
 
 -----------------------------------
-
-4. OUR PROCESS
-
-Timeline drawn by hand.
-
-Step 1
-Discover
-
-↓
-
-Strategy
-
-↓
-
-Build
-
-↓
-
-Launch
-
-↓
-
-Scale
-
-Each connected with animated pencil line.
-
+PAGE STRUCTURE (current — 11 sections + header/footer)
 -----------------------------------
 
-5. SERVICES
+1. **Hero** — huge headline ("We grow brands people remember."), supporting copy, "Start
+   Growing" / "See Our Work" CTAs, floating mock-UI collage (analytics card, SEO/search result,
+   Instagram post, video card, sticky-note quote, paper-clip doodles) connected by sketch lines.
+2. **Trust strip** — "Our clients have been featured on" + monochrome logo marquee.
+3. **Problem** — "Sound familiar?" — three pinned paper-clipped cards with hand-drawn arrows
+   between them.
+4. **Manifesto** — a full-viewport bridge statement between Problem and Process. *Added after
+   the original brief* — the story arc ("businesses struggle → we understand why → here's how we
+   think → here's what we build → proof → let's work together") needed an explicit beat here.
+5. **Process** — Discover → Strategy → Build → Launch → Scale, hand-drawn connecting line.
+6. **Services** — all 12 offerings as an editorial index (not a generic card grid).
+7. **Results** — key metrics (250+ projects, 18M+ reach, 5x ROAS, 98% retention).
+8. **Case Studies** — 3 featured client results.
+9. **Testimonials** — client quotes.
+10. **FAQ** — accordion with hand-drawn plus icons.
+11. **Final CTA** — "Ready to become the brand everyone remembers?" with a hand-drawn arrow
+    pointing at the button.
 
-Grid of cards.
-
-Each service has
-
-small doodle icon
-
-handwritten note
-
-short description
-
-hover animation
-
-Services:
-
-Website Design
-
-SEO
-
-Performance Marketing
-
-Social Media
-
-Influencers
-
-Video
-
-Content
-
-Brand Strategy
-
-Media Buying
-
-Analytics
-
-Localization
-
-Consulting
-
-Cards should feel like sticky notes.
+Exactly how each of these is built today (layout, motion, interaction) is documented in full in
+`Architecture files/systemstatus.md` §4 — read that before assuming a section still matches its
+one-line description here; several have been redesigned more than once since the first build.
 
 -----------------------------------
-
-6. RESULTS
-
-Large metrics.
-
-250+
-
-Projects
-
-18M+
-
-Monthly Reach
-
-5x
-
-Average ROAS
-
-98%
-
-Client Retention
-
-Numbers animate.
-
+TECH STACK (as actually built)
 -----------------------------------
 
-7. FEATURED CASE STUDIES
+Next.js 15.5 (App Router) · TypeScript · Tailwind CSS v4 (CSS-first `@theme`, no
+`tailwind.config.js`) · Framer Motion · Lucide Icons · Radix UI primitives (hand-built
+`components/ui/` primitives in the shadcn spirit — not the shadcn CLI itself).
 
-Three premium cards.
-
-Large screenshot placeholder.
-
-Results.
-
-CTA.
-
------------------------------------
-
-8. TESTIMONIALS
-
-Speech bubbles.
-
-Floating.
-
-Different rotations.
-
------------------------------------
-
-9. FAQ
-
-Accordion.
-
-Hand drawn plus icons.
-
------------------------------------
-
-10. FINAL CTA
-
-Large friendly section.
-
-Headline:
-
-Ready to become the brand everyone remembers?
-
-Large CTA button.
-
-Hand drawn arrow pointing toward button.
-
------------------------------------
-MICRO INTERACTIONS
------------------------------------
-
-Every section should contain tiny delightful details.
-
-Examples:
-
-✓ pencil underlines animate
-
-✓ doodles draw themselves
-
-✓ arrows wiggle slightly
-
-✓ sticky notes rotate 1-2°
-
-✓ cursor reveals sketch circle
-
-✓ buttons have marker highlight
-
-✓ section dividers are hand drawn waves
-
-✓ subtle grain texture
-
-✓ random tiny stars
-
-✓ smile doodles
-
-✓ paper clips
-
-✓ masking tape
-
-✓ handwritten labels
-
-Nothing should feel perfectly geometric.
-
-Everything should feel handcrafted.
-
------------------------------------
-TECH STACK
------------------------------------
-
-Next.js 15
-
-App Router
-
-TypeScript
-
-TailwindCSS
-
-Framer Motion
-
-Lucide Icons
-
-next/image
-
-shadcn/ui
-
-Use reusable components.
-
-Folder structure:
-
+```
+app/          routes, layout, metadata, SEO endpoints
+sections/     one component per page section
 components/
-sections/
-lib/
-app/
+  ui/         generic primitives — Button, Container, Reveal, Accordion, Spotlight, ...
+  doodles/    hand-drawn brand accents — LogoMark, HandArrow, PaperClip, ScribbleUnderline
+lib/          constants.ts (all copy/data), schema.ts (JSON-LD), utils.ts
+```
+
+Reusable, componentized. All copy/content lives in `lib/constants.ts` — never hardcode marketing
+copy inside a section file.
 
 -----------------------------------
-SEO
+SEO — implemented, keep the bar
 -----------------------------------
 
-This is extremely important.
+Already in place; don't regress it when adding or changing sections:
 
-The website must be fully SEO optimized.
-
-Implement:
-
-✓ Metadata API
-
-✓ generateMetadata()
-
-✓ Open Graph
-
-✓ Twitter Cards
-
-✓ canonical URL
-
-✓ robots.txt
-
-✓ sitemap.xml
-
-✓ semantic HTML
-
-✓ schema.org JSON-LD
-
-✓ Organization Schema
-
-✓ LocalBusiness Schema
-
-✓ Service Schema
-
-✓ FAQ Schema
-
-✓ Breadcrumb Schema
-
-✓ proper heading hierarchy
-
-✓ optimized images
-
-✓ lazy loading
-
-✓ font optimization
-
-✓ excellent Core Web Vitals
-
-✓ accessible ARIA labels
-
-✓ proper alt text
-
-✓ server components wherever possible
-
-✓ dynamic metadata support
+✓ Metadata API / static `Metadata` export ✓ Open Graph ✓ Twitter Cards ✓ canonical URL
+✓ `robots.ts` ✓ `sitemap.ts` ✓ semantic HTML ✓ schema.org JSON-LD — Organization, LocalBusiness,
+Service, FAQ, Breadcrumb (generated from `lib/constants.ts`, so schema can't drift from on-page
+copy) ✓ proper heading hierarchy ✓ optimized images/fonts ✓ accessible ARIA labels ✓ alt text
+✓ server components by default ✓ dynamic OG image generation
 
 -----------------------------------
 CODE QUALITY
 -----------------------------------
 
-Write production-quality code.
+Production-quality. No placeholder Lorem Ipsum, no fake agency copy — copy should read as
+genuinely persuasive. Componentized, reusable, maintainable, responsive, **mobile-first**.
+Avoid generic templates — every section should feel deliberately composed, not stamped from the
+same layout as the last one.
 
-No placeholder Lorem Ipsum.
-
-No fake agency copy.
-
-Write persuasive marketing copy.
-
-Everything should be componentized.
-
-Reusable.
-
-Maintainable.
-
-Responsive.
-
-Mobile-first.
-
-Avoid generic templates.
-
-The final result should look like an expensive creative agency website that could realistically win design awards while still converting visitors into clients.
-
-The emotional response should be:
-
-"These people clearly know marketing. I trust them."
-
-Do not stop after creating the first version. Continue refining spacing, typography, animations, responsiveness, accessibility, and visual polish until the landing page feels premium and production-ready.
+Before calling any UI change done: run it in the browser, check both mobile and desktop, run
+`npm run lint` and `npm run build` clean. See `AGENT.md` for exact commands and known gotchas
+worth checking first.

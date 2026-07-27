@@ -32,15 +32,15 @@ export function RollingNumber({
   className?: string;
 }) {
   const chars = value.split("");
-  let digitIndex = 0;
+  const digitsBefore = (index: number) =>
+    chars.slice(0, index).filter((c) => /[0-9]/.test(c)).length;
 
   return (
     <span className={cn("inline-flex tabular-nums", className)} aria-label={value}>
       {chars.map((char, i) => {
         if (/[0-9]/.test(char)) {
           const target = revealed ? Number(char) : 0;
-          const delay = digitIndex * 0.06;
-          digitIndex += 1;
+          const delay = digitsBefore(i) * 0.06;
           return <RollingDigit key={i} digit={target} delay={delay} />;
         }
         return (

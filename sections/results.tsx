@@ -6,11 +6,11 @@ import { useRef } from "react";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { RollingNumber } from "@/components/ui/rolling-number";
-import { RESULTS_STATS } from "@/lib/constants";
+import type { ResultsData } from "@/lib/cms/types";
 
 const ICONS: LucideIcon[] = [Briefcase, Users, Target, Heart];
 
-export function Results() {
+export function Results({ data }: { data: ResultsData }) {
   const ref = useRef<HTMLDivElement>(null);
   const revealed = useInView(ref, { once: true, margin: "-15% 0px -15% 0px" });
 
@@ -19,15 +19,15 @@ export function Results() {
       <Container>
         <Reveal className="text-center">
           <span className="font-hand -rotate-1 inline-block text-base text-accent">
-            the numbers
+            {data.eyebrow}
           </span>
           <h2 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-paper text-balance md:text-4xl">
-            Growth you can measure.
+            {data.heading}
           </h2>
         </Reveal>
 
         <div ref={ref} className="mt-14 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
-          {RESULTS_STATS.map((stat, index) => {
+          {data.stats.map((stat, index) => {
             const Icon = ICONS[index];
             return (
               <Reveal key={stat.label} delay={index * 0.08}>
@@ -47,8 +47,7 @@ export function Results() {
 
         <Reveal delay={0.3}>
           <p className="mx-auto mt-12 max-w-sm text-center text-base text-paper/50">
-            Every engagement is measured against outcomes we agree on before we start — no
-            vanity metrics.
+            {data.note}
           </p>
         </Reveal>
       </Container>

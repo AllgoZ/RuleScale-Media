@@ -1,19 +1,32 @@
-import { Briefcase, Camera, Mail, Play } from "lucide-react";
+import { Briefcase, Camera, Mail, Play, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { LogoMark } from "@/components/doodles/logo-mark";
 import { Container } from "@/components/ui/container";
-import { CONTACT_EMAIL, NAV_LINKS, SITE_NAME } from "@/lib/constants";
+import type { FooterData, NavLinkData } from "@/lib/cms/types";
 
-const SERVICE_LINKS = [
-  "Website Design",
-  "SEO",
-  "Performance Marketing",
-  "Social Media",
-  "Video Production",
-  "Brand Strategy",
-];
+const SOCIAL_ICONS: Record<string, LucideIcon> = {
+  instagram: Camera,
+  linkedin: Briefcase,
+  youtube: Play,
+};
 
-export function Footer() {
+const SOCIAL_LABELS: Record<string, string> = {
+  instagram: "Follow us on Instagram",
+  linkedin: "Follow us on LinkedIn",
+  youtube: "Subscribe on YouTube",
+};
+
+export function Footer({
+  footer,
+  companyLinks,
+  siteName,
+  contactEmail,
+}: {
+  footer: FooterData;
+  companyLinks: NavLinkData[];
+  siteName: string;
+  contactEmail: string;
+}) {
   const year = new Date().getFullYear();
 
   return (
@@ -26,26 +39,24 @@ export function Footer() {
               className="flex items-center gap-2.5 font-heading text-xl font-extrabold text-ink"
             >
               <LogoMark size={28} />
-              {SITE_NAME}
+              {siteName}
             </Link>
-            <p className="mt-4 max-w-xs text-sm text-ink-soft">
-              A full-service marketing agency for brands who want to be remembered, not just seen.
-            </p>
+            <p className="mt-4 max-w-xs text-sm text-ink-soft">{footer.blurb}</p>
             <div className="mt-6 flex items-center gap-3">
-              {[
-                { Icon: Camera, label: "Follow us on Instagram" },
-                { Icon: Briefcase, label: "Follow us on LinkedIn" },
-                { Icon: Play, label: "Subscribe on YouTube" },
-              ].map(({ Icon, label }) => (
-                <a
-                  key={label}
-                  href="#top"
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline text-ink-soft transition-colors hover:border-ink hover:text-ink"
-                  aria-label={label}
-                >
-                  <Icon size={18} />
-                </a>
-              ))}
+              {footer.socialLinks.map((social) => {
+                const Icon = SOCIAL_ICONS[social.platform] ?? Camera;
+                const label = SOCIAL_LABELS[social.platform] ?? social.platform;
+                return (
+                  <a
+                    key={social.platform}
+                    href={social.url}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline text-ink-soft transition-colors hover:border-ink hover:text-ink"
+                    aria-label={label}
+                  >
+                    <Icon size={18} />
+                  </a>
+                );
+              })}
             </div>
           </div>
 
@@ -54,13 +65,13 @@ export function Footer() {
               Services
             </p>
             <ul className="mt-4 flex flex-col gap-3">
-              {SERVICE_LINKS.map((service) => (
-                <li key={service}>
+              {footer.serviceLinks.map((service) => (
+                <li key={service.label}>
                   <Link
-                    href="#services"
+                    href={service.href}
                     className="text-sm text-ink-soft transition-colors hover:text-ink"
                   >
-                    {service}
+                    {service.label}
                   </Link>
                 </li>
               ))}
@@ -72,7 +83,7 @@ export function Footer() {
               Company
             </p>
             <ul className="mt-4 flex flex-col gap-3">
-              {NAV_LINKS.map((link) => (
+              {companyLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -90,26 +101,25 @@ export function Footer() {
               Get in touch
             </p>
             <a
-              href={`mailto:${CONTACT_EMAIL}`}
+              href={`mailto:${contactEmail}`}
               className="mt-4 flex items-center gap-2 text-sm text-ink-soft transition-colors hover:text-ink"
             >
               <Mail size={16} />
-              {CONTACT_EMAIL}
+              {contactEmail}
             </a>
           </div>
         </div>
 
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-hairline py-8 text-sm text-ink-soft md:flex-row">
           <p>
-            © {year} {SITE_NAME}. All rights reserved.
+            © {year} {siteName}. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <Link href="#top" className="hover:text-ink">
-              Privacy Policy
-            </Link>
-            <Link href="#top" className="hover:text-ink">
-              Terms of Service
-            </Link>
+            {footer.legalLinks.map((link) => (
+              <Link key={link.label} href={link.href} className="hover:text-ink">
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       </Container>

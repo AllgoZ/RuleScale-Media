@@ -1,11 +1,12 @@
 # RuleScale Media — Landing Page: System Status
 
-Last updated: 2026-07-23
-Repo: https://github.com/AllgoZ/RuleScale-Media (branch `main`, pushed and up to date)
+Last updated: 2026-07-27
+Repo: https://github.com/AllgoZ/RuleScale-Media (branch `main`)
 
 A single-page Next.js marketing site for RuleScale Media, built as a sequence of distinct
-"scenes" rather than repeating template sections. This document is a from-scratch snapshot of
-the current implementation — tech stack, brand system, and every section top to bottom.
+"scenes" rather than repeating template sections, now backed by Payload CMS + PostgreSQL rather
+than hard-coded content. This document is a from-scratch snapshot of the current implementation —
+tech stack, brand system, CMS architecture, and every section top to bottom.
 
 ---
 
@@ -13,7 +14,9 @@ the current implementation — tech stack, brand system, and every section top t
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 15.5 (App Router) |
+| Framework | Next.js 16.2.12 (App Router, Turbopack) |
+| CMS | Payload CMS 3.86.0 |
+| Database | PostgreSQL via `@payloadcms/db-postgres` (Supabase in production) |
 | Language | TypeScript |
 | Styling | Tailwind CSS v4 (CSS-first `@theme`, no `tailwind.config.js`) |
 | Animation | Framer Motion 12 |
@@ -22,19 +25,65 @@ the current implementation — tech stack, brand system, and every section top t
 | Utilities | `class-variance-authority`, `clsx`, `tailwind-merge` |
 | React | 19.2 |
 
+Next.js is pinned to 16.2.12 specifically because every published Payload version's `next` peer
+range excludes 15.5.x entirely (only 15.2.9/15.3.9/15.4.11 or 16.2.6+ are supported) — see
+`CHANGELOG.md` 2026-07-27 for the full reasoning and the upgrade-verification process used.
+
 Folder layout:
 ```
-app/          routes, layout, metadata, SEO endpoints
-sections/     one file per page section (Header, Hero, Problem, ... Footer)
+app/
+  (frontend)/  the marketing site itself — layout.tsx, page.tsx, globals.css (route group)
+  (payload)/   Payload-generated admin + REST/GraphQL API routes (never hand-edited)
+  robots.ts, sitemap.ts, icon.tsx, opengraph-image.tsx   top-level, outside both route groups
+payload.config.ts   Payload config root (collections, globals, db adapter)
+payload/
+  collections/  users, media, categories, authors, posts, testimonials, case-studies, leads
+  globals/       homepage, navigation, footer, site-settings, seo-settings
+  seed.ts        one-time seed for testimonials/case-studies (npm run seed)
+lib/
+  cms/          getHomepage() / getNavigation() / getFooter() / getSiteSettings() — the only
+                 code that talks to Payload, each falling back to lib/constants.ts on error
+  constants.ts  fallback source of truth (no longer the primary content source, still live)
+  schema.ts     JSON-LD builders — still reads lib/constants.ts directly, not yet CMS-wired
+  utils.ts      cn() class-merge helper
+sections/     one file per page section (Header, Hero, Problem, ... Footer), each consuming
+              CMS content via a `data` (or `navigation`/`footer`) prop, not a direct import
 components/
   ui/         generic primitives (Button, Container, Reveal, Accordion, Spotlight, RollingNumber, Marquee)
   doodles/    hand-drawn brand accents (LogoMark, HandArrow, PaperClip, ScribbleUnderline)
   hero-collage.tsx, mobile-cta.tsx   standalone composed pieces
-lib/          constants.ts (all copy/data), schema.ts (JSON-LD), utils.ts (cn helper)
 ```
 
-Build: clean lint, clean production build. Current bundle: **22.8 kB** page weight / **184 kB**
-first-load JS for `/`.
+Build: clean lint, clean production build (verified against a placeholder, deliberately
+unreachable `DATABASE_URL` — the homepage still statically prerenders correctly via the
+`lib/cms` fallback path; only `/admin` fails, gracefully, without one).
+
+---
+
+## 1a. CMS architecture (Payload + Postgres)
+
+Added 2026-07-27 per `prompts/backend/phase1.md` — full reasoning, the Next.js 16 upgrade
+tradeoff, and the `robots.ts`-in-a-route-group gotcha are in `CHANGELOG.md`, not repeated here.
+
+- **Collections**: `users` (admin auth), `media` (uploads, responsive image sizes),
+  `categories`/`authors`/`posts` (blog groundwork, not yet rendered anywhere), `testimonials` and
+  `case-studies` (real collections, referenced from the Homepage global via relationship fields),
+  `leads` (schema only — no contact form exists yet to write to it).
+- **Globals**: `homepage` (one group per section — Hero, TrustLogos, Problem, Manifesto, Process,
+  Services, Results, CaseStudies, Testimonials, FAQ, FinalCTA — every field has a `defaultValue`
+  mirroring today's copy), `navigation`, `footer`, `siteSettings`, `seoSettings`. The latter two
+  are admin-editable but **not yet consumed** by `layout.tsx`'s metadata export or `schema.ts` —
+  deliberately deferred to a later phase.
+- **Data flow**: `app/(frontend)/layout.tsx` fetches navigation/footer/site-settings once;
+  `app/(frontend)/page.tsx` fetches the homepage once. Both pass slices down as props — no section
+  component ever imports `payload` or `lib/cms` directly, satisfying "one clean abstraction layer."
+- **Fallback**: every `lib/cms/*.ts` getter is `try/catch`-wrapped and returns a
+  `lib/constants.ts`-derived object on any failure. This isn't just a safety net for production
+  outages — it's what makes local dev and CI work at all before a real `DATABASE_URL` exists.
+- **Seeding**: `testimonials`/`case-studies` are relationship-based, so they can't carry a static
+  `defaultValue` the way plain array fields can. `payload/seed.ts` (`npm run seed`) inserts the 4
+  testimonials / 3 case studies and points the Homepage global's relationships at them — required
+  once, after a real Postgres connection exists.
 
 ---
 
@@ -71,7 +120,7 @@ to their exact JSX (arbitrary Tailwind values, not tokens) and do not affect the
 - **Hand-drawn accents**: Caveat (weights 500–700) — used only for small eyebrow labels,
   margin notes, and quote-style flourishes (~10% of the UI, by design).
 - Custom display-type utility classes in `globals.css`:
-  - `.text-display` — clamp(2.75rem, …, 7.5rem), weight 800, tracking -0.03em — hero/final-CTA headline
+  - `.text-display` — clamp(2.25rem, 1.2rem + 6vw, 7.5rem), weight 800, tracking -0.03em — hero/final-CTA headline (formula tuned for mobile, see `CHANGELOG.md`)
   - `.text-editorial` — clamp(2rem, …, 4rem), weight 800 — standard section headline
   - `.text-mega` — clamp(3.5rem, …, 13rem) — (defined, currently unused after the Results rebuild)
 
@@ -128,8 +177,10 @@ layout).
 ### 1. Hero (`sections/hero.tsx` + `components/hero-collage.tsx`)
 - Asymmetric 12-col grid: copy in the left 7 columns, floating collage in the right 5.
 - Eyebrow: pill badge ("Hi, we're RuleScale Media", Sparkle icon, Caveat).
-- Headline: "We grow brands people remember." — `.text-display`-scale (5xl→6xl→3.75rem), with a
-  hand-drawn `ScribbleUnderline` (accent) under "people remember."
+- Headline: "We grow brands people remember." — responsive `text-5xl→6xl→3.75rem` scale, with a
+  hand-drawn `ScribbleUnderline` (accent) under "people remember." The "people remember." span is
+  `sm:whitespace-nowrap` (nowrap only at 640px+; wraps freely below that), and both grid columns
+  carry `min-w-0` — fixes for a mobile horizontal-scroll bug, see `CHANGELOG.md`.
 - Sub-copy, then accent + ghost CTA buttons ("Start Growing" / "See Our Work"), then a trust line.
 - Wrapped in `<Spotlight>` for a cursor-follow red glow.
 - **Hero collage**: a parallax composition of 6 floating mock-UI cards (mouse-tracked via
@@ -295,12 +346,35 @@ and on-page copy can't drift apart.
 - Tech stack is pinned slightly ahead of the brief's "Next.js 15" (currently Next 15.5.21 /
   React 19.2) after hitting an RSC bug on the bleeding-edge Next 16 canary that was originally
   installed; downgraded to the latest stable 15.x line, which resolved it.
+- **CSS Grid items default to `min-width: auto`**, not `0`. Any `grid` container whose
+  `grid-cols-*` only kicks in at a breakpoint (e.g. `grid lg:grid-cols-12`) has a single implicit
+  column at mobile — if a descendant has any unbreakable content (`whitespace-nowrap`, a long
+  clamp()-sized word, a fixed-width element), that item won't shrink to fit and drags the whole
+  row wider than the viewport. Fixed in Hero by adding `min-w-0` to the grid item wrappers. Worth
+  checking first if a horizontal-scroll bug ever reappears — see `CHANGELOG.md` for the full
+  diagnostic writeup.
+- **`getBoundingClientRect()` does not reveal text overflow.** If a heading's own box looks
+  correctly sized but `element.scrollWidth > element.clientWidth`, the text content itself
+  (usually one long unbreakable word at a large clamp() font-size) is overflowing invisibly —
+  this is what caused the Final CTA half of the mobile-scroll bug. Diagnose with `scrollWidth`
+  comparisons, not just rect scans.
 
 ---
 
 ## 9. Repo / deployment status
 
-- Git initialized, first commit pushed to `https://github.com/AllgoZ/RuleScale-Media` on `main`.
-- Working tree is clean against that commit (no uncommitted section changes as of this writing).
+- Git initialized, pushed to `https://github.com/AllgoZ/RuleScale-Media` on `main`. See
+  `CHANGELOG.md` and `git log` for the actual commit-by-commit history.
 - No CI/deployment pipeline configured yet (no Vercel project, no GitHub Actions).
-- `.env*` is gitignored; no environment variables are currently required to run the site.
+- `.env*` is gitignored. `DATABASE_URL` and `PAYLOAD_SECRET` are now required (see
+  `.env.example`) — the frontend degrades gracefully via the `lib/cms` fallback without them, but
+  `/admin` needs a real `DATABASE_URL` to function at all.
+
+---
+
+## 10. See also
+
+- **`Architecture files/CHANGELOG.md`** — dated log of notable fixes/changes, including the
+  full diagnostic writeup for the mobile horizontal-scroll bug. This status doc describes *what
+  the system currently is*; the changelog describes *what changed and why*. Update the changelog
+  going forward rather than accumulating history in this file.

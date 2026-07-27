@@ -7,10 +7,16 @@ import { useEffect, useState } from "react";
 import { LogoMark } from "@/components/doodles/logo-mark";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
-import { NAV_LINKS, SITE_NAME } from "@/lib/constants";
+import type { NavigationData } from "@/lib/cms/types";
 import { cn } from "@/lib/utils";
 
-export function Header() {
+export function Header({
+  navigation,
+  siteName,
+}: {
+  navigation: NavigationData;
+  siteName: string;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -47,11 +53,11 @@ export function Header() {
             className="flex items-center gap-2 font-heading text-[15px] font-bold text-ink"
           >
             <LogoMark size={24} />
-            {SITE_NAME}
+            {siteName}
           </Link>
 
           <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
-            {NAV_LINKS.map((link) => (
+            {navigation.links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -64,7 +70,7 @@ export function Header() {
 
           <div className="hidden md:block">
             <Button variant="accent" size="default" className="h-10 px-5 text-sm" asChild>
-              <Link href="#final-cta">Start Growing</Link>
+              <Link href={navigation.ctaHref}>{navigation.ctaLabel}</Link>
             </Button>
           </div>
 
@@ -91,7 +97,7 @@ export function Header() {
           >
             <Container>
               <div className="mt-2 flex flex-col gap-1 rounded-3xl border border-hairline bg-paper/95 p-4 shadow-lift backdrop-blur-xl">
-                {NAV_LINKS.map((link) => (
+                {navigation.links.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
@@ -107,7 +113,7 @@ export function Header() {
                   asChild
                   onClick={() => setOpen(false)}
                 >
-                  <Link href="#final-cta">Start Growing</Link>
+                  <Link href={navigation.ctaHref}>{navigation.ctaLabel}</Link>
                 </Button>
               </div>
             </Container>

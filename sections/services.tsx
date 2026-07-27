@@ -21,7 +21,7 @@ import {
 import { useState } from "react";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
-import { SERVICES } from "@/lib/constants";
+import type { ServicesData } from "@/lib/cms/types";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -39,9 +39,9 @@ const ICONS: Record<string, LucideIcon> = {
   lightbulb: Lightbulb,
 };
 
-export function Services() {
-  const [open, setOpen] = useState<string | undefined>(SERVICES[0]?.title);
-  const active = SERVICES.find((s) => s.title === open) ?? SERVICES[0];
+export function Services({ data }: { data: ServicesData }) {
+  const [open, setOpen] = useState<string | undefined>(data.items[0]?.title);
+  const active = data.items.find((s) => s.title === open) ?? data.items[0];
   const ActiveIcon = ICONS[active.icon];
 
   return (
@@ -51,15 +51,10 @@ export function Services() {
           <div className="lg:sticky lg:top-32 lg:col-span-4 lg:self-start">
             <Reveal>
               <span className="font-hand -rotate-1 inline-block text-base text-accent">
-                here&apos;s what we build
+                {data.eyebrow}
               </span>
-              <h2 className="text-editorial mt-3 text-ink text-balance">
-                One team. Every channel.
-              </h2>
-              <p className="mt-5 max-w-xs text-base text-ink-soft">
-                Pick a single service, or hand us the whole growth engine. Tap any line to see
-                what it actually includes.
-              </p>
+              <h2 className="text-editorial mt-3 text-ink text-balance">{data.heading}</h2>
+              <p className="mt-5 max-w-xs text-base text-ink-soft">{data.description}</p>
             </Reveal>
 
             <Reveal delay={0.1} className="mt-8 hidden lg:block">
@@ -92,7 +87,7 @@ export function Services() {
               value={open}
               onValueChange={(v) => setOpen(v || undefined)}
             >
-              {SERVICES.map((service, index) => {
+              {data.items.map((service, index) => {
                 const isOpen = open === service.title;
                 const Icon = ICONS[service.icon];
                 return (

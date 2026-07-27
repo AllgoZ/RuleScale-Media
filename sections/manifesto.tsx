@@ -3,9 +3,9 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Container } from "@/components/ui/container";
-import { MANIFESTO } from "@/lib/constants";
+import type { ManifestoData } from "@/lib/cms/types";
 
-export function Manifesto() {
+export function Manifesto({ data }: { data: ManifestoData }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-20% 0px -20% 0px" });
 
@@ -14,11 +14,11 @@ export function Manifesto() {
       <Container>
         <div ref={ref} className="mx-auto max-w-4xl text-center">
           <span className="font-hand -rotate-1 inline-block text-base text-accent">
-            {MANIFESTO.eyebrow}
+            {data.eyebrow}
           </span>
 
           <p className="font-heading mt-6 text-3xl font-normal italic leading-[1.15] text-ink text-balance sm:text-4xl md:text-5xl">
-            {MANIFESTO.lines.map((line, i) => (
+            {data.lines.map((line, i) => (
               <span key={line} className="block overflow-hidden">
                 <motion.span
                   initial={{ y: "100%", opacity: 0 }}
@@ -38,7 +38,7 @@ export function Manifesto() {
             transition={{ duration: 0.6, delay: 0.6 }}
             className="mt-8 text-base text-ink-soft"
           >
-            {MANIFESTO.note}
+            {data.note}
           </motion.p>
         </div>
       </Container>

@@ -1,7 +1,7 @@
 import { ArrowUpRight, Globe, Lock } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
-import { CASE_STUDIES } from "@/lib/constants";
+import type { CaseStudiesData } from "@/lib/cms/types";
 
 const OFFSETS = ["lg:mt-0", "lg:mt-20", "lg:mt-8"];
 
@@ -55,23 +55,21 @@ function BrowserMock({
   );
 }
 
-export function CaseStudies() {
+export function CaseStudies({ data }: { data: CaseStudiesData }) {
   return (
     <section id="case-studies" className="py-28 md:py-40">
       <Container>
         <Reveal>
           <div className="max-w-lg">
             <span className="font-hand -rotate-1 inline-block text-base text-accent">
-              here&apos;s proof
+              {data.eyebrow}
             </span>
-            <h2 className="text-editorial mt-3 text-ink text-balance">
-              Recent work we&apos;re proud of.
-            </h2>
+            <h2 className="text-editorial mt-3 text-ink text-balance">{data.heading}</h2>
           </div>
         </Reveal>
 
         <div className="mt-16 grid gap-x-8 gap-y-16 lg:grid-cols-3">
-          {CASE_STUDIES.map((study, index) => (
+          {data.items.map((study, index) => (
             <Reveal key={study.client} delay={index * 0.1} className={OFFSETS[index % OFFSETS.length]}>
               <article className="group">
                 <BrowserMock index={index} result={study.result} />
