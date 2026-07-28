@@ -3,9 +3,10 @@ a senior Next.js engineer, working on the RuleScale Media marketing landing page
 
 > **Status: built and live** on `main` (https://github.com/AllgoZ/RuleScale-Media). This file is
 > the creative brief and brand direction the project was built from — the philosophy here still
-> governs any future work. For the current technical architecture, section-by-section
+> governs any future work. For what phase the project is in right now, read
+> `Architecture files/currentphase.md`. For the current technical architecture, section-by-section
 > implementation, and engineering gotchas, read `Architecture files/systemstatus.md` and
-> `Architecture files/CHANGELOG.md` first. This file explains the *why*; those explain *what's
+> `Architecture files/CHANGELOG.md`. This file explains the *why*; those explain *what's
 > actually there*. For quick technical/operational reference, see `AGENT.md`.
 
 The agency specializes in: Website Design & Development, SEO, Digital Media Planning, Social
@@ -122,21 +123,29 @@ one-line description here; several have been redesigned more than once since the
 TECH STACK (as actually built)
 -----------------------------------
 
-Next.js 15.5 (App Router) · TypeScript · Tailwind CSS v4 (CSS-first `@theme`, no
+Next.js 16.2.12 (App Router) · TypeScript · Tailwind CSS v4 (CSS-first `@theme`, no
 `tailwind.config.js`) · Framer Motion · Lucide Icons · Radix UI primitives (hand-built
-`components/ui/` primitives in the shadcn spirit — not the shadcn CLI itself).
+`components/ui/` primitives in the shadcn spirit — not the shadcn CLI itself) · Payload CMS 3.86.0
++ PostgreSQL (Supabase) as of the backend phases — see `Architecture files/currentphase.md` for
+what phase the backend is in right now.
 
 ```
-app/          routes, layout, metadata, SEO endpoints
-sections/     one component per page section
+app/(frontend)/   routes, layout, metadata, SEO endpoints (route group)
+app/(payload)/    Payload admin + REST/GraphQL routes (generated, never hand-edited)
+payload/          collections, globals, access control, hooks
+sections/         one component per page section
 components/
-  ui/         generic primitives — Button, Container, Reveal, Accordion, Spotlight, ...
-  doodles/    hand-drawn brand accents — LogoMark, HandArrow, PaperClip, ScribbleUnderline
-lib/          constants.ts (all copy/data), schema.ts (JSON-LD), utils.ts
+  ui/             generic primitives — Button, Container, Reveal, Accordion, Spotlight, ...
+  doodles/        hand-drawn brand accents — LogoMark, HandArrow, PaperClip, ScribbleUnderline
+lib/
+  cms/            the only code that talks to Payload
+  constants.ts    fallback content if the CMS is unreachable
+  schema/, seo/, cache/   JSON-LD, metadata, and cache-tag helpers
 ```
 
-Reusable, componentized. All copy/content lives in `lib/constants.ts` — never hardcode marketing
-copy inside a section file.
+Reusable, componentized. All copy/content is CMS-driven (Payload) with `lib/constants.ts` as the
+fallback — never hardcode marketing copy inside a section file, and never hardcode it as a new
+Payload field's only value either; give it a `defaultValue` matching the brand voice above.
 
 -----------------------------------
 SEO — implemented, keep the bar
@@ -144,11 +153,12 @@ SEO — implemented, keep the bar
 
 Already in place; don't regress it when adding or changing sections:
 
-✓ Metadata API / static `Metadata` export ✓ Open Graph ✓ Twitter Cards ✓ canonical URL
-✓ `robots.ts` ✓ `sitemap.ts` ✓ semantic HTML ✓ schema.org JSON-LD — Organization, LocalBusiness,
-Service, FAQ, Breadcrumb (generated from `lib/constants.ts`, so schema can't drift from on-page
-copy) ✓ proper heading hierarchy ✓ optimized images/fonts ✓ accessible ARIA labels ✓ alt text
-✓ server components by default ✓ dynamic OG image generation
+✓ Metadata API via `generateMetadata()`, CMS-driven (`lib/seo/metadata.ts`) ✓ Open Graph
+✓ Twitter Cards ✓ canonical URL ✓ `robots.ts` ✓ `sitemap.ts` ✓ semantic HTML ✓ schema.org
+JSON-LD — Organization, LocalBusiness, Service, FAQ, Breadcrumb (`lib/schema/`, built from the
+same CMS data the page renders, so schema can't drift from on-page copy) ✓ proper heading
+hierarchy ✓ optimized images/fonts ✓ accessible ARIA labels ✓ alt text ✓ server components by
+default ✓ dynamic OG image generation
 
 -----------------------------------
 CODE QUALITY

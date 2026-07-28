@@ -147,6 +147,7 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  role: 'admin' | 'editor';
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -173,6 +174,7 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
+  caption?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -420,6 +422,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  role?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -443,6 +446,7 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  caption?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -750,6 +754,7 @@ export interface Homepage {
       href?: string | null;
     };
   };
+  _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -838,6 +843,14 @@ export interface SeoSetting {
     | null;
   ogImageAlt?: string | null;
   twitterHandle?: string | null;
+  /**
+   * Allow search engines to index the site.
+   */
+  robotsIndex?: boolean | null;
+  /**
+   * Allow search engines to follow links on the site.
+   */
+  robotsFollow?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -991,6 +1004,7 @@ export interface HomepageSelect<T extends boolean = true> {
               href?: T;
             };
       };
+  _status?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1079,6 +1093,8 @@ export interface SeoSettingsSelect<T extends boolean = true> {
       };
   ogImageAlt?: T;
   twitterHandle?: T;
+  robotsIndex?: T;
+  robotsFollow?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

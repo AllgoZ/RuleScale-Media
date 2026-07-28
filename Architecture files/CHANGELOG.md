@@ -1,8 +1,77 @@
 # Changelog
 
-Dated log of notable changes. `systemstatus.md` describes what the system *currently is*; this
-file describes what changed, why, and (for the non-obvious ones) how it was diagnosed. Add new
-entries at the top.
+Dated log of notable changes. `systemstatus.md` describes what the system *currently is*;
+`currentphase.md` is the fast "what phase are we in" pointer; this file describes what changed,
+why, and (for the non-obvious ones) how it was diagnosed. Add new entries at the top.
+
+---
+
+## 2026-07-28 — Phase 1.5: production hardening (caching, drafts, RBAC, health)
+
+Hardened the Phase 1 CMS foundation per `prompts/backend/phase1_5.md`, ahead of the blog phase.
+No visual change — verified pixel-identical against the Phase 1 Playwright baseline throughout.
+
+**SiteSettings/SEOSettings now actually power metadata + JSON-LD**, closing the deferral Phase 1
+left open. `app/(frontend)/layout.tsx`'s static `metadata` export became an async
+`generateMetadata()` calling the new `lib/seo/metadata.ts`. `lib/schema.ts` moved to
+`lib/schema/index.ts` and its five JSON-LD builders became pure functions taking
+`siteSettings`/`services`/`faq` as parameters instead of importing `constants.ts` — verified the
+rendered `<head>` (title, description, keywords, OG/Twitter tags, robots directive, all 5 JSON-LD
+blocks) was byte-identical to the pre-change static version before moving on.
+
+**Caching: `React.cache()` wrapping `unstable_cache()`, not `"use cache"`.** Considered Next 16's
+stable Cache Components (`"use cache"` + `cacheComponents: true`) first, but that flag changes the
+rendering model for the *entire app*, not just these five queries — much bigger blast radius than
+this phase's brief asked for, and the brief itself explicitly allows `unstable_cache()`. Every
+`lib/cms/*.ts` getter is now `cache(unstable_cache(fetchFn, [tag], {tags:[tag]}))`; tags live in
+the new `lib/cache/tags.ts`. Verified live: `revalidateTag(tag, 'max')` fired from a Payload
+`afterChange` hook (`payload/hooks/revalidate.ts`) — a same-process call, valid because Payload's
+admin/API already run inside real Next.js Route Handlers in this repo — reflected an admin-panel
+save on the running dev server within ~1-2 seconds, no restart, confirmed by editing a live field,
+polling the public page for the new value, then reverting.
+
+**Draft mode.** `homepage` global got `versions.drafts: true` + `admin.preview`;
+`app/(frontend)/next/preview` and `/next/exit-preview` are the entry/exit routes, matching
+Payload's own official website-template pattern (verified against that template's actual source
+before writing this, including a real bug in the template's own `payload.auth()` usage — it
+checks `if (!user)` against the whole `{ user, permissions }` result object rather than
+destructuring `user` first, which would never be falsy; fixed in this implementation).
+`getHomepage()` branches on `draftMode().isEnabled` *before* the cache layer — draft reads are
+never tagged or cached, so a draft can't leak to a real visitor through a shared cache entry.
+Verified live end-to-end: saved a draft-only Homepage edit, confirmed the public page was
+unaffected, confirmed `/next/preview?...` showed the draft, confirmed `/next/exit-preview`
+returned to published, then published the original content back to fully settle the version
+history (a draft-only save leaves Payload's `_status` as `"draft"` even when the content is
+unchanged from what's published — a stray "unpublished changes" state, not a content bug, cleaned
+up with one real Publish).
+
+**Role-based access control.** `users.role` (`admin | editor`, admin-only to change via
+field-level access — prevents self-escalation). `payload/access.ts` has three reusable checks
+(`isAdmin`, `isAdminOrEditor`, `isAdminOrSelf`) instead of repeating role-check logic across 13
+collection/global configs. Admin: full access. Editor: create/read/update on `homepage`, `posts`,
+`media`, `testimonials`, `case-studies` (delete stays admin-only everywhere per the brief — it
+never grants editors delete). Everything else stays admin-only to write.
+**Real bootstrap problem hit and solved**: once the `role` field's own update-access became
+admin-gated, the *existing* first user (created before `role` existed, defaulted to `editor`)
+could no longer be promoted through the normal API/UI — nobody had admin rights yet to authorize
+the change. Fixed with one direct SQL `UPDATE`, the correct tool for a one-time bootstrap step.
+Verified live via actual REST API calls with an editor session: `POST /api/globals/navigation` →
+403, `POST /api/globals/homepage` → 200, `DELETE /api/testimonials/:id` → 403, `GET /api/users` →
+200 but scoped to only the editor's own record (proving the `Where`-constraint form of `Access`
+works, not just the boolean form) — all against a temporary test editor account, deleted after.
+
+**Media hardening.** Added a `caption` field. Focal-point selection turned out to already be
+active — Payload auto-enables it once `imageSizes` is defined (documented behavior), which the
+Media collection already had from Phase 1 — confirmed by uploading a synthetic test image and
+finding the focal-point controls inside the "Edit Image" modal (not inline on the main form,
+which is why an earlier check for the phrase "focal point" on the page itself found nothing).
+
+**Health check.** `GET /api/health` pings Postgres via `payload.db.drizzle.execute(sql\`select
+1\`)` — the documented public accessor, preferred over the working-but-undocumented
+`payload.db.pool`. Placed at `app/(frontend)/api/health/route.ts`, a literal segment living
+alongside Payload's `/api/*` catch-all (`app/(payload)/api/[...slug]/route.ts`); confirmed by
+actual build + curl that Next.js resolves the more specific static route first and every other
+`/api/*` path still reaches Payload untouched.
 
 ---
 

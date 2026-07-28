@@ -1,7 +1,10 @@
 # RuleScale Media — Landing Page: System Status
 
-Last updated: 2026-07-27
+Last updated: 2026-07-28
 Repo: https://github.com/AllgoZ/RuleScale-Media (branch `main`)
+
+For "what phase are we in right now and what's next" in 30 seconds, read `currentphase.md`
+instead — this file is the full architecture snapshot, that one's the fast pointer.
 
 A single-page Next.js marketing site for RuleScale Media, built as a sequence of distinct
 "scenes" rather than repeating template sections, now backed by Payload CMS + PostgreSQL rather
@@ -37,14 +40,22 @@ app/
   robots.ts, sitemap.ts, icon.tsx, opengraph-image.tsx   top-level, outside both route groups
 payload.config.ts   Payload config root (collections, globals, db adapter)
 payload/
-  collections/  users, media, categories, authors, posts, testimonials, case-studies, leads
-  globals/       homepage, navigation, footer, site-settings, seo-settings
+  collections/  users (role: admin/editor), media, categories, authors, posts, testimonials,
+                 case-studies, leads
+  globals/       homepage (drafts + preview), navigation, footer, site-settings, seo-settings
+  access.ts      shared RBAC helpers (isAdmin, isAdminOrEditor, isAdminOrSelf)
+  hooks/         revalidateTagSafely() — every afterChange/afterDelete hook goes through this
   seed.ts        one-time seed for testimonials/case-studies (npm run seed)
 lib/
-  cms/          getHomepage() / getNavigation() / getFooter() / getSiteSettings() — the only
-                 code that talks to Payload, each falling back to lib/constants.ts on error
+  cms/          getHomepage() / getNavigation() / getFooter() / getSiteSettings() /
+                 getSEOSettings() — the only code that talks to Payload. Each is
+                 cache(unstable_cache(...)) with tag-based invalidation, falling back to
+                 lib/constants.ts (uncached) on error; getHomepage() also branches on Next draft
+                 mode before the cached path
+  cache/tags.ts  CACHE_TAGS — shared between lib/cms and the payload/*/hooks
+  seo/metadata.ts  buildSiteMetadata(), called from layout.tsx's generateMetadata()
   constants.ts  fallback source of truth (no longer the primary content source, still live)
-  schema.ts     JSON-LD builders — still reads lib/constants.ts directly, not yet CMS-wired
+  schema/index.ts  JSON-LD builders — pure functions taking CMS data as params
   utils.ts      cn() class-merge helper
 sections/     one file per page section (Header, Hero, Problem, ... Footer), each consuming
               CMS content via a `data` (or `navigation`/`footer`) prop, not a direct import
@@ -71,12 +82,11 @@ tradeoff, and the `robots.ts`-in-a-route-group gotcha are in `CHANGELOG.md`, not
   `leads` (schema only — no contact form exists yet to write to it).
 - **Globals**: `homepage` (one group per section — Hero, TrustLogos, Problem, Manifesto, Process,
   Services, Results, CaseStudies, Testimonials, FAQ, FinalCTA — every field has a `defaultValue`
-  mirroring today's copy), `navigation`, `footer`, `siteSettings`, `seoSettings`. The latter two
-  are admin-editable but **not yet consumed** by `layout.tsx`'s metadata export or `schema.ts` —
-  deliberately deferred to a later phase.
-- **Data flow**: `app/(frontend)/layout.tsx` fetches navigation/footer/site-settings once;
-  `app/(frontend)/page.tsx` fetches the homepage once. Both pass slices down as props — no section
-  component ever imports `payload` or `lib/cms` directly, satisfying "one clean abstraction layer."
+  mirroring today's copy), `navigation`, `footer`, `siteSettings`, `seoSettings`. As of Phase 1.5
+  (§1b), `siteSettings`/`seoSettings` power `layout.tsx`'s metadata + `lib/schema/`'s JSON-LD.
+- **Data flow**: `app/(frontend)/layout.tsx` fetches navigation/footer/site-settings/homepage
+  once; `app/(frontend)/page.tsx` fetches the homepage once too — free, deduped by `React.cache()`
+  within one request. No section component ever imports `payload` or `lib/cms` directly.
 - **Fallback**: every `lib/cms/*.ts` getter is `try/catch`-wrapped and returns a
   `lib/constants.ts`-derived object on any failure. This isn't just a safety net for production
   outages — it's what makes local dev and CI work at all before a real `DATABASE_URL` exists.
@@ -84,6 +94,46 @@ tradeoff, and the `robots.ts`-in-a-route-group gotcha are in `CHANGELOG.md`, not
   `defaultValue` the way plain array fields can. `payload/seed.ts` (`npm run seed`) inserts the 4
   testimonials / 3 case studies and points the Homepage global's relationships at them — required
   once, after a real Postgres connection exists.
+- Connected to a real Supabase project since 2026-07-27 (session pooler — the direct-connection
+  host is IPv6-only and this environment has no IPv6 route out). Admin user, seeding, and every
+  claim in this document have been verified against that live database, not just built.
+
+---
+
+## 1b. Production hardening (Phase 1.5)
+
+Added 2026-07-28 per `prompts/backend/phase1_5.md` — full reasoning (why `unstable_cache()` over
+Cache Components, the `payload run` floating-promise bug, etc.) is in `CHANGELOG.md`.
+
+- **Caching**: every `lib/cms/*.ts` getter is `cache(unstable_cache(fetchFn, [tag], {tags:
+  [tag]}))` — `React.cache()` dedupes repeated calls within one request, `unstable_cache()`
+  persists across requests with tag-based invalidation. Tags live in `lib/cache/tags.ts`, the
+  single source of truth shared with the Payload hooks that invalidate them.
+- **Invalidation**: `payload/globals/*.ts` and the `testimonials`/`case-studies` collections each
+  have an `afterChange` (`+afterDelete` for the two collections) hook calling
+  `revalidateTagSafely()` (`payload/hooks/revalidate.ts`) — same-process `revalidateTag`, no HTTP
+  round-trip, since Payload's admin/API already run inside real Next.js Route Handlers here.
+  Verified live: an admin-panel save reflects on the running site within ~1-2s, no restart.
+- **Draft mode**: `homepage` global has `versions.drafts: true` + `admin.preview`.
+  `app/(frontend)/next/preview` (validates `PREVIEW_SECRET` + an authenticated Payload session,
+  then enables Next draft mode) and `/next/exit-preview` are the entry/exit points.
+  `getHomepage()` reads `draftMode()` first — draft reads bypass the cache entirely and are never
+  tagged, so a draft can never leak into what a real visitor sees. Verified live end-to-end.
+- **RBAC**: `users.role` is `admin | editor`. `payload/access.ts` has the three reusable checks.
+  Admin: full access everywhere. Editor: create/read/update on `homepage` (global, update-only),
+  `posts`, `media`, `testimonials`, `case-studies` — delete stays admin-only. Everything else
+  (`users`, `navigation`, `footer`, `siteSettings`, `seoSettings`, `categories`, `authors`,
+  `leads`) is admin-only to write. `users` read/update is self-or-admin (an editor can see/edit
+  their own account, not anyone else's). Verified live via real 403s/200s against the REST API,
+  not just code review. This only governs `/admin` + REST/GraphQL — Local API reads (`lib/cms/`)
+  default to `overrideAccess: true` and are unaffected.
+- **Media hardening**: `caption` field added. Focal-point selection was already active (Payload
+  auto-enables it once `imageSizes` is defined, which this collection already had) — confirmed via
+  the "Edit Image" modal in `/admin`, not code that needed writing.
+- **Health check**: `GET /api/health` (`app/(frontend)/api/health/route.ts`) pings Postgres via
+  `payload.db.drizzle.execute(sql\`select 1\`)`, returns `200`/`503`. Coexists with Payload's
+  `/api/*` catch-all because Next.js resolves the more specific static segment first — confirmed
+  empirically, both routes verified working side by side.
 
 ---
 

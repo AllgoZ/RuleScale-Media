@@ -171,3 +171,13 @@ export type SiteSettingsData = {
   contactEmail: string;
   sameAs: string[];
 };
+
+export type SEOSettingsData = {
+  defaultTitle: string;
+  defaultDescription: string;
+  keywords: string[];
+  ogImageAlt: string;
+  twitterHandle: string;
+  robotsIndex: boolean;
+  robotsFollow: boolean;
+};

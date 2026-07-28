@@ -1,3 +1,7 @@
+import { unstable_cache } from "next/cache";
+import { draftMode } from "next/headers";
+import { cache } from "react";
+import { CACHE_TAGS } from "@/lib/cache/tags";
 import {
   CASE_STUDIES,
   FAQS,
@@ -242,11 +246,25 @@ function normalize(doc: PayloadHomepage): HomepageData {
   };
 }
 
-export async function getHomepage(): Promise<HomepageData> {
+async function fetchHomepageFromPayload(draft: boolean): Promise<HomepageData> {
+  const payload = await getPayloadClient();
+  const doc = await payload.findGlobal({ slug: "homepage", depth: 1, draft });
+  return normalize(doc);
+}
+
+const getCachedHomepage = unstable_cache(
+  () => fetchHomepageFromPayload(false),
+  [CACHE_TAGS.homepage],
+  { tags: [CACHE_TAGS.homepage] }
+);
+
+export const getHomepage = cache(async (): Promise<HomepageData> => {
   try {
-    const payload = await getPayloadClient();
-    const doc = await payload.findGlobal({ slug: "homepage", depth: 1 });
-    return normalize(doc);
+    const { isEnabled: isDraft } = await draftMode();
+    if (isDraft) {
+      return await fetchHomepageFromPayload(true);
+    }
+    return await getCachedHomepage();
   } catch (error) {
     console.error(
       "[cms] Failed to load homepage from Payload, falling back to constants.ts",
@@ -254,4 +272,4 @@ export async function getHomepage(): Promise<HomepageData> {
     );
     return FALLBACK_HOMEPAGE;
   }
-}
+});

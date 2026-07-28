@@ -1,3 +1,6 @@
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
+import { CACHE_TAGS } from "@/lib/cache/tags";
 import { getPayloadClient } from "./payload-client";
 import type { FooterData } from "./types";
 
@@ -23,22 +26,30 @@ const FALLBACK_FOOTER: FooterData = {
   ],
 };
 
-export async function getFooter(): Promise<FooterData> {
+async function fetchFooterFromPayload(): Promise<FooterData> {
+  const payload = await getPayloadClient();
+  const doc = await payload.findGlobal({ slug: "footer" });
+  return {
+    blurb: doc.blurb || FALLBACK_FOOTER.blurb,
+    serviceLinks: doc.serviceLinks?.length
+      ? doc.serviceLinks.map((link) => ({ label: link.label, href: link.href }))
+      : FALLBACK_FOOTER.serviceLinks,
+    legalLinks: doc.legalLinks?.length
+      ? doc.legalLinks.map((link) => ({ label: link.label, href: link.href }))
+      : FALLBACK_FOOTER.legalLinks,
+    socialLinks: doc.socialLinks?.length
+      ? doc.socialLinks.map((link) => ({ platform: link.platform, url: link.url }))
+      : FALLBACK_FOOTER.socialLinks,
+  };
+}
+
+const getCachedFooter = unstable_cache(fetchFooterFromPayload, [CACHE_TAGS.footer], {
+  tags: [CACHE_TAGS.footer],
+});
+
+export const getFooter = cache(async (): Promise<FooterData> => {
   try {
-    const payload = await getPayloadClient();
-    const doc = await payload.findGlobal({ slug: "footer" });
-    return {
-      blurb: doc.blurb || FALLBACK_FOOTER.blurb,
-      serviceLinks: doc.serviceLinks?.length
-        ? doc.serviceLinks.map((link) => ({ label: link.label, href: link.href }))
-        : FALLBACK_FOOTER.serviceLinks,
-      legalLinks: doc.legalLinks?.length
-        ? doc.legalLinks.map((link) => ({ label: link.label, href: link.href }))
-        : FALLBACK_FOOTER.legalLinks,
-      socialLinks: doc.socialLinks?.length
-        ? doc.socialLinks.map((link) => ({ platform: link.platform, url: link.url }))
-        : FALLBACK_FOOTER.socialLinks,
-    };
+    return await getCachedFooter();
   } catch (error) {
     console.error(
       "[cms] Failed to load footer from Payload, falling back to constants.ts",
@@ -46,4 +57,4 @@ export async function getFooter(): Promise<FooterData> {
     );
     return FALLBACK_FOOTER;
   }
-}
+});

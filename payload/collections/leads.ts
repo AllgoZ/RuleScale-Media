@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { isAdmin } from "../access";
 
 export const Leads: CollectionConfig = {
   slug: "leads",
@@ -7,9 +8,9 @@ export const Leads: CollectionConfig = {
   },
   access: {
     create: () => true,
-    read: ({ req: { user } }) => Boolean(user),
-    update: ({ req: { user } }) => Boolean(user),
-    delete: ({ req: { user } }) => Boolean(user),
+    read: isAdmin,
+    update: isAdmin,
+    delete: isAdmin,
   },
   fields: [
     {

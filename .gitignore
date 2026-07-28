@@ -20,6 +20,9 @@
 # production
 /build
 
+# payload local media storage (uploaded files, not source)
+/media/
+
 # misc
 .DS_Store
 *.pem

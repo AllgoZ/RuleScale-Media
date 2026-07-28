@@ -1,4 +1,7 @@
 import type { CollectionConfig } from "payload";
+import { CACHE_TAGS } from "@/lib/cache/tags";
+import { isAdmin, isAdminOrEditor } from "../access";
+import { revalidateTagSafely } from "../hooks/revalidate";
 
 export const CaseStudies: CollectionConfig = {
   slug: "case-studies",
@@ -7,6 +10,21 @@ export const CaseStudies: CollectionConfig = {
   },
   access: {
     read: () => true,
+    create: isAdminOrEditor,
+    update: isAdminOrEditor,
+    delete: isAdmin,
+  },
+  hooks: {
+    afterChange: [
+      () => {
+        revalidateTagSafely(CACHE_TAGS.homepage);
+      },
+    ],
+    afterDelete: [
+      () => {
+        revalidateTagSafely(CACHE_TAGS.homepage);
+      },
+    ],
   },
   fields: [
     {

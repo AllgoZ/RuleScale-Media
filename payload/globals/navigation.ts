@@ -1,7 +1,21 @@
 import type { GlobalConfig } from "payload";
+import { CACHE_TAGS } from "@/lib/cache/tags";
+import { isAdmin } from "../access";
+import { revalidateTagSafely } from "../hooks/revalidate";
 
 export const Navigation: GlobalConfig = {
   slug: "navigation",
+  access: {
+    read: () => true,
+    update: isAdmin,
+  },
+  hooks: {
+    afterChange: [
+      () => {
+        revalidateTagSafely(CACHE_TAGS.navigation);
+      },
+    ],
+  },
   fields: [
     {
       name: "links",

@@ -1,7 +1,21 @@
 import type { GlobalConfig } from "payload";
+import { CACHE_TAGS } from "@/lib/cache/tags";
+import { isAdmin } from "../access";
+import { revalidateTagSafely } from "../hooks/revalidate";
 
 export const SEOSettings: GlobalConfig = {
   slug: "seoSettings",
+  access: {
+    read: () => true,
+    update: isAdmin,
+  },
+  hooks: {
+    afterChange: [
+      () => {
+        revalidateTagSafely(CACHE_TAGS.seoSettings);
+      },
+    ],
+  },
   fields: [
     {
       name: "defaultTitle",
@@ -38,6 +52,22 @@ export const SEOSettings: GlobalConfig = {
     {
       name: "twitterHandle",
       type: "text",
+    },
+    {
+      name: "robotsIndex",
+      type: "checkbox",
+      defaultValue: true,
+      admin: {
+        description: "Allow search engines to index the site.",
+      },
+    },
+    {
+      name: "robotsFollow",
+      type: "checkbox",
+      defaultValue: true,
+      admin: {
+        description: "Allow search engines to follow links on the site.",
+      },
     },
   ],
 };

@@ -1,7 +1,21 @@
 import type { GlobalConfig } from "payload";
+import { CACHE_TAGS } from "@/lib/cache/tags";
+import { isAdmin } from "../access";
+import { revalidateTagSafely } from "../hooks/revalidate";
 
 export const Footer: GlobalConfig = {
   slug: "footer",
+  access: {
+    read: () => true,
+    update: isAdmin,
+  },
+  hooks: {
+    afterChange: [
+      () => {
+        revalidateTagSafely(CACHE_TAGS.footer);
+      },
+    ],
+  },
   fields: [
     {
       name: "blurb",

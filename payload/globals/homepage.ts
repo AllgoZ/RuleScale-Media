@@ -1,4 +1,7 @@
 import type { GlobalConfig } from "payload";
+import { CACHE_TAGS } from "@/lib/cache/tags";
+import { isAdminOrEditor } from "../access";
+import { revalidateTagSafely } from "../hooks/revalidate";
 
 const SERVICE_ICON_OPTIONS = [
   { label: "Layout", value: "layout" },
@@ -17,6 +20,29 @@ const SERVICE_ICON_OPTIONS = [
 
 export const Homepage: GlobalConfig = {
   slug: "homepage",
+  versions: {
+    drafts: true,
+  },
+  access: {
+    read: () => true,
+    update: isAdminOrEditor,
+  },
+  admin: {
+    preview: () => {
+      const params = new URLSearchParams({
+        path: "/",
+        previewSecret: process.env.PREVIEW_SECRET || "",
+      });
+      return `/next/preview?${params.toString()}`;
+    },
+  },
+  hooks: {
+    afterChange: [
+      () => {
+        revalidateTagSafely(CACHE_TAGS.homepage);
+      },
+    ],
+  },
   fields: [
     {
       name: "hero",
