@@ -1,6 +1,6 @@
 # RuleScale Media — Landing Page: System Status
 
-Last updated: 2026-07-28
+Last updated: 2026-07-29
 Repo: https://github.com/AllgoZ/RuleScale-Media (branch `main`)
 
 For "what phase are we in right now and what's next" in 30 seconds, read `currentphase.md`
@@ -36,32 +36,56 @@ Folder layout:
 ```
 app/
   (frontend)/  the marketing site itself — layout.tsx, page.tsx, globals.css (route group)
+    blog/      the blog (Phase 2) — index, [slug], category/[slug], tag/[slug], author/[slug],
+               search, rss.xml
+    contact/   the contact page (Phase 3) — the site's only lead-capture form
+    api/contact/    the one backend endpoint the contact form posts to (Phase 3)
+    api/leads/export/   admin-only CSV export of the leads collection (Phase 3)
   (payload)/   Payload-generated admin + REST/GraphQL API routes (never hand-edited)
   robots.ts, sitemap.ts, icon.tsx, opengraph-image.tsx   top-level, outside both route groups
-payload.config.ts   Payload config root (collections, globals, db adapter)
+                 (sitemap.ts now also includes posts/categories/tags/authors, Phase 2)
+payload.config.ts   Payload config root (collections, globals, db adapter, admin.components)
 payload/
-  collections/  users (role: admin/editor), media, categories, authors, posts, testimonials,
-                 case-studies, leads
+  collections/  users (role: admin/editor), media, categories, authors, posts, tags,
+                 testimonials, case-studies, leads, clients, projects, contracts, files,
+                 meetings (the last 5 are Phase 3 placeholders, admin.hidden: true)
   globals/       homepage (drafts + preview), navigation, footer, site-settings, seo-settings
   access.ts      shared RBAC helpers (isAdmin, isAdminOrEditor, isAdminOrSelf)
-  hooks/         revalidateTagSafely() — every afterChange/afterDelete hook goes through this
+  hooks/         revalidateTagSafely() (cache invalidation) and dispatchLeadEvent() (Phase 3 —
+                 the single seam Leads afterChange events flow through, currently email only)
+  admin-views/   custom Payload admin components (Phase 3) — business-dashboard.tsx,
+                 leads-export-button.tsx, dashboard-nav-link.tsx
   seed.ts        one-time seed for testimonials/case-studies (npm run seed)
 lib/
   cms/          getHomepage() / getNavigation() / getFooter() / getSiteSettings() /
-                 getSEOSettings() — the only code that talks to Payload. Each is
-                 cache(unstable_cache(...)) with tag-based invalidation, falling back to
-                 lib/constants.ts (uncached) on error; getHomepage() also branches on Next draft
-                 mode before the cached path
+                 getSEOSettings() / getCategories() / getTags() / getAuthors() / getPublishedPosts()
+                 / getPostBySlug() / getFeaturedPost() / getRelatedPosts() / getAdjacentPosts() —
+                 the only code that talks to Payload. Each is cache(unstable_cache(...)) with
+                 tag-based invalidation; the homepage-era getters fall back to lib/constants.ts
+                 (uncached) on error, the blog getters return empty results on error (no
+                 pre-CMS blog content to fall back to). getHomepage()/getPostBySlug() branch on
+                 Next draft mode before the cached path
   cache/tags.ts  CACHE_TAGS — shared between lib/cms and the payload/*/hooks
+  blog/          reading-time.ts, toc.ts (heading extraction + id assignment for the article TOC)
+  leads/         validate.ts, rate-limit.ts, attribution.ts, turnstile.ts (Phase 3 — the
+                 /api/contact security/validation layer, none of it Payload-specific)
+  email/         resend-client.ts, send-lead-emails.tsx, templates/ (Phase 3, React Email)
+  env.ts         optional-integration-key accessors (RESEND_API_KEY, TURNSTILE_*) — warn once
+                 and degrade gracefully rather than throw when unset (Phase 3)
   seo/metadata.ts  buildSiteMetadata(), called from layout.tsx's generateMetadata()
   constants.ts  fallback source of truth (no longer the primary content source, still live)
-  schema/index.ts  JSON-LD builders — pure functions taking CMS data as params
+  schema/index.ts  JSON-LD builders — pure functions taking CMS data as params (Organization,
+                 LocalBusiness, Service, FAQPage, BreadcrumbList, Article)
   utils.ts      cn() class-merge helper
 sections/     one file per page section (Header, Hero, Problem, ... Footer), each consuming
               CMS content via a `data` (or `navigation`/`footer`) prop, not a direct import
 components/
   ui/         generic primitives (Button, Container, Reveal, Accordion, Spotlight, RollingNumber, Marquee)
   doodles/    hand-drawn brand accents (LogoMark, HandArrow, PaperClip, ScribbleUnderline)
+  blog/       PostCard, FeaturedPost, CategoryPill, AuthorByline, TableOfContents, RelatedPosts,
+              PostNavigation, ShareButtons, NewsletterCta, SearchBox, Pagination, ArticleContent,
+              PostGrid
+  contact/    ContactForm (Phase 3) — the site's only lead-capture form, "use client"
   hero-collage.tsx, mobile-cta.tsx   standalone composed pieces
 ```
 
@@ -137,11 +161,120 @@ Cache Components, the `payload run` floating-promise bug, etc.) is in `CHANGELOG
 
 ---
 
+## 1c. Blog / publishing platform (Phase 2)
+
+Added 2026-07-29 per `prompts/backend/phase2.md` — full reasoning (the `_status`-filter bug, the
+dev-mode-only Turbopack caching artifact, the nav-link discovery) is in `CHANGELOG.md`.
+
+- **Routes** (`app/(frontend)/blog/`): `/blog` (index, featured post + grid + category pills +
+  search box + pagination), `/blog/[slug]` (article — hero, byline, TOC, rich-text body, related
+  posts, prev/next, share buttons, `Article` + `BreadcrumbList` JSON-LD), `/blog/category/[slug]`,
+  `/blog/tag/[slug]`, `/blog/author/[slug]` (archive listings), `/blog/search` (plain GET form,
+  reads `?q=`), `/blog/rss.xml` (hand-built RSS 2.0, `revalidate: 3600`). `sitemap.ts` extended
+  with posts/categories/tags/authors alongside the existing homepage entry.
+- **Data model**: new `tags` collection (`title`/`slug`, mirrors `categories`). `authors` gained a
+  `slug` field (was missing, needed for the author archive route). `posts` gained `tags`
+  (relationship, hasMany), `featured` (checkbox), a `seo` group (meta title/description,
+  canonical URL, OG/Twitter images), and `admin.preview` → `/blog/${slug}`. Reading time and the
+  table-of-contents are computed at read time from the Lexical JSON, not stored.
+- **Cache tags**: `posts` (any list-shaped read), `post-<slug>` (single article, precise
+  invalidation), `taxonomy` (categories+tags+authors, shared). Posts/Categories/Authors/Tags each
+  have `afterChange`/`afterDelete` hooks calling `revalidateTagSafely()`.
+- **Published-only filtering**: every public-facing query in `lib/cms/posts.ts` explicitly filters
+  `{ _status: { equals: "published" } }` — Payload's `draft` find option does **not** do this by
+  itself (see `CHANGELOG.md` for the bug this caught). `getPostBySlug()` branches on `draftMode()`
+  before the cache layer, same pattern as `getHomepage()` — draft reads always hit Payload live.
+- **Draft preview**: reuses the existing `/next/preview` / `/next/exit-preview` routes unchanged.
+  Verified live: authenticated admin + correct `PREVIEW_SECRET` → sees the draft; no session or
+  wrong secret → `403`; the draft is absent from the index, pagination, related posts, RSS, and
+  sitemap the whole time.
+- **Rich text**: `@payloadcms/richtext-lexical/react`'s default JSX converters, with only the
+  `heading` converter overridden (to inject TOC-matching anchor ids). Styled via a `.article-body`
+  descendant-selector block in `globals.css`, not per-node Tailwind classes.
+- **No fake seed content**: every blog listing surface has a real empty-state message. Verified
+  end-to-end against ~10 real-shaped temporary test posts (plus categories/tags/an author)
+  created through Payload's Local API, then deleted once confirmed working.
+- **Verification caveat**: no browser-automation tool was available this session — functional
+  checks were HTTP-request-based (`curl`) against a real `npm run build && npm run start` server,
+  not the usual Playwright screenshot pass. Visual/responsive (390px/1440px) verification of the
+  new blog pages is still outstanding.
+
+---
+
+## 1d. Agency operations platform (Phase 3)
+
+Added 2026-07-29 per `prompts/backend/phase3.md` — full reasoning (the REST-create security gap,
+the DB-backed rate-limit decision, why `versions: true` instead of a bespoke audit log) is in
+`CHANGELOG.md`.
+
+- **Lead capture**: `/contact` (`app/(frontend)/contact/page.tsx` +
+  `components/contact/contact-form.tsx`) is the site's only contact form, posting to the single
+  backend endpoint `app/(frontend)/api/contact/route.ts`. That route validates
+  (`lib/leads/validate.ts`), checks a honeypot field, rate-limits by email/IP against recent
+  `leads` rows (`lib/leads/rate-limit.ts`, DB-backed — no Redis/Upstash provisioned), optionally
+  verifies Cloudflare Turnstile if configured (`lib/leads/turnstile.ts`), builds last-touch
+  attribution (`lib/leads/attribution.ts`), and creates the lead via the Local API.
+- **`leads` collection** (`payload/collections/leads.ts`) expanded from 6 fields to a real CRM
+  record: company/website/budget/servicesInterested (sourced from `lib/constants.ts` `SERVICES`)/
+  priority/assignedUser (relationship → `users`)/internalNotes/an `attribution` group, plus
+  `status` now includes `won`/`lost`. `versions: true` gives a full revision/audit history for
+  free. `access.create: () => false` — the public REST/GraphQL create endpoint is closed; only
+  `/api/contact`'s Local API call (which bypasses access control by design) can create leads.
+  `read`/`update`: `isAdminOrEditor`; `delete`: `isAdmin`.
+- **Email**: Resend + React Email (`lib/email/`), triggered from `Leads.afterChange` via
+  `payload/hooks/lead-events.ts`'s `dispatchLeadEvent()` — the single seam any future automation
+  (Slack/Notion/WhatsApp) will hook into. Sends a visitor confirmation and an admin notification
+  (to the CMS's existing `siteSettings.contactEmail`, no new env var). Without a real
+  `RESEND_API_KEY`, both emails render and log to the console instead of sending — no crash.
+- **Admin business dashboard**: a custom Payload admin view at `/admin/business-dashboard`
+  (`payload/admin-views/business-dashboard.tsx`, linked from the sidebar via
+  `admin.components.afterNavLinks`) — total/new/won/lost leads, monthly counts, conversion rate,
+  most-requested services, lead sources. Server-computed via the Local API, plain HTML/inline
+  styles (Payload's admin bundle doesn't run this repo's Tailwind build).
+- **CSV export**: `app/(frontend)/api/leads/export/route.ts`, admin-session-gated (same
+  `payload.auth()` pattern as `/next/preview`), linked from a `beforeList` button on the Leads
+  list view (`payload/admin-views/leads-export-button.tsx`).
+- **RBAC**: `users.read` widened `isAdminOrSelf` → `isAdminOrEditor` so the Leads "Assigned User"
+  field's dropdown can list every staff member; `users` create/update/delete unchanged.
+- **Future collections**: `clients`/`projects`/`contracts`/`files`/`meetings` — registered,
+  minimal schema, `admin.hidden: true`, placeholders for a later client-portal phase.
+- **Contact CTAs**: the Homepage global's FinalCTA and the footer's email link now point to
+  `/contact` instead of `mailto:` — the only two existing-surface changes in this phase.
+- **Verification caveat**: same as the blog phase — no browser-automation tool was available,
+  so this was verified via HTTP requests against a running server, not Playwright screenshots.
+
+---
+
 ## 2. Brand system
+
+> **2026-07-29 update**: the sections below describe the *original* ink/red/paper editorial
+> system as documented at launch. As of 2026-07-29, the **homepage only** was redesigned (UI/UX
+> only, zero backend/CMS-schema change) to a clean blue→purple gradient system inspired by a
+> reference competitor site, at the user's explicit request. New tokens (`--color-accent-from`,
+> `--color-accent-to`, `--color-accent-solid`, `--color-home-bg`) and utility classes
+> (`.gradient-text`, `.gradient-bg`, `.pill-badge`, `.bg-dot-grid-light`) were added to
+> `globals.css` in a **separate namespace from `--color-accent`**, specifically so the blog
+> (Phase 2) and `/contact` (Phase 3) pages — which already reference `text-accent`/`bg-accent` —
+> stay pixel-identical to what's described below. Every homepage section was restyled in place
+> (hand-drawn doodle motifs — `ScribbleUnderline`/`HandArrow`/`PaperClip`/`HeroCollage` — dropped
+> from the homepage only, left unused in the tree) while reading the exact same `HomepageData`
+> shape from the exact same `getHomepage()` — no Payload field was added, removed, or renamed.
+> Section order on the homepage was also reprioritized to match the reference (proof/stats moved
+> up, services before trust logos, a new hardcoded "Tools & Platforms" section and a floating
+> WhatsApp button added, and the final CTA section now embeds the real `ContactForm` from Phase 3
+> directly on the homepage instead of only linking out to `/contact`). Verified live: build/lint
+> clean, a real submission through the new embedded homepage form still creates a lead via the
+> unmodified `/api/contact`, and the direct-REST lockdown (`POST /api/leads` → `403`) still holds
+> — proving the backend is untouched. No browser-automation tool was available this session, so
+> — same caveat as Phases 2–3 — this was verified structurally (`curl`), not with real
+> screenshots; a mobile/desktop visual pass is still outstanding for this redesign specifically.
 
 The visual system is the real RuleScale Media brand mark (ring + lightning-bolt "S", from the
 brand PDF), **not** a generic palette — deliberately restrained to three colors plus one
-typeface, per the brand guide's "one accent" principle.
+typeface, per the brand guide's "one accent" principle. **This section describes the blog and
+`/contact` pages' current system, and the homepage's system prior to the 2026-07-29 redesign
+noted above** — it has not been rewritten wholesale to avoid losing the historical record; treat
+the callout above as authoritative for the homepage's current state.
 
 ### Colors (`app/globals.css`)
 
@@ -207,8 +340,9 @@ the favicon (`app/icon.tsx`, dynamic `ImageResponse`) and the OG image (`app/ope
 Sticky, thin (h-14), floating glass pill. Transparent at the top of the page; on scroll
 (`scrollY > 24`) animates to a translucent blurred pill (`backdrop-blur-xl`, soft shadow,
 hairline border) via Framer Motion `animate={{ backgroundColor, borderColor, boxShadow }}`.
-Logo + wordmark left, nav links (`Work / Services / Process / FAQ`) center, "Start Growing"
-accent button right. Mobile: hamburger → animated dropdown panel with the same nav links + CTA.
+Logo + wordmark left, nav links (`Work / Services / Process / FAQ / Blog`, the last one added in
+Phase 2) center, "Start Growing" accent button right. Mobile: hamburger → animated dropdown panel
+with the same nav links + CTA.
 
 ### Mobile sticky CTA (`components/mobile-cta.tsx`)
 `md:hidden` fixed bottom bar, full-width accent "Start Growing" button, `env(safe-area-inset-bottom)`

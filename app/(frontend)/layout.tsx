@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Caveat } from "next/font/google";
 import { MobileCTA } from "@/components/mobile-cta";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { getFooter } from "@/lib/cms/footer";
 import { getHomepage } from "@/lib/cms/homepage";
 import { getNavigation } from "@/lib/cms/navigation";
@@ -85,10 +86,10 @@ export default async function RootLayout({
             footer={footer}
             companyLinks={navigation.links}
             siteName={siteSettings.siteName}
-            contactEmail={siteSettings.contactEmail}
           />
         </div>
         <MobileCTA />
+        <WhatsAppButton />
       </body>
     </html>
   );

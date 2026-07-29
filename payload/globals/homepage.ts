@@ -151,7 +151,7 @@ export const Homepage: GlobalConfig = {
       name: "manifesto",
       type: "group",
       fields: [
-        { name: "eyebrow", type: "text", defaultValue: "why we exist" },
+        { name: "eyebrow", type: "text", defaultValue: "About" },
         {
           name: "lines",
           type: "array",
@@ -173,7 +173,7 @@ export const Homepage: GlobalConfig = {
       name: "process",
       type: "group",
       fields: [
-        { name: "eyebrow", type: "text", defaultValue: "here's how we think" },
+        { name: "eyebrow", type: "text", defaultValue: "Process" },
         { name: "heading", type: "text", defaultValue: "A plan, not a guess." },
         {
           name: "description",
@@ -229,7 +229,7 @@ export const Homepage: GlobalConfig = {
       name: "services",
       type: "group",
       fields: [
-        { name: "eyebrow", type: "text", defaultValue: "here's what we build" },
+        { name: "eyebrow", type: "text", defaultValue: "Services" },
         { name: "heading", type: "text", defaultValue: "One team. Every channel." },
         {
           name: "description",
@@ -344,7 +344,7 @@ export const Homepage: GlobalConfig = {
       name: "results",
       type: "group",
       fields: [
-        { name: "eyebrow", type: "text", defaultValue: "the numbers" },
+        { name: "eyebrow", type: "text", defaultValue: "Proof" },
         { name: "heading", type: "text", defaultValue: "Growth you can measure." },
         {
           name: "note",
@@ -375,7 +375,7 @@ export const Homepage: GlobalConfig = {
       name: "caseStudies",
       type: "group",
       fields: [
-        { name: "eyebrow", type: "text", defaultValue: "here's proof" },
+        { name: "eyebrow", type: "text", defaultValue: "Case Studies" },
         { name: "heading", type: "text", defaultValue: "Recent work we're proud of." },
         {
           name: "items",
@@ -389,7 +389,7 @@ export const Homepage: GlobalConfig = {
       name: "testimonials",
       type: "group",
       fields: [
-        { name: "eyebrow", type: "text", defaultValue: "kind words" },
+        { name: "eyebrow", type: "text", defaultValue: "Testimonials" },
         {
           name: "items",
           type: "relationship",
@@ -402,7 +402,7 @@ export const Homepage: GlobalConfig = {
       name: "faq",
       type: "group",
       fields: [
-        { name: "eyebrow", type: "text", defaultValue: "questions" },
+        { name: "eyebrow", type: "text", defaultValue: "FAQ" },
         { name: "heading", type: "text", defaultValue: "Everything you're wondering." },
         {
           name: "items",
@@ -453,7 +453,7 @@ export const Homepage: GlobalConfig = {
         {
           name: "eyebrow",
           type: "text",
-          defaultValue: "let's make something people remember",
+          defaultValue: "Get in touch",
         },
         {
           name: "heading",
@@ -471,7 +471,7 @@ export const Homepage: GlobalConfig = {
           type: "group",
           fields: [
             { name: "label", type: "text", defaultValue: "Start Growing" },
-            { name: "href", type: "text", defaultValue: "mailto:hello@rulescale.media" },
+            { name: "href", type: "text", defaultValue: "/contact" },
           ],
         },
       ],

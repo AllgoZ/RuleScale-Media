@@ -6,6 +6,198 @@ why, and (for the non-obvious ones) how it was diagnosed. Add new entries at the
 
 ---
 
+## 2026-07-29 — Phase 3: agency operations platform (leads, CRM, email, dashboard, security)
+
+Built the operational backbone behind the marketing site per `prompts/backend/phase3.md`: a real
+lead-capture pipeline, a lightweight CRM layer on the previously-unused `leads` collection,
+transactional email (Resend + React Email), a custom admin business dashboard, CSV export,
+last-touch attribution, and request-level security (validation, DB-backed rate limiting, honeypot,
+optional Turnstile). No blog code touched, no homepage redesign — only two existing CTA hrefs
+changed (see below).
+
+**There was no contact form anywhere on the site before this.** Every "Start Growing" CTA and the
+footer email link were `mailto:` links — Phase 1's own docs had flagged this as an explicit
+deferral. Confirmed via direct exploration before planning, not assumed. Built a new `/contact`
+page (`components/contact/contact-form.tsx`) and, with the user's explicit sign-off on the
+approach, repointed exactly two existing hrefs to it: the Homepage global's FinalCTA
+(`payload/globals/homepage.ts`, `mailto:hello@rulescale.media` → `/contact`) and the footer's
+email anchor (`sections/footer.tsx`, now a `/contact` link labeled "Contact us" instead of the raw
+address — keeping literal email text on a link that no longer opens a mail client would have been
+misleading). The Homepage global's live document was already persisted from Phase 1, so — same as
+the Phase 2 nav-link lesson, but the opposite finding — the code's `defaultValue` change alone did
+NOT touch production data; it needed a one-time live patch via the Local API, same bootstrap
+pattern used for the Phase 1.5 admin-role fix.
+
+**A real security gap found and closed: Payload's public REST create endpoint bypassed all of
+this.** `/api/contact` validates, rate-limits, and (optionally) Turnstile-checks every submission
+— but Payload auto-generates a public `POST /api/leads` REST route from the collection config,
+and the original `create: () => true` access meant anyone could skip the hardened endpoint
+entirely and hit the raw API directly, unprotected. Fixed by setting `Leads.access.create` to
+`() => false`. This does not break the real submit path: Local API calls
+(`payload.create()` from inside `/api/contact`) default to `overrideAccess: true` and are
+unaffected by collection access control — only the raw external REST/GraphQL path is closed.
+Verified live: direct `POST /api/leads` → `403`; `/api/contact` → `200` and a real lead is created.
+
+**Rate limiting is DB-backed, not in-memory or Redis.** No Upstash/Redis is provisioned, and the
+deployment target isn't confirmed (in-memory state is useless across serverless invocations
+anyway). `lib/leads/rate-limit.ts` queries recent `leads` by email/IP within a rolling window using
+the collection itself — no new infrastructure. Verified live: the 4th submission from the same
+email within the window returned `429`; the first 3 succeeded.
+
+**Emails degrade gracefully without a real Resend key**, matching this codebase's established
+fallback conventions (DB-unreachable → `constants.ts`; no email adapter → Payload logs to
+console). Verified live with no `RESEND_API_KEY` set: both the visitor-confirmation and
+admin-notification emails rendered correctly via `@react-email/render` and were logged to the
+console instead of throwing. The notification recipient reuses the existing
+`getSiteSettings().contactEmail` CMS field rather than adding a new env var.
+
+**Attribution is last-touch, not first-touch.** True cross-session first-touch attribution needs a
+cookie set on first page load and read later — real infrastructure for what the brief listed as
+"store useful attribution data," not a hard requirement for session-linked tracking. Instead,
+`lib/leads/attribution.ts` captures UTM params + `document.referrer` + the current page directly
+from the `/contact` form at submit time, plus IP/user-agent server-side from request headers, plus
+a small inline regex classifier for device/browser (no new dependency).
+
+**Admin dashboard and CSV export are custom-built**, confirmed via direct `node_modules`
+inspection before writing any of it: no built-in CSV feature in this Payload version, no
+`@payloadcms/plugin-import-export` installed, and the only stat-widget system
+(`admin.dashboard`) is explicitly marked `@experimental` in Payload's own type defs. Used the
+stable, documented `admin.components.views` mechanism instead
+(`payload/admin-views/business-dashboard.tsx`, registered at `/admin/business-dashboard` with a
+sidebar link via `admin.components.afterNavLinks`) — plain HTML/inline styles, since Payload's
+admin bundle doesn't run this repo's Tailwind build. CSV export
+(`app/(frontend)/api/leads/export/route.ts`) replicates the `payload.auth()` + role-check pattern
+from the existing `/next/preview` route to gate it to admins only — verified live: `401`
+unauthenticated, `200` with an admin session, correct CSV content including the `servicesInterested`
+multi-select joined with `; `.
+
+**RBAC**: Leads read/update widened to `isAdminOrEditor` (was admin-only), delete stays
+`isAdmin`-only — mirrors the exact allowance already granted to posts/media/testimonials/
+case-studies in Phase 1.5. `users.read` widened from `isAdminOrSelf` to `isAdminOrEditor` so the
+new "Assigned User" relationship field's admin-UI dropdown can actually list every staff member
+(Payload resolves relationship options through the target collection's own read access) —
+create/update/delete on `users` are untouched.
+
+**Audit logging reuses Payload's built-in `versions`** (`versions: true` on `Leads`) rather than a
+bespoke audit-log collection — full revision history through the existing admin UI, no new table.
+
+**Automation seam, not real integrations.** The brief asks for Slack/Notion/WhatsApp to be
+addable "later without refactoring," not built now (no credentials exist for any of them).
+`payload/hooks/lead-events.ts` exports one `dispatchLeadEvent()` function that every Leads
+`afterChange` event flows through — currently only triggering the two Resend emails; a future
+integration is one more call inside that function, never a new hook wired into the collection
+config. The hook is `await`ed (not fire-and-forget) specifically so a serverless response can't
+return — freezing/killing the function — before the emails finish sending.
+
+**Future collections** (`clients`, `projects`, `contracts`, `files`, `meetings`) are registered,
+minimal-schema, `admin.hidden: true` — real, migratable tables invisible in the admin nav until a
+later phase builds real UI for them, matching the brief's "no UI required yet."
+
+**"Services Interested" options are sourced from `lib/constants.ts`'s existing `SERVICES` array**
+(both in the Payload field config and in `lib/leads/validate.ts`'s server-side whitelist), not
+hand-duplicated strings, so the two can't drift.
+
+**Verification**: `npm run build` / `npm run lint` clean after each chunk. Full live pass against
+the Supabase database — 3 real-shaped temporary test leads created through `/contact`'s actual
+`/api/contact` endpoint (not a script), exercising validation, honeypot rejection, rate limiting,
+the email fallback, the CSV export, and the business dashboard's aggregation math (verified the
+displayed counts matched the known test data exactly) — then deleted. No browser-automation tool
+was available this session (same gap as Phase 2) — verification was HTTP-request-based against a
+running server rather than Playwright screenshots; the mobile/desktop visual pass is still
+outstanding.
+
+---
+
+## 2026-07-29 — Phase 2: blog / publishing platform
+
+Built the actual `/blog` on top of the Phase 1/1.5 CMS foundation per `prompts/backend/phase2.md`
+— listing, article, category/tag/author archives, search, RSS, sitemap, draft preview, SEO/JSON-LD.
+No homepage/existing-page changes beyond a new "Blog" nav link and generalizing
+`breadcrumbSchema()` to accept an optional trail (defaults to exactly its old single-item output).
+
+**Data model.** New `payload/collections/tags.ts` (mirrors `categories.ts`: `title`/`slug`,
+admin-only writes). `authors` was missing a `slug` field entirely — required for
+`/blog/author/[slug]`, added. `posts` gained `tags` (relationship, hasMany), `featured`
+(checkbox), a `seo` group (`metaTitle`/`metaDescription`/`canonicalUrl`/`ogImage`/`twitterImage`),
+and `admin.preview` pointing at `/blog/${doc.slug}`. Reading time and TOC are computed at read
+time from the Lexical JSON (`lib/blog/reading-time.ts`, `lib/blog/toc.ts`), not stored fields —
+cheap to compute, can't drift from the actual content.
+
+**Cache tags: three shapes, not one per entity.** `posts` (any list-shaped read — index, search,
+pagination, archives, RSS, sitemap, related, prev/next), `post-<slug>` (single article, precise
+per-post invalidation on save/slug-rename), `taxonomy` (categories+tags+authors, shared since
+they're small and rarely edited). Posts/Categories/Authors/Tags each got `afterChange`/
+`afterDelete` hooks calling `revalidateTagSafely()`.
+
+**Real bug found during verification: Payload's `draft` find option does not filter by
+`_status`.** The working assumption going in — that omitting `draft` (or passing `draft: false`)
+on a `find()` against a versioned collection automatically excludes `_status: "draft"` documents
+— is wrong. It controls which version's *content* comes back, not whether the document appears
+at all. A draft-only test post was showing up in the blog index, pagination counts, related
+posts, and the RSS feed, and was directly fetchable by URL (`200`, should be `404`). Fixed by
+adding an explicit `PUBLISHED_ONLY = { _status: { equals: "published" } }` filter to every
+public-facing query in `lib/cms/posts.ts` (`fetchPublishedPosts`, `fetchPostBySlugFromPayload`
+when not in preview mode, `fetchFeaturedPostFromPayload`, `fetchRelatedPostsFromPayload`,
+`fetchAdjacentPostsFromPayload`). Verified with a real draft-only test post afterward: `404` on
+direct fetch, absent from the index/pagination/related-posts/RSS/sitemap, and correctly visible
+through the authenticated preview flow only. Worth remembering for any future Payload query
+against a `versions.drafts: true` collection — `draft: false` is not a status filter.
+
+**Draft preview.** `admin.preview` on `posts` reuses the existing `/next/preview` /
+`/next/exit-preview` routes from Phase 1.5 unchanged (they already accepted an arbitrary `path`
+query param). `getPostBySlug()` branches on `draftMode()` before the cache layer, same pattern as
+`getHomepage()`. Verified live end-to-end with real HTTP requests: authenticated admin session +
+correct `PREVIEW_SECRET` → redirected to the draft page, draft content visible, `__prerender_bypass`
+cookie set; no session → `403`; wrong secret → `403`.
+
+**Blog nav link needed no live-database patch.** The plan assumed the existing `navigation` global
+document (saved during Phase 1) would need a direct API patch to add the new link, matching the
+Phase 1.5 admin-role bootstrap pattern. Turned out the `navigation` global has never actually been
+saved through `/admin` — `payload.findGlobal()` was confirmed to return a *fresh, unpersisted*
+value straight from `defaultValue` every call (proven by requesting it twice and seeing the
+array's item `id`s change between calls). So editing `payload/globals/navigation.ts`'s
+`defaultValue` array was sufficient by itself; no live-document patch was needed or performed.
+
+**Dev-mode-only caching artifact hit during verification, not a product bug.** While iterating
+with `payload run` standalone scripts (seeding test posts, fixing their publish status, deleting
+them), some `unstable_cache` entries in the running `next dev` process got and stayed stale even
+across full process restarts and `rm -rf .next/cache` — isolated by comparing a raw
+`getPayloadClient()` query (always correct), the same query through `getPublishedPosts()` called
+from a throwaway Route Handler (correct), and the same call from `blog/page.tsx` in the same
+process (stale), which rules out the data layer and points at Turbopack dev's per-route module
+compilation giving different entry points their own long-lived `unstable_cache`/`getPayloadClient()`
+singleton instances that don't reliably stay in sync with each other. Confirmed clean on a real
+`npm run build && npm run start` (single unified server bundle, no per-route module duplication) —
+every check that failed under `next dev` passed under the production server. Documented here so
+a future "the blog looks empty in dev but the database clearly has posts" report isn't re-debugged
+from scratch — restart `next dev` and/or verify against `npm run build && npm run start` first.
+
+**Rich text rendering.** `ArticleContent` (`components/blog/article-content.tsx`) reuses
+`@payloadcms/richtext-lexical/react`'s default JSX converters for every node type except
+`heading` (overridden to inject TOC-matching anchor ids), rather than reimplementing
+list/link/upload/blockquote conversion. Un-styled default output is styled via a `.article-body`
+descendant-selector block in `globals.css`, matching this project's existing convention (see
+`.text-display` etc.) rather than inventing a second styling approach for one component.
+TOC/heading-id sync: `lib/blog/toc.ts` exports `createHeadingIdAssigner()`, a stateful factory
+that both `extractHeadings()` (TOC sidebar) and `ArticleContent`'s heading converter instantiate
+fresh per render — both walk the document in the same order, so the ids always match without any
+shared mutable state across renders.
+
+**Verification.** Created ~10 real-shaped temporary test posts (varying categories/tags/dates,
+one featured, one genuine draft) plus 2 categories/2 tags/1 author through Payload's Local API
+(same "create, verify, delete" pattern used for the Phase 1.5 RBAC test account), exercising
+pagination, both archive types, search, related posts, prev/next, RSS, sitemap, and the draft/
+preview boundary against the live Supabase database — then deleted all of it, confirmed via a
+final "posts remaining: 0" check. No Playwright/browser-automation tool was available in this
+session (unlike the Phase 1/1.5 sessions); functional/structural verification was done via direct
+HTTP requests (`curl`) against a running production server instead — response status codes,
+rendered HTML content, RSS/sitemap XML well-formedness, and the authenticated-vs-anonymous preview
+behavior were all checked this way, but no actual screenshots or console-error checks were taken.
+Visual/responsive (390px/1440px) verification of the new blog pages is still outstanding and
+should be done with real browser tooling before considering this phase fully closed out.
+
+---
+
 ## 2026-07-28 — Phase 1.5: production hardening (caching, drafts, RBAC, health)
 
 Hardened the Phase 1 CMS foundation per `prompts/backend/phase1_5.md`, ahead of the blog phase.

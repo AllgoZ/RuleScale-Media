@@ -72,9 +72,15 @@ export interface Config {
     categories: Category;
     authors: Author;
     posts: Post;
+    tags: Tag;
     testimonials: Testimonial;
     'case-studies': CaseStudy;
     leads: Lead;
+    clients: Client;
+    projects: Project;
+    contracts: Contract;
+    files: File;
+    meetings: Meeting;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -87,9 +93,15 @@ export interface Config {
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     authors: AuthorsSelect<false> | AuthorsSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
+    tags: TagsSelect<false> | TagsSelect<true>;
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
     'case-studies': CaseStudiesSelect<false> | CaseStudiesSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
+    clients: ClientsSelect<false> | ClientsSelect<true>;
+    projects: ProjectsSelect<false> | ProjectsSelect<true>;
+    contracts: ContractsSelect<false> | ContractsSelect<true>;
+    files: FilesSelect<false> | FilesSelect<true>;
+    meetings: MeetingsSelect<false> | MeetingsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -232,6 +244,7 @@ export interface Category {
 export interface Author {
   id: number;
   name: string;
+  slug: string;
   role?: string | null;
   avatar?: (number | null) | Media;
   bio?: string | null;
@@ -264,11 +277,31 @@ export interface Post {
   };
   featuredImage?: (number | null) | Media;
   category?: (number | null) | Category;
+  tags?: (number | Tag)[] | null;
   author?: (number | null) | Author;
   publishedDate?: string | null;
+  featured?: boolean | null;
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    canonicalUrl?: string | null;
+    ogImage?: (number | null) | Media;
+    twitterImage?: (number | null) | Media;
+  };
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags".
+ */
+export interface Tag {
+  id: number;
+  title: string;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -313,9 +346,103 @@ export interface Lead {
   name: string;
   email: string;
   phone?: string | null;
+  company?: string | null;
+  website?: string | null;
+  budget?: ('under-5k' | '5k-15k' | '15k-50k' | '50k-plus' | 'not-sure') | null;
+  servicesInterested?:
+    | (
+        | 'website-design'
+        | 'seo'
+        | 'performance-marketing'
+        | 'social-media'
+        | 'influencers'
+        | 'video'
+        | 'content'
+        | 'brand-strategy'
+        | 'media-buying'
+        | 'analytics'
+        | 'localization'
+        | 'consulting'
+      )[]
+    | null;
   message?: string | null;
   source?: ('website-contact-form' | 'newsletter' | 'referral' | 'other') | null;
-  status?: ('new' | 'contacted' | 'qualified' | 'closed') | null;
+  status?: ('new' | 'contacted' | 'qualified' | 'won' | 'lost') | null;
+  priority?: ('low' | 'medium' | 'high') | null;
+  assignedUser?: (number | null) | User;
+  internalNotes?: string | null;
+  /**
+   * Captured automatically from the contact form — not visitor-editable.
+   */
+  attribution?: {
+    ipAddress?: string | null;
+    userAgent?: string | null;
+    referrer?: string | null;
+    landingPage?: string | null;
+    utmSource?: string | null;
+    utmMedium?: string | null;
+    utmCampaign?: string | null;
+    utmTerm?: string | null;
+    utmContent?: string | null;
+    device?: string | null;
+    browser?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "clients".
+ */
+export interface Client {
+  id: number;
+  name: string;
+  lead?: (number | null) | Lead;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects".
+ */
+export interface Project {
+  id: number;
+  title: string;
+  client?: (number | null) | Client;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contracts".
+ */
+export interface Contract {
+  id: number;
+  title: string;
+  client?: (number | null) | Client;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "files".
+ */
+export interface File {
+  id: number;
+  title: string;
+  client?: (number | null) | Client;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meetings".
+ */
+export interface Meeting {
+  id: number;
+  title: string;
+  client?: (number | null) | Client;
+  date?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -364,6 +491,10 @@ export interface PayloadLockedDocument {
         value: number | Post;
       } | null)
     | ({
+        relationTo: 'tags';
+        value: number | Tag;
+      } | null)
+    | ({
         relationTo: 'testimonials';
         value: number | Testimonial;
       } | null)
@@ -374,6 +505,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'leads';
         value: number | Lead;
+      } | null)
+    | ({
+        relationTo: 'clients';
+        value: number | Client;
+      } | null)
+    | ({
+        relationTo: 'projects';
+        value: number | Project;
+      } | null)
+    | ({
+        relationTo: 'contracts';
+        value: number | Contract;
+      } | null)
+    | ({
+        relationTo: 'files';
+        value: number | File;
+      } | null)
+    | ({
+        relationTo: 'meetings';
+        value: number | Meeting;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -510,6 +661,7 @@ export interface CategoriesSelect<T extends boolean = true> {
  */
 export interface AuthorsSelect<T extends boolean = true> {
   name?: T;
+  slug?: T;
   role?: T;
   avatar?: T;
   bio?: T;
@@ -527,11 +679,32 @@ export interface PostsSelect<T extends boolean = true> {
   content?: T;
   featuredImage?: T;
   category?: T;
+  tags?: T;
   author?: T;
   publishedDate?: T;
+  featured?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        canonicalUrl?: T;
+        ogImage?: T;
+        twitterImage?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags_select".
+ */
+export interface TagsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -573,9 +746,82 @@ export interface LeadsSelect<T extends boolean = true> {
   name?: T;
   email?: T;
   phone?: T;
+  company?: T;
+  website?: T;
+  budget?: T;
+  servicesInterested?: T;
   message?: T;
   source?: T;
   status?: T;
+  priority?: T;
+  assignedUser?: T;
+  internalNotes?: T;
+  attribution?:
+    | T
+    | {
+        ipAddress?: T;
+        userAgent?: T;
+        referrer?: T;
+        landingPage?: T;
+        utmSource?: T;
+        utmMedium?: T;
+        utmCampaign?: T;
+        utmTerm?: T;
+        utmContent?: T;
+        device?: T;
+        browser?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "clients_select".
+ */
+export interface ClientsSelect<T extends boolean = true> {
+  name?: T;
+  lead?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects_select".
+ */
+export interface ProjectsSelect<T extends boolean = true> {
+  title?: T;
+  client?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contracts_select".
+ */
+export interface ContractsSelect<T extends boolean = true> {
+  title?: T;
+  client?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "files_select".
+ */
+export interface FilesSelect<T extends boolean = true> {
+  title?: T;
+  client?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "meetings_select".
+ */
+export interface MeetingsSelect<T extends boolean = true> {
+  title?: T;
+  client?: T;
+  date?: T;
   updatedAt?: T;
   createdAt?: T;
 }

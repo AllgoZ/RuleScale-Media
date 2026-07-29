@@ -25,6 +25,7 @@ export const Navigation: GlobalConfig = {
         { label: "Services", href: "#services" },
         { label: "Process", href: "#process" },
         { label: "FAQ", href: "#faq" },
+        { label: "Blog", href: "/blog" },
       ],
       fields: [
         { name: "label", type: "text", required: true },

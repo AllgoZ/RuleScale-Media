@@ -8,35 +8,33 @@ import type { ManifestoData } from "@/lib/cms/types";
 export function Manifesto({ data }: { data: ManifestoData }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-20% 0px -20% 0px" });
+  const leadLines = data.lines.slice(0, -1).join(" ");
+  const finalLine = data.lines[data.lines.length - 1];
 
   return (
-    <section className="svh flex items-center py-24">
+    <section className="py-20 md:py-28">
       <Container>
-        <div ref={ref} className="mx-auto max-w-4xl text-center">
-          <span className="font-hand -rotate-1 inline-block text-base text-accent">
+        <div ref={ref} className="mx-auto max-w-3xl text-center">
+          <span className="pill-badge inline-flex">
+            <span className="gradient-bg h-1.5 w-1.5 rounded-full" />
             {data.eyebrow}
           </span>
 
-          <p className="font-heading mt-6 text-3xl font-normal italic leading-[1.15] text-ink text-balance sm:text-4xl md:text-5xl">
-            {data.lines.map((line, i) => (
-              <span key={line} className="block overflow-hidden">
-                <motion.span
-                  initial={{ y: "100%", opacity: 0 }}
-                  animate={inView ? { y: "0%", opacity: 1 } : {}}
-                  transition={{ duration: 0.8, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
-                  className="block"
-                >
-                  {line}
-                </motion.span>
-              </span>
-            ))}
-          </p>
+          <motion.h2
+            initial={{ opacity: 0, y: 16 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-6 font-heading text-3xl font-extrabold leading-tight text-ink text-balance md:text-4xl"
+          >
+            {leadLines ? `${leadLines} ` : null}
+            <span className="gradient-text">{finalLine}</span>
+          </motion.h2>
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={inView ? { opacity: 1 } : {}}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="mt-8 text-base text-ink-soft"
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mx-auto mt-5 max-w-lg text-base text-ink-soft"
           >
             {data.note}
           </motion.p>

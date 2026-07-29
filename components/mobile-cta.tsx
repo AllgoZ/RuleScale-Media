@@ -65,7 +65,10 @@ export function MobileCTA() {
           className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-paper/85 px-4 pt-3 backdrop-blur-xl md:hidden"
           style={{ paddingBottom: "calc(0.75rem + var(--safe-b))" }}
         >
-          <Button variant="accent" className="w-full" asChild>
+          <Button
+            className="gradient-bg w-full text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_24px_-8px_rgba(124,58,237,0.45)]"
+            asChild
+          >
             <Link href="#final-cta">
               Start Growing
               <ArrowRight size={17} />

@@ -20,12 +20,10 @@ export function Footer({
   footer,
   companyLinks,
   siteName,
-  contactEmail,
 }: {
   footer: FooterData;
   companyLinks: NavLinkData[];
   siteName: string;
-  contactEmail: string;
 }) {
   const year = new Date().getFullYear();
 
@@ -100,13 +98,13 @@ export function Footer({
             <p className="font-heading text-sm font-bold uppercase tracking-wide text-ink">
               Get in touch
             </p>
-            <a
-              href={`mailto:${contactEmail}`}
+            <Link
+              href="/contact"
               className="mt-4 flex items-center gap-2 text-sm text-ink-soft transition-colors hover:text-ink"
             >
               <Mail size={16} />
-              {contactEmail}
-            </a>
+              Contact us
+            </Link>
           </div>
         </div>
 

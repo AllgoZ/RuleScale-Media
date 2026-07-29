@@ -1,47 +1,74 @@
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
-import { HandArrow } from "@/components/doodles/hand-arrow";
-import { Button } from "@/components/ui/button";
+import { Briefcase, Mail, Phone } from "lucide-react";
+import { ContactForm } from "@/components/contact/contact-form";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
-import { Spotlight } from "@/components/ui/spotlight";
 import type { FinalCtaData } from "@/lib/cms/types";
 
-export function FinalCTA({ data }: { data: FinalCtaData }) {
+const WHATSAPP_NUMBER = "919500381132";
+const WHATSAPP_DISPLAY = "+91 95003 81132";
+
+export function FinalCTA({
+  data,
+  contactEmail,
+  linkedinUrl,
+  services,
+  turnstileSiteKey,
+}: {
+  data: FinalCtaData;
+  contactEmail: string;
+  linkedinUrl: string | null;
+  services: string[];
+  turnstileSiteKey: string | null;
+}) {
   return (
-    <Spotlight
-      color="rgba(236, 48, 19, 0.1)"
-      className="bg-ink py-32 text-paper md:py-44"
-    >
-      <section id="final-cta">
-        <Container className="relative text-center">
-          <Reveal>
-            <span className="font-hand -rotate-1 inline-block text-lg text-paper/60">
+    <section id="final-cta" className="py-20 md:py-28">
+      <Container>
+        <div className="grid gap-2 overflow-hidden rounded-3xl border border-hairline bg-white p-2 lg:grid-cols-2">
+          <Reveal className="gradient-bg flex flex-col justify-center rounded-[20px] p-8 text-white md:p-12">
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/15 px-4 py-2 text-sm font-medium">
               {data.eyebrow}
             </span>
-
-            <h2 className="text-display mx-auto mt-6 max-w-4xl text-paper text-balance">
+            <h2 className="mt-6 font-heading text-3xl font-extrabold leading-tight text-balance md:text-4xl">
               {data.heading}
             </h2>
+            <p className="mt-4 max-w-md text-white/80">{data.subheading}</p>
 
-            <p className="mx-auto mt-8 max-w-md text-lg text-paper/60">{data.subheading}</p>
-
-            <div className="relative mt-12 inline-block">
-              <Button variant="accent" size="lg" asChild>
-                <Link href={data.cta.href}>
-                  {data.cta.label}
-                  <ArrowRight size={18} />
-                </Link>
-              </Button>
-              <HandArrow
-                variant="pointUp"
-                color="rgba(243, 242, 242, 0.4)"
-                className="absolute -left-16 top-full hidden h-16 w-16 sm:block"
-              />
+            <div className="mt-8 flex flex-col gap-3">
+              <a
+                href={`mailto:${contactEmail}`}
+                className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm transition-colors hover:bg-white/15"
+              >
+                <Mail size={16} />
+                {contactEmail}
+              </a>
+              <a
+                href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm transition-colors hover:bg-white/15"
+              >
+                <Phone size={16} />
+                {WHATSAPP_DISPLAY}
+              </a>
+              {linkedinUrl ? (
+                <a
+                  href={linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm transition-colors hover:bg-white/15"
+                >
+                  <Briefcase size={16} />
+                  LinkedIn
+                </a>
+              ) : null}
             </div>
           </Reveal>
-        </Container>
-      </section>
-    </Spotlight>
+
+          <Reveal delay={0.1} className="p-8 md:p-12">
+            <ContactForm services={services} turnstileSiteKey={turnstileSiteKey} />
+          </Reveal>
+        </div>
+      </Container>
+    </section>
   );
 }

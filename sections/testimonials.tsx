@@ -22,10 +22,11 @@ export function Testimonials({ data }: { data: TestimonialsData }) {
   const active = data.items[index];
 
   return (
-    <section className="py-28 md:py-40">
-      <Container className="max-w-3xl">
+    <section className="py-20 md:py-28">
+      <Container className="max-w-2xl">
         <Reveal className="text-center">
-          <span className="font-hand -rotate-1 inline-block text-base text-accent">
+          <span className="pill-badge inline-flex">
+            <span className="gradient-bg h-1.5 w-1.5 rounded-full" />
             {data.eyebrow}
           </span>
         </Reveal>
@@ -33,12 +34,8 @@ export function Testimonials({ data }: { data: TestimonialsData }) {
         <div
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
-          className="relative mt-10 min-h-[16rem] text-center"
+          className="relative mt-8 min-h-[14rem]"
         >
-          <span className="font-heading pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 text-7xl leading-none text-accent/15">
-            &ldquo;
-          </span>
-
           <AnimatePresence mode="wait">
             <motion.div
               key={active.name}
@@ -46,17 +43,18 @@ export function Testimonials({ data }: { data: TestimonialsData }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="rounded-[24px] border border-hairline bg-white p-8 text-center shadow-soft"
             >
-              <p className="font-heading text-2xl font-normal italic leading-snug text-ink text-balance sm:text-3xl">
-                {active.quote}
+              <p className="font-heading text-xl font-medium leading-snug text-ink text-balance">
+                &ldquo;{active.quote}&rdquo;
               </p>
-              <p className="mt-6 text-sm font-semibold text-ink">{active.name}</p>
+              <p className="mt-5 text-sm font-semibold text-ink">{active.name}</p>
               <p className="text-sm text-ink-soft">{active.title}</p>
             </motion.div>
           </AnimatePresence>
         </div>
 
-        <div className="mt-10 flex items-center justify-center gap-2">
+        <div className="mt-8 flex items-center justify-center gap-2">
           {data.items.map((testimonial, i) => (
             <button
               key={testimonial.name}
@@ -69,7 +67,7 @@ export function Testimonials({ data }: { data: TestimonialsData }) {
               <span
                 className={cn(
                   "block h-1.5 rounded-full transition-all duration-300",
-                  i === index ? "w-6 bg-accent" : "w-1.5 bg-ink/15"
+                  i === index ? "gradient-bg w-6" : "w-1.5 bg-ink/15"
                 )}
               />
             </button>

@@ -8,9 +8,15 @@ import sharp from "sharp";
 import { Authors } from "./payload/collections/authors";
 import { CaseStudies } from "./payload/collections/case-studies";
 import { Categories } from "./payload/collections/categories";
+import { Clients } from "./payload/collections/clients";
+import { Contracts } from "./payload/collections/contracts";
+import { Files } from "./payload/collections/files";
 import { Leads } from "./payload/collections/leads";
 import { Media } from "./payload/collections/media";
+import { Meetings } from "./payload/collections/meetings";
 import { Posts } from "./payload/collections/posts";
+import { Projects } from "./payload/collections/projects";
+import { Tags } from "./payload/collections/tags";
 import { Testimonials } from "./payload/collections/testimonials";
 import { Users } from "./payload/collections/users";
 import { Footer } from "./payload/globals/footer";
@@ -28,6 +34,16 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    components: {
+      afterNavLinks: ["@/payload/admin-views/dashboard-nav-link#BusinessDashboardNavLink"],
+      views: {
+        businessDashboard: {
+          Component: "@/payload/admin-views/business-dashboard#BusinessDashboardView",
+          path: "/business-dashboard",
+          exact: true,
+        },
+      },
+    },
   },
   collections: [
     Users,
@@ -35,9 +51,15 @@ export default buildConfig({
     Categories,
     Authors,
     Posts,
+    Tags,
     Testimonials,
     CaseStudies,
     Leads,
+    Clients,
+    Projects,
+    Contracts,
+    Files,
+    Meetings,
   ],
   globals: [Homepage, Navigation, Footer, SiteSettings, SEOSettings],
   editor: lexicalEditor(),

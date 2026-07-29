@@ -10,6 +10,16 @@ import { Container } from "@/components/ui/container";
 import type { NavigationData } from "@/lib/cms/types";
 import { cn } from "@/lib/utils";
 
+function TwoToneName({ siteName }: { siteName: string }) {
+  const [first, ...rest] = siteName.split(" ");
+  return (
+    <span className="flex items-center gap-1">
+      <span className="text-ink">{first}</span>
+      {rest.length ? <span className="gradient-text">{rest.join(" ")}</span> : null}
+    </span>
+  );
+}
+
 export function Header({
   navigation,
   siteName,
@@ -39,29 +49,26 @@ export function Header({
       <Container>
         <motion.div
           animate={{
-            backgroundColor: scrolled ? "rgba(243, 242, 242, 0.75)" : "rgba(243, 242, 242, 0)",
-            borderColor: scrolled ? "rgba(32, 30, 29, 0.09)" : "rgba(32, 30, 29, 0)",
-            boxShadow: scrolled ? "0 8px 30px rgba(32,30,29,0.06)" : "0 0px 0px rgba(32,30,29,0)",
+            backgroundColor: scrolled ? "rgba(255, 255, 255, 0.85)" : "rgba(255, 255, 255, 0.5)",
+            borderColor: scrolled ? "rgba(32, 30, 29, 0.09)" : "rgba(32, 30, 29, 0.06)",
+            boxShadow: scrolled ? "0 8px 30px rgba(32,30,29,0.08)" : "0 0px 0px rgba(32,30,29,0)",
           }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className={cn(
-            "flex h-14 items-center justify-between rounded-full border px-5 backdrop-blur-xl transition-[padding]"
-          )}
+          className="flex h-16 items-center justify-between rounded-full border px-4 backdrop-blur-xl transition-[padding]"
         >
-          <Link
-            href="#top"
-            className="flex items-center gap-2 font-heading text-[15px] font-bold text-ink"
-          >
-            <LogoMark size={24} />
-            {siteName}
+          <Link href="#top" className="flex items-center gap-2.5 font-heading text-base font-bold">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-white">
+              <LogoMark size={22} />
+            </span>
+            <TwoToneName siteName={siteName} />
           </Link>
 
-          <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
             {navigation.links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-[13px] font-medium text-ink-soft transition-colors hover:text-ink"
+                className="rounded-full px-4 py-2 text-[14px] font-medium text-ink-soft transition-colors hover:bg-ink/[0.04] hover:text-ink"
               >
                 {link.label}
               </Link>
@@ -69,7 +76,11 @@ export function Header({
           </nav>
 
           <div className="hidden md:block">
-            <Button variant="accent" size="default" className="h-10 px-5 text-sm" asChild>
+            <Button
+              size="default"
+              className="h-11 gradient-bg px-6 text-sm text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_24px_-8px_rgba(124,58,237,0.45)] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_16px_32px_-10px_rgba(124,58,237,0.55)]"
+              asChild
+            >
               <Link href={navigation.ctaHref}>{navigation.ctaLabel}</Link>
             </Button>
           </div>
@@ -96,7 +107,7 @@ export function Header({
             className="md:hidden"
           >
             <Container>
-              <div className="mt-2 flex flex-col gap-1 rounded-3xl border border-hairline bg-paper/95 p-4 shadow-lift backdrop-blur-xl">
+              <div className="mt-2 flex flex-col gap-1 rounded-3xl border border-hairline bg-white/95 p-4 shadow-lift backdrop-blur-xl">
                 {navigation.links.map((link) => (
                   <Link
                     key={link.href}
@@ -108,8 +119,10 @@ export function Header({
                   </Link>
                 ))}
                 <Button
-                  variant="accent"
-                  className="mt-2 w-full"
+                  className={cn(
+                    "mt-2 w-full gradient-bg text-white",
+                    "shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_24px_-8px_rgba(124,58,237,0.45)]"
+                  )}
                   asChild
                   onClick={() => setOpen(false)}
                 >

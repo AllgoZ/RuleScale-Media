@@ -1,4 +1,9 @@
-import type { FaqItemData, ServiceItemData, SiteSettingsData } from "@/lib/cms/types";
+import type {
+  FaqItemData,
+  PostData,
+  ServiceItemData,
+  SiteSettingsData,
+} from "@/lib/cms/types";
 
 export function organizationSchema(siteSettings: SiteSettingsData) {
   return {
@@ -68,17 +73,61 @@ export function faqSchema(faq: FaqItemData[]) {
   };
 }
 
-export function breadcrumbSchema(siteSettings: SiteSettingsData) {
+export type BreadcrumbItem = {
+  name: string;
+  url: string;
+};
+
+/** `items` defaults to just Home — the homepage's only-ever call site keeps its
+ * exact existing output. Blog pages pass a longer trail (Home > Blog > ... ). */
+export function breadcrumbSchema(siteSettings: SiteSettingsData, items?: BreadcrumbItem[]) {
+  const trail: BreadcrumbItem[] = items?.length
+    ? items
+    : [{ name: "Home", url: siteSettings.url }];
+
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: siteSettings.url,
+    itemListElement: trail.map((crumb, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: crumb.name,
+      item: crumb.url,
+    })),
+  };
+}
+
+export function articleSchema(post: PostData, siteSettings: SiteSettingsData) {
+  const url = `${siteSettings.url}/blog/${post.slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "@id": `${url}/#article`,
+    headline: post.title,
+    description: post.seo.metaDescription || post.excerpt,
+    image: post.featuredImage?.url ? [post.featuredImage.url] : undefined,
+    datePublished: post.publishedDate || post.updatedAt,
+    dateModified: post.updatedAt,
+    author: post.author
+      ? {
+          "@type": "Person",
+          name: post.author.name,
+        }
+      : {
+          "@type": "Organization",
+          name: siteSettings.siteName,
+        },
+    publisher: {
+      "@type": "Organization",
+      name: siteSettings.siteName,
+      logo: {
+        "@type": "ImageObject",
+        url: `${siteSettings.url}/icon.svg`,
       },
-    ],
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": url,
+    },
   };
 }

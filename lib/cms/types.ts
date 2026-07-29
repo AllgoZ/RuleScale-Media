@@ -181,3 +181,77 @@ export type SEOSettingsData = {
   robotsIndex: boolean;
   robotsFollow: boolean;
 };
+
+// --- Blog ---
+
+/** Raw Lexical document shape, reused from the generated Payload type so it can never drift. */
+export type LexicalContent = import("@/payload-types").Post["content"];
+
+export type MediaImageData = {
+  url: string;
+  alt: string;
+  width: number | null;
+  height: number | null;
+};
+
+export type AuthorSummaryData = {
+  id: number;
+  name: string;
+  slug: string;
+  role: string;
+  avatar: MediaImageData | null;
+};
+
+export type AuthorData = AuthorSummaryData & {
+  bio: string;
+};
+
+export type CategoryData = {
+  id: number;
+  title: string;
+  slug: string;
+  description: string;
+};
+
+export type TagData = {
+  id: number;
+  title: string;
+  slug: string;
+};
+
+export type PostSummaryData = {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string;
+  featuredImage: MediaImageData | null;
+  category: CategoryData | null;
+  tags: TagData[];
+  author: AuthorSummaryData | null;
+  publishedDate: string | null;
+  featured: boolean;
+  readingTime: number;
+};
+
+export type PostSeoData = {
+  metaTitle: string;
+  metaDescription: string;
+  canonicalUrl: string;
+  ogImage: MediaImageData | null;
+  twitterImage: MediaImageData | null;
+};
+
+export type PostData = PostSummaryData & {
+  content: LexicalContent;
+  updatedAt: string;
+  seo: PostSeoData;
+};
+
+export type PaginatedPosts = {
+  docs: PostSummaryData[];
+  totalDocs: number;
+  totalPages: number;
+  page: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+};

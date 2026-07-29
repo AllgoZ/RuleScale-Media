@@ -21,6 +21,9 @@ Requires a `.env.local` (see `.env.example`): `DATABASE_URL` (Postgres/Supabase 
 string), `PAYLOAD_SECRET`, and `PREVIEW_SECRET` (draft-mode preview link token). Without a real
 `DATABASE_URL`, the frontend still works (every `lib/cms/*.ts` getter falls back to
 `lib/constants.ts` on any Payload/DB error), but `/admin` will 500 with a clear connection error.
+Optional (Phase 3): `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY` —
+the contact form and lead pipeline work fully without these (emails log to the console instead of
+sending, Turnstile verification is skipped), see `lib/env.ts`.
 
 `curl http://localhost:3000/api/health` reports `{status, checks: {app, database}}` — `200` when
 Postgres is reachable, `503` otherwise. Cheapest way to confirm the DB connection is alive.
@@ -37,15 +40,29 @@ app/
                       (route group; doesn't affect URLs)
   (frontend)/api/health/  Postgres connectivity check — coexists with Payload's /api/*
                       catch-all because Next prefers the more specific static segment
+  (frontend)/blog/     the blog (Phase 2) — page.tsx (index), [slug]/page.tsx (article),
+                      category/[slug], tag/[slug], author/[slug] (archives), search/page.tsx,
+                      rss.xml/route.ts. No generateStaticParams anywhere here on purpose — posts
+                      stay on the same dynamic-route + tag-cache model as everything else, so an
+                      admin save shows up live without a rebuild.
+  (frontend)/contact/   the contact page (Phase 3) — the site's only lead-capture form
+  (frontend)/api/contact/  the one backend endpoint the contact form posts to (Phase 3):
+                      validation, honeypot, DB-backed rate limiting, optional Turnstile, then
+                      payload.create() via the Local API (bypasses access control by design)
+  (frontend)/api/leads/export/  admin-only CSV export of the leads collection (Phase 3)
   (payload)/          Payload-generated admin/API routes — do NOT hand-edit, regenerate instead
                       (`npm run generate:importmap`)
   robots.ts, sitemap.ts, icon.tsx, opengraph-image.tsx  top-level on purpose, NOT inside
                       (frontend) — robots.ts specifically silently stops working if moved into a
-                      route group on this Next/Turbopack version, see CHANGELOG 2026-07-27
-payload.config.ts    Payload config root — collections, globals, db adapter, secret
+                      route group on this Next/Turbopack version, see CHANGELOG 2026-07-27.
+                      sitemap.ts now also includes posts/categories/tags/authors (Phase 2).
+payload.config.ts    Payload config root — collections, globals, db adapter, secret,
+                      admin.components (custom dashboard view + nav link, Phase 3)
 payload/
-  collections/         users (has `role`: admin/editor), media, categories, authors, posts,
-                        testimonials, case-studies, leads
+  collections/         users (has `role`: admin/editor), media, categories, authors, posts, tags,
+                        testimonials, case-studies, leads, clients, projects, contracts, files,
+                        meetings (the last 5 are Phase 3 placeholders: admin.hidden: true, no
+                        real UI/workflow yet, for a future client-portal phase)
   globals/              homepage (drafts + preview enabled), navigation, footer, site-settings,
                         seo-settings
   access.ts             shared RBAC helpers (isAdmin, isAdminOrEditor, isAdminOrSelf) — reused
@@ -53,29 +70,71 @@ payload/
                         role-check logic inline
   hooks/revalidate.ts   revalidateTagSafely(tag) — every afterChange/afterDelete hook calls this,
                         never `revalidateTag` directly (keeps the try/catch discipline in one place)
+  hooks/lead-events.ts   dispatchLeadEvent({event, doc, previousDoc}) (Phase 3) — the single seam
+                        every Leads afterChange event flows through; currently only triggers the
+                        two Resend emails. A future Slack/Notion/WhatsApp integration is one more
+                        call inside this function, never a new hook wired into leads.ts. Always
+                        `await`ed by the collection hook (not fire-and-forget) so a serverless
+                        response can't return — freezing the function — before emails finish.
+  admin-views/           custom Payload admin components (Phase 3): business-dashboard.tsx
+                        (custom view at /admin/business-dashboard, registered via
+                        payload.config.ts's admin.components.views), leads-export-button.tsx
+                        (beforeList button on the Leads collection), dashboard-nav-link.tsx
+                        (sidebar link via admin.components.afterNavLinks — custom views don't
+                        auto-appear in the nav). Plain HTML/inline styles, not Tailwind classes —
+                        Payload's admin bundle doesn't run this repo's Tailwind build. Any new
+                        admin component needs `npm run generate:importmap` afterward.
   seed.ts               one-time data seed, run via `npm run seed`
 lib/
   cms/                 the ONLY code that talks to Payload — getHomepage(), getNavigation(),
-                        getFooter(), getSiteSettings(), getSEOSettings(). Each is
+                        getFooter(), getSiteSettings(), getSEOSettings(), getCategories(),
+                        getTags(), getAuthors(), getPublishedPosts(), getPostBySlug(),
+                        getFeaturedPost(), getRelatedPosts(), getAdjacentPosts(). Each is
                         `cache(unstable_cache(fetchFn, [tag], {tags:[tag]}))` — React cache() for
                         per-request dedupe, unstable_cache() for cross-request persistence,
-                        invalidated by the matching payload/*/hooks.ts on save. Each falls back to
-                        lib/constants.ts on any Payload/DB error — that fallback path is
-                        deliberately NOT cached (see CHANGELOG 2026-07-28), so a transient DB
-                        outage can't get stuck serving stale fallback content forever.
-                        getHomepage() additionally branches on next/headers draftMode() before
-                        the cached path — draft reads always hit Payload live, uncached, `draft:
-                        true`. Never import `payload` or query Payload from a section component.
+                        invalidated by the matching payload/*/hooks.ts on save. The homepage-era
+                        getters fall back to lib/constants.ts on any Payload/DB error — that
+                        fallback path is deliberately NOT cached (see CHANGELOG 2026-07-28), so a
+                        transient DB outage can't get stuck serving stale fallback content
+                        forever. The blog getters have no fallback (no pre-CMS blog content
+                        exists) — they return empty results on error and every blog page renders
+                        the same empty-state UI for "no data" and "fetch failed."
+                        getHomepage()/getPostBySlug() additionally branch on next/headers
+                        draftMode() before the cached path — draft reads always hit Payload live,
+                        uncached, `draft: true`. **Every public post query must also explicitly
+                        filter `{_status: {equals: "published"}}`** — Payload's `draft` find
+                        option does NOT exclude `_status: "draft"` documents by itself, a real bug
+                        caught during Phase 2 verification, see CHANGELOG 2026-07-29. Never import
+                        `payload` or query Payload from a section/blog component.
   cache/tags.ts          CACHE_TAGS — single source of truth for cache tag strings, imported by
-                        both lib/cms/*.ts and payload/**/*.ts hooks so they can't drift apart
+                        both lib/cms/*.ts and payload/**/*.ts hooks so they can't drift apart.
+                        Blog tags: `posts` (any list-shaped read), `postBySlug(slug)` (single
+                        article), `taxonomy` (categories+tags+authors, shared).
+  blog/                 reading-time.ts (word count / 200wpm from the Lexical JSON, computed at
+                        read time, not stored), toc.ts (extractHeadings() + the shared
+                        createHeadingIdAssigner() factory that both the TOC and
+                        ArticleContent's heading converter use, so anchor ids always match)
   seo/metadata.ts        buildSiteMetadata() — assembles the Next Metadata object from
                         SiteSettings + SEOSettings, called from layout.tsx's generateMetadata()
   constants.ts          fallback source of truth if Payload is unreachable/unseeded — not dead
                         code, still actively used
-  schema/index.ts        JSON-LD builders — pure functions taking siteSettings/services/faq as
-                        params (no internal fetching), called from layout.tsx with data it already
-                        fetched for Header/Footer/Homepage
+  schema/index.ts        JSON-LD builders — pure functions taking siteSettings/services/faq/post
+                        as params (no internal fetching). breadcrumbSchema() takes an optional
+                        `items` trail (defaults to just Home, the original homepage behavior);
+                        articleSchema() is new for blog posts.
   utils.ts               cn() class-merge helper
+  leads/                 validate.ts, rate-limit.ts, attribution.ts, turnstile.ts (Phase 3) —
+                        the /api/contact security/validation layer. rate-limit.ts is DB-backed
+                        (queries recent `leads` by email/IP) rather than in-memory/Redis, since
+                        no rate-limiting infra is provisioned and in-memory state doesn't survive
+                        serverless invocations.
+  email/                 resend-client.ts (lazy client, no-ops when RESEND_API_KEY is unset),
+                        templates/ (@react-email/components, brand colors inlined as literal hex
+                        since email clients don't support CSS custom properties),
+                        send-lead-emails.tsx (Phase 3)
+  env.ts                 getResendApiKey() / getTurnstileSecretKey() / getTurnstileSiteKey() —
+                        warn once and return null when an optional integration key is unset,
+                        rather than throwing (Phase 3)
 sections/            one component per page section, in page order (Header/Footer included).
                      Each takes CMS content as a `data` prop (or `navigation`/`footer`/etc. for
                      Header/Footer) — fetched once in layout.tsx/page.tsx, not per-section.
@@ -83,6 +142,13 @@ components/
   ui/                generic primitives — Button, Container, Reveal, Accordion, Spotlight,
                       RollingNumber, Marquee
   doodles/            hand-drawn brand accents — LogoMark, HandArrow, PaperClip, ScribbleUnderline
+  blog/               PostCard, FeaturedPost, CategoryPill, AuthorByline, TableOfContents,
+                      RelatedPosts, PostNavigation, ShareButtons, NewsletterCta (static
+                      placeholder, no signup wiring), SearchBox, Pagination, ArticleContent
+                      (RichText with only the heading converter overridden), PostGrid
+  contact/            ContactForm (Phase 3) — the site's only lead-capture form, "use client",
+                      includes a CSS-hidden honeypot field and an optional Turnstile widget
+                      (only renders if NEXT_PUBLIC_TURNSTILE_SITE_KEY is set)
   hero-collage.tsx    standalone composed piece used only by Hero
   mobile-cta.tsx      global sticky mobile CTA bar
 Architecture files/
@@ -104,14 +170,35 @@ claude files/
   from that same constant. Never hardcode a tag string in more than one place.
 - Role-based access: `payload/access.ts` has `isAdmin` / `isAdminOrEditor` / `isAdminOrSelf` —
   use these on every new collection/global's `access` block rather than inlining
-  `req.user?.role === 'admin'` checks. Local API calls (everything in `lib/cms/`) default to
-  `overrideAccess: true` and are unaffected by any of this — access control only governs `/admin`
-  and the REST/GraphQL surface.
-- Draft mode only exists on the Homepage global right now (`versions.drafts` + `admin.preview`).
+  `req.user?.role === 'admin'` checks. Local API calls (everything in `lib/cms/`, `lib/leads/`
+  route handlers) default to `overrideAccess: true` and are unaffected by any of this — access
+  control only governs `/admin` and the REST/GraphQL surface.
+- **If a collection accepts public writes through a hardened Route Handler** (validation, rate
+  limiting, honeypot, etc. — like `/api/contact` → `leads`), set that collection's Payload
+  `access.create` to `() => false`, not `() => true`. The Route Handler's own
+  `payload.create()` call still works (Local API bypasses access control by default), but this
+  closes the auto-generated public `POST /api/<collection>` REST endpoint, which would otherwise
+  let anyone skip every one of the Route Handler's protections by hitting Payload's raw API
+  directly. This is a real gap that existed on `leads` until Phase 3 — see CHANGELOG 2026-07-29.
+- Custom Payload admin UI (a dashboard view, a list-view button, a nav link) goes in
+  `payload/admin-views/`, registered via `payload.config.ts`'s `admin.components` (`views` for a
+  new top-level route, `beforeList`/`afterList` for a per-collection list-view addition,
+  `afterNavLinks` for a sidebar link — custom views don't auto-appear in the nav). Reference
+  components with the `@/` path alias (e.g. `"@/payload/admin-views/foo#ComponentName"`) — Payload's
+  import-map generator resolves it the same way Next's bundler does. Always run
+  `npm run generate:importmap` after adding or renaming one, or the admin panel won't find it.
+- Draft mode exists on the Homepage global and on Posts (`versions.drafts` + `admin.preview`).
   Preview a pending edit via the "Preview" button in `/admin` (or manually:
-  `/next/preview?path=/&previewSecret=...`, then `/next/exit-preview` to leave). Posts has
-  `versions.drafts: true` too but no preview route yet — there's no `/blog` page to preview
-  against until the blog phase.
+  `/next/preview?path=/&previewSecret=...` for the homepage, `?path=/blog/<slug>&...` for a post,
+  then `/next/exit-preview` to leave). The generic preview routes accept any `path`, so no new
+  route was needed for Posts.
+- Any query in `lib/cms/posts.ts` (or a future collection with `versions.drafts: true`) that's
+  meant to be public-facing MUST explicitly filter `{_status: {equals: "published"}}`. Payload's
+  `draft` find/findByID option controls which version's *content* comes back, not whether a
+  draft-status document is included at all — omitting `draft`, or passing `draft: false`, does
+  NOT exclude `_status: "draft"` docs. This is a real bug that shipped once and was caught during
+  Phase 2 verification (a draft test post appeared in the listing, pagination, related posts, and
+  RSS, and was directly fetchable by URL) — see CHANGELOG 2026-07-29.
 - Brand tokens live in `app/(frontend)/globals.css` (`--color-ink`, `--color-paper`,
   `--color-accent`, `--color-ink-soft`, `--color-hairline`) and are exposed as Tailwind utilities
   (`bg-ink`, `text-accent`, `border-hairline`, ...). Use those, don't hardcode hex values for new
@@ -143,10 +230,29 @@ claude files/
   correctly sized but the page still scrolls horizontally, compare `element.scrollWidth` vs
   `element.clientWidth` on the actual text-bearing elements, not just rects — a heading can
   overflow its box invisibly at a large responsive font size.
+- If `npm run dev` seems to be serving stale `unstable_cache` data (a page shows old/missing
+  content that a direct DB check proves is actually correct) even after killing the process and
+  deleting `.next/cache`, this is a known Turbopack dev-mode artifact, not a code bug — different
+  route entry points can end up with their own `unstable_cache`/module-singleton instances that
+  don't stay in sync. Verify against `npm run build && npm run start` (single unified bundle)
+  before concluding there's a real problem. See CHANGELOG 2026-07-29 for the full diagnosis.
+- Any `payload run <script>.ts` one-off (seeding/publishing/cleanup) that calls `payload.create`
+  on a `versions.drafts: true` collection defaults to `_status: "draft"` if you don't pass
+  anything — omitting the `draft` option does NOT mean "published." To create a genuinely
+  published document via the Local API, pass `data: { _status: "published" }` explicitly (passing
+  `draft: false` to `update()` was tried and does *not* do this). Also note:
+  `revalidateTagSafely()` always fails (harmlessly, caught) when called from a standalone
+  `payload run` script — there's no Next.js request context outside a real HTTP request, so a
+  script-driven write won't invalidate the running dev/prod server's cache; restart the server (or
+  hit the write through `/admin`/the REST API instead) if you need the change to show up live.
 
 ## Verifying UI changes
 
-No visual regression suite exists — verification is manual, via Playwright driven through Bash:
+No visual regression suite exists — verification is manual, via Playwright driven through Bash.
+(If no Playwright/browser-automation tool is available in a given session, fall back to
+HTTP-request-based checks — status codes, rendered HTML content, response headers — and say so
+explicitly rather than claiming a visual pass that didn't happen; this occurred during Phase 2,
+see `Architecture files/currentphase.md`'s "Known gap.")
 
 1. Start the dev server (`npm run dev`), confirm it's actually serving before testing against it.
 2. Screenshot the change at a mobile width (~375–390px) and desktop (~1440px).

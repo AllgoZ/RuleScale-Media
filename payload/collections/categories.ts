@@ -1,5 +1,7 @@
 import type { CollectionConfig } from "payload";
+import { CACHE_TAGS } from "@/lib/cache/tags";
 import { isAdmin } from "../access";
+import { revalidateTagSafely } from "../hooks/revalidate";
 
 export const Categories: CollectionConfig = {
   slug: "categories",
@@ -11,6 +13,20 @@ export const Categories: CollectionConfig = {
     create: isAdmin,
     update: isAdmin,
     delete: isAdmin,
+  },
+  hooks: {
+    afterChange: [
+      () => {
+        revalidateTagSafely(CACHE_TAGS.taxonomy);
+        revalidateTagSafely(CACHE_TAGS.posts);
+      },
+    ],
+    afterDelete: [
+      () => {
+        revalidateTagSafely(CACHE_TAGS.taxonomy);
+        revalidateTagSafely(CACHE_TAGS.posts);
+      },
+    ],
   },
   fields: [
     {
