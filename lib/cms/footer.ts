@@ -8,21 +8,21 @@ const FALLBACK_FOOTER: FooterData = {
   blurb:
     "A full-service marketing agency for brands who want to be remembered, not just seen.",
   serviceLinks: [
-    { label: "Website Design", href: "#services" },
-    { label: "SEO", href: "#services" },
-    { label: "Performance Marketing", href: "#services" },
-    { label: "Social Media", href: "#services" },
-    { label: "Video Production", href: "#services" },
-    { label: "Brand Strategy", href: "#services" },
+    { label: "Website Design", href: "/#services" },
+    { label: "SEO", href: "/#services" },
+    { label: "Performance Marketing", href: "/#services" },
+    { label: "Social Media", href: "/#services" },
+    { label: "Video Production", href: "/#services" },
+    { label: "Brand Strategy", href: "/#services" },
   ],
   legalLinks: [
-    { label: "Privacy Policy", href: "#top" },
-    { label: "Terms of Service", href: "#top" },
+    { label: "Privacy Policy", href: "/#top" },
+    { label: "Terms of Service", href: "/#top" },
   ],
   socialLinks: [
-    { platform: "instagram", url: "#top" },
-    { platform: "linkedin", url: "#top" },
-    { platform: "youtube", url: "#top" },
+    { platform: "instagram", url: "/#top" },
+    { platform: "linkedin", url: "/#top" },
+    { platform: "youtube", url: "/#top" },
   ],
 };
 

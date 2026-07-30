@@ -27,12 +27,12 @@ export const Footer: GlobalConfig = {
       name: "serviceLinks",
       type: "array",
       defaultValue: [
-        { label: "Website Design", href: "#services" },
-        { label: "SEO", href: "#services" },
-        { label: "Performance Marketing", href: "#services" },
-        { label: "Social Media", href: "#services" },
-        { label: "Video Production", href: "#services" },
-        { label: "Brand Strategy", href: "#services" },
+        { label: "Website Design", href: "/#services" },
+        { label: "SEO", href: "/#services" },
+        { label: "Performance Marketing", href: "/#services" },
+        { label: "Social Media", href: "/#services" },
+        { label: "Video Production", href: "/#services" },
+        { label: "Brand Strategy", href: "/#services" },
       ],
       fields: [
         { name: "label", type: "text", required: true },
@@ -43,8 +43,8 @@ export const Footer: GlobalConfig = {
       name: "legalLinks",
       type: "array",
       defaultValue: [
-        { label: "Privacy Policy", href: "#top" },
-        { label: "Terms of Service", href: "#top" },
+        { label: "Privacy Policy", href: "/#top" },
+        { label: "Terms of Service", href: "/#top" },
       ],
       fields: [
         { name: "label", type: "text", required: true },
@@ -55,9 +55,9 @@ export const Footer: GlobalConfig = {
       name: "socialLinks",
       type: "array",
       defaultValue: [
-        { platform: "instagram", url: "#top" },
-        { platform: "linkedin", url: "#top" },
-        { platform: "youtube", url: "#top" },
+        { platform: "instagram", url: "/#top" },
+        { platform: "linkedin", url: "/#top" },
+        { platform: "youtube", url: "/#top" },
       ],
       fields: [
         {

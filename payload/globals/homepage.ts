@@ -62,7 +62,7 @@ export const Homepage: GlobalConfig = {
           type: "group",
           fields: [
             { name: "label", type: "text", defaultValue: "Start Growing" },
-            { name: "href", type: "text", defaultValue: "#final-cta" },
+            { name: "href", type: "text", defaultValue: "/#final-cta" },
           ],
         },
         {
@@ -70,7 +70,7 @@ export const Homepage: GlobalConfig = {
           type: "group",
           fields: [
             { name: "label", type: "text", defaultValue: "See Our Work" },
-            { name: "href", type: "text", defaultValue: "#case-studies" },
+            { name: "href", type: "text", defaultValue: "/#case-studies" },
           ],
         },
         {

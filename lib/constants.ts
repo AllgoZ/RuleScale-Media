@@ -7,10 +7,10 @@ export const SITE_DESCRIPTION =
 export const CONTACT_EMAIL = "hello@rulescale.media";
 
 export const NAV_LINKS = [
-  { label: "Work", href: "#case-studies" },
-  { label: "Services", href: "#services" },
-  { label: "Process", href: "#process" },
-  { label: "FAQ", href: "#faq" },
+  { label: "Work", href: "/#case-studies" },
+  { label: "Services", href: "/#services" },
+  { label: "Process", href: "/#process" },
+  { label: "FAQ", href: "/#faq" },
   { label: "Blog", href: "/blog" },
 ] as const;
 

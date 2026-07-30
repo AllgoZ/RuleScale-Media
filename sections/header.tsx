@@ -56,7 +56,7 @@ export function Header({
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           className="flex h-16 items-center justify-between rounded-full border px-4 backdrop-blur-xl transition-[padding]"
         >
-          <Link href="#top" className="flex items-center gap-2.5 font-heading text-base font-bold">
+          <Link href="/#top" className="flex items-center gap-2.5 font-heading text-base font-bold">
             <span className="flex h-10 w-10 items-center justify-center rounded-full border border-hairline bg-white">
               <LogoMark size={22} />
             </span>

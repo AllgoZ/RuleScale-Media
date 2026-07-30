@@ -24,8 +24,8 @@ const FALLBACK_HOMEPAGE: HomepageData = {
     headingHighlight: "people remember.",
     subheading:
       "Marketing that actually moves businesses. We pair sharp strategy with website design, SEO, social, influencer, and video production — so growth isn't left to chance.",
-    primaryCta: { label: "Start Growing", href: "#final-cta" },
-    secondaryCta: { label: "See Our Work", href: "#case-studies" },
+    primaryCta: { label: "Start Growing", href: "/#final-cta" },
+    secondaryCta: { label: "See Our Work", href: "/#case-studies" },
     trustLine: "Trusted by 250+ brands across DTC, hospitality, SaaS, and retail.",
   },
   trustLogos: {

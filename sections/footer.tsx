@@ -33,7 +33,7 @@ export function Footer({
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Link
-              href="#top"
+              href="/#top"
               className="flex items-center gap-2.5 font-heading text-xl font-extrabold text-ink"
             >
               <LogoMark size={28} />

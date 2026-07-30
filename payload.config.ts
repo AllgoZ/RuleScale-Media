@@ -78,6 +78,16 @@ export default buildConfig({
     // production never applies schema changes at all, only ever reads/writes
     // against whatever the database already happens to have.
     prodMigrations: migrations,
+    // Local dev and production point at the *same* Supabase database (confirmed
+    // by the user), so dev-mode auto-push must stay off everywhere, not just in
+    // production. Without this, every local `npm run dev` boot (or any script
+    // that calls getPayload()) re-inserts a `{name: "dev", batch: -1}` marker
+    // into payload_migrations, which makes Payload's migrate() try to show an
+    // interactive "you used dev mode, data loss will occur" confirmation prompt
+    // on the next Vercel build — unanswerable in a non-interactive build, hard
+    // crash. Real schema changes now go through `payload migrate:create` +
+    // committed migration files, same as production.
+    push: false,
   }),
   sharp,
 });

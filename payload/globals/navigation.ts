@@ -21,10 +21,10 @@ export const Navigation: GlobalConfig = {
       name: "links",
       type: "array",
       defaultValue: [
-        { label: "Work", href: "#case-studies" },
-        { label: "Services", href: "#services" },
-        { label: "Process", href: "#process" },
-        { label: "FAQ", href: "#faq" },
+        { label: "Work", href: "/#case-studies" },
+        { label: "Services", href: "/#services" },
+        { label: "Process", href: "/#process" },
+        { label: "FAQ", href: "/#faq" },
         { label: "Blog", href: "/blog" },
       ],
       fields: [
@@ -40,7 +40,7 @@ export const Navigation: GlobalConfig = {
     {
       name: "ctaHref",
       type: "text",
-      defaultValue: "#final-cta",
+      defaultValue: "/#final-cta",
     },
   ],
 };

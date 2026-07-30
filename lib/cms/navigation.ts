@@ -8,7 +8,7 @@ import type { NavigationData } from "./types";
 const FALLBACK_NAVIGATION: NavigationData = {
   links: NAV_LINKS.map((link) => ({ label: link.label, href: link.href })),
   ctaLabel: "Start Growing",
-  ctaHref: "#final-cta",
+  ctaHref: "/#final-cta",
 };
 
 async function fetchNavigationFromPayload(): Promise<NavigationData> {

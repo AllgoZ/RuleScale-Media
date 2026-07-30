@@ -69,7 +69,7 @@ export function MobileCTA() {
             className="gradient-bg w-full text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_10px_24px_-8px_rgba(124,58,237,0.45)]"
             asChild
           >
-            <Link href="#final-cta">
+            <Link href="/#final-cta">
               Start Growing
               <ArrowRight size={17} />
             </Link>
