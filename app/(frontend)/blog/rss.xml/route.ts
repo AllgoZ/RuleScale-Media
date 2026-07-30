@@ -1,7 +1,13 @@
 import { getPublishedPosts } from "@/lib/cms/posts";
 import { getSiteSettings } from "@/lib/cms/settings";
 
-export const revalidate = 3600;
+// force-dynamic, not revalidate: a `revalidate` export makes Next.js try to
+// statically pre-render this route *at build time*, which means the build
+// itself depends on Postgres being reachable from Vercel's build step. The
+// underlying getPublishedPosts()/getSiteSettings() calls are already cached
+// via unstable_cache, so this loses no real caching — only the build-time
+// dependency, matching every other blog route (all computed per-request).
+export const dynamic = "force-dynamic";
 
 function escapeXml(value: string): string {
   return value
