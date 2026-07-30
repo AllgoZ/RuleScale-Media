@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowUpRight, Target, TrendingUp } from "lucide-react";
 import Link from "next/link";
@@ -19,19 +20,46 @@ function AnimatedWords({ text, delayStart = 0 }: { text: string; delayStart?: nu
   return (
     <>
       {words.map((word, i) => (
-        <motion.span
-          key={`${word}-${i}`}
-          initial="hidden"
-          animate="visible"
-          variants={wordVariants}
-          transition={{ duration: 0.5, delay: delayStart + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-          className="inline-block"
-        >
-          {word}
+        // The separating space is a sibling text node OUTSIDE the inline-block
+        // span, not inside it — a space placed right at the edge of an
+        // inline-block box gets silently trimmed during layout, which is what
+        // was collapsing "We grow brands" into "Wegrowbrands".
+        <Fragment key={`word-${i}`}>
+          <motion.span
+            initial="hidden"
+            animate="visible"
+            variants={wordVariants}
+            transition={{ duration: 0.5, delay: delayStart + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-block"
+          >
+            {word}
+          </motion.span>
           {i < words.length - 1 ? " " : ""}
-        </motion.span>
+        </Fragment>
       ))}
     </>
+  );
+}
+
+/** A slow, gentle vertical bob — starts only after the entrance settles, loops forever. */
+function Float({
+  children,
+  delay = 0,
+  duration = 3.4,
+  distance = 7,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  duration?: number;
+  distance?: number;
+}) {
+  return (
+    <motion.div
+      animate={{ y: [0, -distance, 0] }}
+      transition={{ duration, delay, repeat: Infinity, ease: "easeInOut" }}
+    >
+      {children}
+    </motion.div>
   );
 }
 
@@ -50,18 +78,26 @@ export function Hero({ data, stats }: { data: HeroData; stats: ResultStatData[] 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 260, damping: 22, delay: 0.5 }}
-        className="absolute left-6 top-8 hidden h-12 w-12 items-center justify-center rounded-full border border-hairline bg-white shadow-soft md:flex"
+        className="absolute left-6 top-8 hidden md:block"
       >
-        <GoogleIcon size={22} />
+        <Float delay={1.1} duration={3.2} distance={6}>
+          <div className="flex h-12 w-12 items-center justify-center rounded-full border border-hairline bg-white shadow-soft">
+            <GoogleIcon size={22} />
+          </div>
+        </Float>
       </motion.div>
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 260, damping: 22, delay: 0.6 }}
-        className="pill-badge absolute right-6 top-8 hidden md:inline-flex"
+        className="absolute right-6 top-8 hidden md:block"
       >
-        <MetaIcon size={16} />
-        Meta Ads
+        <Float delay={1.4} duration={3.6} distance={6}>
+          <div className="pill-badge inline-flex">
+            <MetaIcon size={16} />
+            Meta Ads
+          </div>
+        </Float>
       </motion.div>
 
       <Container className="relative">
@@ -147,18 +183,22 @@ export function Hero({ data, stats }: { data: HeroData; stats: ResultStatData[] 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 220, damping: 24, delay: 0.75 }}
-            className="absolute left-4 top-28 hidden rounded-[22px] border border-hairline bg-white p-4 shadow-lift md:left-10 md:block lg:flex lg:items-center lg:gap-3"
+            className="absolute left-4 top-28 hidden md:left-10 md:block"
           >
-            <span className="gradient-bg flex h-10 w-10 items-center justify-center rounded-full text-white">
-              <TrendingUp size={18} />
-            </span>
-            <div>
-              <p className="font-heading text-lg font-extrabold text-ink">
-                {floatingStats[0].value}
-                {floatingStats[0].suffix}
-              </p>
-              <p className="text-xs text-ink-soft">{floatingStats[0].label}</p>
-            </div>
+            <Float delay={1.6} duration={3.8} distance={8}>
+              <div className="rounded-[22px] border border-hairline bg-white p-4 shadow-lift lg:flex lg:items-center lg:gap-3">
+                <span className="gradient-bg flex h-10 w-10 items-center justify-center rounded-full text-white">
+                  <TrendingUp size={18} />
+                </span>
+                <div>
+                  <p className="font-heading text-lg font-extrabold text-ink">
+                    {floatingStats[0].value}
+                    {floatingStats[0].suffix}
+                  </p>
+                  <p className="text-xs text-ink-soft">{floatingStats[0].label}</p>
+                </div>
+              </div>
+            </Float>
           </motion.div>
         ) : null}
 
@@ -167,18 +207,22 @@ export function Hero({ data, stats }: { data: HeroData; stats: ResultStatData[] 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 220, damping: 24, delay: 0.85 }}
-            className="absolute right-4 top-44 hidden items-center gap-3 rounded-[22px] border border-hairline bg-white p-4 shadow-lift md:right-10 md:flex"
+            className="absolute right-4 top-44 hidden md:right-10 md:block"
           >
-            <span className="accent-red-bg flex h-10 w-10 items-center justify-center rounded-full text-white">
-              <Target size={18} />
-            </span>
-            <div>
-              <p className="font-heading text-lg font-extrabold text-ink">
-                {floatingStats[1].value}
-                {floatingStats[1].suffix}
-              </p>
-              <p className="text-xs text-ink-soft">{floatingStats[1].label}</p>
-            </div>
+            <Float delay={1.9} duration={4.0} distance={8}>
+              <div className="flex items-center gap-3 rounded-[22px] border border-hairline bg-white p-4 shadow-lift">
+                <span className="accent-red-bg flex h-10 w-10 items-center justify-center rounded-full text-white">
+                  <Target size={18} />
+                </span>
+                <div>
+                  <p className="font-heading text-lg font-extrabold text-ink">
+                    {floatingStats[1].value}
+                    {floatingStats[1].suffix}
+                  </p>
+                  <p className="text-xs text-ink-soft">{floatingStats[1].label}</p>
+                </div>
+              </div>
+            </Float>
           </motion.div>
         ) : null}
       </Container>

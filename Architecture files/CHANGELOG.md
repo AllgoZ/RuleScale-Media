@@ -6,6 +6,96 @@ why, and (for the non-obvious ones) how it was diagnosed. Add new entries at the
 
 ---
 
+## 2026-07-30 — Homepage UI/UX redesign, refinements, and first production deploy
+
+Two threads of work: a full visual redesign of the homepage (UI/UX only, explicitly no backend/
+endpoint changes), refined over several rounds of live feedback; and the first real deploy to
+Vercel, which surfaced — and led to fixing — a class of "worked in dev, breaks in production"
+gaps this project had been carrying since Phase 1.
+
+**Homepage redesign.** Every homepage section restyled from the ink/red/paper editorial system to
+a clean, card-and-pill "reference-inspired" system, at the user's explicit request, reading the
+exact same `HomepageData` shape from the exact same `getHomepage()` — zero Payload schema change.
+New tokens/utility classes (`.gradient-text`, `.gradient-bg`, `.pill-badge`, `.bg-dot-grid-light`,
+`--color-accent-from/via/to/solid`, `--color-home-bg`) live in a namespace separate from
+`--color-accent`, so the blog (Phase 2) and `/contact` (Phase 3) pages are byte-for-byte
+unaffected. Section order was reprioritized to match the reference (proof/stats moved up, services
+before trust logos), a hardcoded "Tools & Platforms" section and a floating WhatsApp button
+(`https://wa.me/919500381132`) were added, and the final section now embeds the real Phase 3
+`ContactForm` directly on the homepage instead of only linking out to `/contact`.
+
+**The color system went through a real iteration, not a single pass.** First pass fully replaced
+red with a blue→purple gradient. Follow-up feedback ("keep these colors too, mix it") changed the
+gradient itself to a 3-stop blend starting on the *original* brand red (`#ec3013`) through purple
+(`#a855f7`) to blue (`#3b82f6`), so the original palette stays literally present in every gradient
+element, not just adjacent to it — plus the original red is reused directly (via the existing,
+untouched `--color-accent` variable) for secondary tag/pill accents and half the animated stat
+numbers, so both palettes read as genuinely mixed.
+
+**Two real bugs found and fixed during the redesign, not just style tweaks:**
+1. `.pill-badge` declared its own `display: inline-flex` as plain (unlayered) CSS. Under Tailwind
+   v4's cascade layers, an unlayered declaration always beats a layered utility like
+   `hidden`/`md:inline-flex`, regardless of source order — so the decorative "Meta Ads" hero badge
+   never actually hid on mobile, and visibly overlapped the eyebrow pill in a live screenshot.
+   Fixed by removing `display` from the CSS class entirely and applying `inline-flex` as an
+   explicit Tailwind class at each call site, restoring correct responsive behavior everywhere
+   `.pill-badge` is used.
+2. The word-by-word headline animation (`AnimatedWords` in `sections/hero.tsx`) put the
+   space between words *inside* each word's `inline-block` span, right at the box edge — browsers
+   silently trim trailing whitespace at an inline-block boundary, which collapsed "We grow brands"
+   into "Wegrowbrands" in production. Fixed by moving the space to a sibling text node outside the
+   animated span (wrapped in a keyed `Fragment`), confirmed via the actual rendered HTML.
+
+Also added in follow-up rounds: hand-rolled Google/Meta SVG icon components (`components/icons/`,
+same inline-SVG pattern as the existing `LogoMark`) for the Hero's platform badges and the Tools
+section; nearly doubled `.bg-dot-grid-light`'s contrast after it read as invisible in a screenshot
+(muted further by the pre-existing site-wide grain overlay sitting above it in z-order); trimmed
+every section's eyebrow copy to short reference-style labels ("Proof", "Services", "FAQ", ...),
+patched live onto the persisted Homepage document since it — unlike `navigation` — turned out to
+already have a saved row from Phase 1; bumped card radii from 16px to 24px and added spring-based
+entrance motion for an "iOS" feel; and a slow, infinite, out-of-phase vertical bob
+(`Float` component) on the Hero's four floating decorative elements (Google icon, Meta Ads pill,
+both stat cards).
+
+**First Vercel deploy surfaced three real production gaps, none of them backend-logic bugs:**
+
+1. **`/admin` 500'd and the Blog nav link silently disappeared.** Root cause confirmed by reading
+   the actual installed `@payloadcms/db-postgres` source (`connect.js`): schema auto-push is
+   hard-disabled whenever `NODE_ENV === "production"` (which Vercel always sets) — production only
+   ever applies schema via an explicit `prodMigrations` config, which this project never had. Every
+   schema change since Phase 1 (Tags, blog fields, the whole Leads/CRM expansion, 5 new
+   collections, `authors.slug`) had only ever reached whichever database `npm run dev` happened to
+   be pointed at locally; Vercel's production boot never touched schema at all. `/admin` queries
+   the full collection set immediately, so it threw a raw SQL error. `getNavigation()`'s try/catch
+   silently fell back to `lib/constants.ts`'s `NAV_LINKS` — which still had the pre-Phase-2 4-link
+   list, since Phase 2 only updated the Payload-side `defaultValue`, never this separate fallback
+   constant — which is why the rest of the page looked "updated" while nav didn't. Fixed: added
+   `NAV_LINKS`'s missing Blog entry; wired `prodMigrations` in `payload.config.ts`; generated a
+   first migration (`payload migrate:create`, `migrations/`) representing the full current schema.
+2. **`DATABASE_URL` on Vercel was set to the literal `.env.example` placeholder** (`ENOTFOUND
+   host` — Node's DNS resolver failing on the literal hostname `host`), not the real Supabase
+   connection string — a dashboard configuration mistake, not a code issue; confirmed by grepping
+   the actual source for that placeholder string and finding zero references outside
+   `.env.example`, which is never loaded at runtime.
+3. **Once `DATABASE_URL` was fixed, the build itself crashed**: `/blog/rss.xml` and `/sitemap.xml`
+   were two of the only routes Next.js pre-renders *at build time* (both had `revalidate`, making
+   them eligible for static generation) — and since this project's database was built entirely via
+   dev-mode push, its `payload_migrations` table held a `{name: "dev", batch: -1}` marker that
+   Payload's migration runner treats as "confirm before proceeding" via an *interactive* prompt,
+   which cannot be answered in Vercel's non-interactive build environment. Fixed two ways: directly
+   corrected the shared database's migration ledger (deleted the `dev` marker, recorded
+   `initial_schema` as already-applied, since its `CREATE TABLE` statements would conflict with
+   tables that already exist) — and, for defense in depth, changed both routes from `revalidate` to
+   `export const dynamic = "force-dynamic"`, so neither one depends on Postgres being reachable
+   *during a build* ever again, matching how every other blog route already worked.
+
+Live-verified throughout: build/lint/typecheck clean after each change; a real submission through
+the redesigned homepage's embedded contact form still creates a lead via the unmodified
+`/api/contact`; the direct-REST lockdown (`POST /api/leads` → `403`) still holds; the rendered
+headline HTML confirmed the space-collapse fix; all temporary test leads deleted after each check.
+
+---
+
 ## 2026-07-29 — Phase 3: agency operations platform (leads, CRM, email, dashboard, security)
 
 Built the operational backbone behind the marketing site per `prompts/backend/phase3.md`: a real

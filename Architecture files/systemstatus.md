@@ -1,6 +1,6 @@
 # RuleScale Media — Landing Page: System Status
 
-Last updated: 2026-07-29
+Last updated: 2026-07-30
 Repo: https://github.com/AllgoZ/RuleScale-Media (branch `main`)
 
 For "what phase are we in right now and what's next" in 30 seconds, read `currentphase.md`
@@ -247,32 +247,56 @@ the DB-backed rate-limit decision, why `versions: true` instead of a bespoke aud
 
 ## 2. Brand system
 
-> **2026-07-29 update**: the sections below describe the *original* ink/red/paper editorial
-> system as documented at launch. As of 2026-07-29, the **homepage only** was redesigned (UI/UX
-> only, zero backend/CMS-schema change) to a clean blue→purple gradient system inspired by a
-> reference competitor site, at the user's explicit request. New tokens (`--color-accent-from`,
-> `--color-accent-to`, `--color-accent-solid`, `--color-home-bg`) and utility classes
-> (`.gradient-text`, `.gradient-bg`, `.pill-badge`, `.bg-dot-grid-light`) were added to
+> **2026-07-29/30 update**: the sections below describe the *original* ink/red/paper editorial
+> system as documented at launch. As of 2026-07-30, the **homepage only** was redesigned (UI/UX
+> only, zero backend/CMS-schema change) to a card/pill/icon-bubble visual system inspired by a
+> reference competitor site, at the user's explicit request, then iterated twice more on
+> follow-up feedback. New tokens — `--color-accent-from: #ec3013` (the *original* brand red),
+> `--color-accent-via: #a855f7`, `--color-accent-to: #3b82f6`, `--color-accent-solid: #8b5cf6`,
+> `--color-home-bg: #f7f8fc` — and utility classes (`.gradient-text`, `.gradient-bg`,
+> `.pill-badge`, `.accent-red-bg`/`.accent-red-text`, `.bg-dot-grid-light`) were added to
 > `globals.css` in a **separate namespace from `--color-accent`**, specifically so the blog
 > (Phase 2) and `/contact` (Phase 3) pages — which already reference `text-accent`/`bg-accent` —
-> stay pixel-identical to what's described below. Every homepage section was restyled in place
+> stay pixel-identical to what's described below. The final color system is a literal 3-stop
+> gradient — red → purple → blue — not a blue/purple-only palette that discarded red: the user's
+> round-1 feedback ("change the color to our original theme but keep these color too, mix it")
+> was resolved by making the brand red a genuine, visible stop in every gradient element, plus
+> using the pure red directly (`.accent-red-bg`/`.accent-red-text`) for secondary pill/tag accents
+> and one of the two Hero floating stat-card icons. Every homepage section was restyled in place
 > (hand-drawn doodle motifs — `ScribbleUnderline`/`HandArrow`/`PaperClip`/`HeroCollage` — dropped
 > from the homepage only, left unused in the tree) while reading the exact same `HomepageData`
 > shape from the exact same `getHomepage()` — no Payload field was added, removed, or renamed.
 > Section order on the homepage was also reprioritized to match the reference (proof/stats moved
 > up, services before trust logos, a new hardcoded "Tools & Platforms" section and a floating
-> WhatsApp button added, and the final CTA section now embeds the real `ContactForm` from Phase 3
-> directly on the homepage instead of only linking out to `/contact`). Verified live: build/lint
-> clean, a real submission through the new embedded homepage form still creates a lead via the
-> unmodified `/api/contact`, and the direct-REST lockdown (`POST /api/leads` → `403`) still holds
-> — proving the backend is untouched. No browser-automation tool was available this session, so
-> — same caveat as Phases 2–3 — this was verified structurally (`curl`), not with real
-> screenshots; a mobile/desktop visual pass is still outstanding for this redesign specifically.
+> WhatsApp button added — `https://wa.me/919500381132` — and the final CTA section now embeds the
+> real `ContactForm` from Phase 3 directly on the homepage instead of only linking out to
+> `/contact`). Two follow-up refinement rounds fixed real bugs, both found from user screenshots
+> and confirmed via direct HTML/CSS inspection before the fix: (1) `.pill-badge` declared `display:
+> inline-flex` as plain/unlayered CSS, which under Tailwind v4's cascade layers always beats
+> layered utilities like `hidden`/`md:inline-flex` regardless of source order — the Meta Ads hero
+> badge never actually hid on mobile; fixed by removing `display` from the CSS class and applying
+> `inline-flex` as an explicit Tailwind utility at every call site instead. (2) The Hero's
+> word-by-word headline animation (`AnimatedWords` in `sections/hero.tsx`) put the separating
+> space *inside* each word's `inline-block` span, and browsers silently trim trailing whitespace
+> at an inline-block box's edge — collapsing "We grow brands" into "Wegrowbrands" in production;
+> fixed by moving the space to a sibling text node outside the span (a keyed `Fragment` per word).
+> The Hero's four decorative floating elements (Google icon, Meta Ads pill, two stat cards) also
+> got a continuous slow vertical-bob idle animation (`Float` component: independent inner
+> `motion.div` with `animate={{y: [0, -distance, 0]}}`, `repeat: Infinity`, staggered
+> delay/duration per element) layered on top of their one-time spring entrance, per user request.
+> Verified live throughout: build/lint clean, a real submission through the new embedded homepage
+> form still creates a lead via the unmodified `/api/contact`, and the direct-REST lockdown
+> (`POST /api/leads` → `403`) still holds — proving the backend is untouched. No browser-
+> automation tool was available this session, so — same caveat as Phases 2–3 — this was verified
+> structurally (`curl`, HTML diffing) and from user-provided screenshots, not with a real
+> Playwright pass; a full mobile/desktop visual QA is still outstanding for this redesign. Full
+> dated diagnostic writeups for both bugs and every iteration round are in `CHANGELOG.md`
+> (2026-07-30 entry).
 
 The visual system is the real RuleScale Media brand mark (ring + lightning-bolt "S", from the
 brand PDF), **not** a generic palette — deliberately restrained to three colors plus one
 typeface, per the brand guide's "one accent" principle. **This section describes the blog and
-`/contact` pages' current system, and the homepage's system prior to the 2026-07-29 redesign
+`/contact` pages' current system, and the homepage's system prior to the 2026-07-30 redesign
 noted above** — it has not been rewritten wholesale to avoid losing the historical record; treat
 the callout above as authoritative for the homepage's current state.
 
@@ -549,10 +573,33 @@ and on-page copy can't drift apart.
 
 - Git initialized, pushed to `https://github.com/AllgoZ/RuleScale-Media` on `main`. See
   `CHANGELOG.md` and `git log` for the actual commit-by-commit history.
-- No CI/deployment pipeline configured yet (no Vercel project, no GitHub Actions).
-- `.env*` is gitignored. `DATABASE_URL` and `PAYLOAD_SECRET` are now required (see
-  `.env.example`) — the frontend degrades gracefully via the `lib/cms` fallback without them, but
-  `/admin` needs a real `DATABASE_URL` to function at all.
+- **Live on Vercel** as of 2026-07-30, connected to the same Supabase Postgres project used in
+  local dev (confirmed by the user). No GitHub Actions/other CI configured — Vercel's own
+  git-push-triggered build is the only pipeline.
+- **Production schema is now migration-based, not dev-push.** Payload hard-disables its
+  auto-push-on-boot behavior whenever `NODE_ENV === "production"` (confirmed from the installed
+  `@payloadcms/db-postgres` source) and instead applies `postgresAdapter({ prodMigrations })` on
+  boot — `payload.config.ts` now wires this to `migrations/`, whose first entry
+  (`20260730_041032_initial_schema.ts`) represents the full schema as of this writing. **Any new
+  collection/field change now needs a real `payload migrate:create` + a reviewed migration file
+  committed alongside it** — `npm run dev`'s auto-push still works locally but no longer has any
+  effect on what production sees.
+- First deploy surfaced three separate, now-fixed issues — full diagnostic writeups in
+  `CHANGELOG.md`'s 2026-07-30 entry: (1) `/admin` 500 + missing Blog nav link, caused by
+  production never having received any schema changes since Phase 1 (fixed by the migrations
+  work above, plus adding the missing `Blog` entry to `lib/constants.ts`'s `NAV_LINKS` fallback);
+  (2) a `DATABASE_URL` Vercel dashboard misconfiguration (was briefly set to the literal
+  `.env.example` placeholder); (3) a build-time crash on `/blog/rss.xml` — Payload's `migrate()`
+  found a `{name: "dev", batch: -1}` dev-push marker row in the live DB's migration ledger and
+  tried to show an interactive confirmation prompt, which can't be answered in Vercel's
+  non-interactive build — fixed by correcting the ledger directly (marker removed, initial
+  migration recorded as already-applied) and switching `rss.xml`/`sitemap.ts` from
+  build-time-static (`revalidate`) to `export const dynamic = "force-dynamic"` so the build no
+  longer depends on Postgres being reachable at all.
+- `.env*` is gitignored. `DATABASE_URL` and `PAYLOAD_SECRET` are required (see `.env.example`) —
+  the frontend degrades gracefully via the `lib/cms` fallback without them, but `/admin` needs a
+  real `DATABASE_URL` to function at all. **Always copy the real value from `.env.local` into
+  Vercel's env vars — never retype `.env.example`'s placeholder.**
 
 ---
 
