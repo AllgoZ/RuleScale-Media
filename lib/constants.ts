@@ -11,6 +11,7 @@ export const NAV_LINKS = [
   { label: "Services", href: "#services" },
   { label: "Process", href: "#process" },
   { label: "FAQ", href: "#faq" },
+  { label: "Blog", href: "/blog" },
 ] as const;
 
 export const TRUST_LOGOS = [
