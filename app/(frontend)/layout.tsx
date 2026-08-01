@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Caveat } from "next/font/google";
+import Script from "next/script";
 import { MobileCTA } from "@/components/mobile-cta";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { getFooter } from "@/lib/cms/footer";
@@ -17,6 +18,8 @@ import { buildSiteMetadata } from "@/lib/seo/metadata";
 import { Footer } from "@/sections/footer";
 import { Header } from "@/sections/header";
 import "./globals.css";
+
+const GTM_ID = "GTM-K28PK4V6";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -69,6 +72,27 @@ export default async function RootLayout({
       className={`${archivo.variable} ${caveat.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
+        </noscript>
+        {/* End Google Tag Manager (noscript) */}
+        <Script
+          id="gtm-script"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${GTM_ID}');`,
+          }}
+        />
         {jsonLd.map((schema, index) => (
           <script
             key={index}
