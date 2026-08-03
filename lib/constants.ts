@@ -1,4 +1,4 @@
-export const SITE_URL = "https://www.rulescalemedia.com";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rulescale.in";
 export const SITE_NAME = "RuleScale Media";
 export const SITE_TAGLINE = "We grow brands people remember.";
 export const SITE_DESCRIPTION =
