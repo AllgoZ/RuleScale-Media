@@ -14,13 +14,14 @@ import { Reveal } from "@/components/ui/reveal";
 import { extractHeadings } from "@/lib/blog/toc";
 import { getAdjacentPosts, getPostBySlug, getRelatedPosts } from "@/lib/cms/posts";
 import { getSiteSettings } from "@/lib/cms/settings";
+import { SITE_URL } from "@/lib/constants";
 import { articleSchema, breadcrumbSchema } from "@/lib/schema";
 
 type Params = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const [post, siteSettings] = await Promise.all([getPostBySlug(slug), getSiteSettings()]);
+  const post = await getPostBySlug(slug);
   if (!post) return {};
 
   const title = post.seo.metaTitle || post.title;
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       type: "article",
       title,
       description,
-      url: `${siteSettings.url}/blog/${post.slug}`,
+      url: `${SITE_URL}/blog/${post.slug}`,
       publishedTime: post.publishedDate || undefined,
       modifiedTime: post.updatedAt,
       authors: post.author ? [post.author.name] : undefined,
@@ -75,17 +76,17 @@ export default async function BlogPostPage({ params }: Params) {
   const jsonLd = [
     articleSchema(post, siteSettings),
     breadcrumbSchema(siteSettings, [
-      { name: "Home", url: siteSettings.url },
-      { name: "Blog", url: `${siteSettings.url}/blog` },
+      { name: "Home", url: SITE_URL },
+      { name: "Blog", url: `${SITE_URL}/blog` },
       ...(post.category
         ? [
             {
               name: post.category.title,
-              url: `${siteSettings.url}/blog/category/${post.category.slug}`,
+              url: `${SITE_URL}/blog/category/${post.category.slug}`,
             },
           ]
         : []),
-      { name: post.title, url: `${siteSettings.url}/blog/${post.slug}` },
+      { name: post.title, url: `${SITE_URL}/blog/${post.slug}` },
     ]),
   ];
 
@@ -147,7 +148,7 @@ export default async function BlogPostPage({ params }: Params) {
           ) : (
             <span />
           )}
-          <ShareButtons url={`${siteSettings.url}/blog/${post.slug}`} title={post.title} />
+          <ShareButtons url={`${SITE_URL}/blog/${post.slug}`} title={post.title} />
         </div>
 
         {publishedDate ? (

@@ -7,6 +7,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { getCategoryBySlug } from "@/lib/cms/categories";
 import { getPublishedPosts } from "@/lib/cms/posts";
 import { getSiteSettings } from "@/lib/cms/settings";
+import { SITE_URL } from "@/lib/constants";
 
 type Params = {
   params: Promise<{ slug: string }>;
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: `/blog/category/${category.slug}` },
-    openGraph: { title, description, url: `${siteSettings.url}/blog/category/${category.slug}` },
+    openGraph: { title, description, url: `${SITE_URL}/blog/category/${category.slug}` },
     twitter: { title, description },
   };
 }

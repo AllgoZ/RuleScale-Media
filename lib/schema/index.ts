@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/constants";
 import type {
   FaqItemData,
   PostData,
@@ -9,10 +10,10 @@ export function organizationSchema(siteSettings: SiteSettingsData) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "@id": `${siteSettings.url}/#organization`,
+    "@id": `${SITE_URL}/#organization`,
     name: siteSettings.siteName,
-    url: siteSettings.url,
-    logo: `${siteSettings.url}/icon.svg`,
+    url: SITE_URL,
+    logo: `${SITE_URL}/icon.svg`,
     email: siteSettings.contactEmail,
     description: siteSettings.description,
     sameAs: siteSettings.sameAs,
@@ -23,10 +24,10 @@ export function localBusinessSchema(siteSettings: SiteSettingsData) {
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "@id": `${siteSettings.url}/#localbusiness`,
+    "@id": `${SITE_URL}/#localbusiness`,
     name: siteSettings.siteName,
-    image: `${siteSettings.url}/icon.svg`,
-    url: siteSettings.url,
+    image: `${SITE_URL}/icon.svg`,
+    url: SITE_URL,
     email: siteSettings.contactEmail,
     priceRange: "$$$",
     description: siteSettings.description,
@@ -41,7 +42,7 @@ export function serviceSchema(siteSettings: SiteSettingsData, services: ServiceI
     provider: {
       "@type": "Organization",
       name: siteSettings.siteName,
-      url: siteSettings.url,
+      url: SITE_URL,
     },
     hasOfferCatalog: {
       "@type": "OfferCatalog",
@@ -81,9 +82,7 @@ export type BreadcrumbItem = {
 /** `items` defaults to just Home — the homepage's only-ever call site keeps its
  * exact existing output. Blog pages pass a longer trail (Home > Blog > ... ). */
 export function breadcrumbSchema(siteSettings: SiteSettingsData, items?: BreadcrumbItem[]) {
-  const trail: BreadcrumbItem[] = items?.length
-    ? items
-    : [{ name: "Home", url: siteSettings.url }];
+  const trail: BreadcrumbItem[] = items?.length ? items : [{ name: "Home", url: SITE_URL }];
 
   return {
     "@context": "https://schema.org",
@@ -98,7 +97,7 @@ export function breadcrumbSchema(siteSettings: SiteSettingsData, items?: Breadcr
 }
 
 export function articleSchema(post: PostData, siteSettings: SiteSettingsData) {
-  const url = `${siteSettings.url}/blog/${post.slug}`;
+  const url = `${SITE_URL}/blog/${post.slug}`;
   return {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -122,7 +121,7 @@ export function articleSchema(post: PostData, siteSettings: SiteSettingsData) {
       name: siteSettings.siteName,
       logo: {
         "@type": "ImageObject",
-        url: `${siteSettings.url}/icon.svg`,
+        url: `${SITE_URL}/icon.svg`,
       },
     },
     mainEntityOfPage: {

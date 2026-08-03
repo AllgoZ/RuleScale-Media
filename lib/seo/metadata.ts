@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getSEOSettings, getSiteSettings } from "@/lib/cms/settings";
+import { SITE_URL } from "@/lib/constants";
 
 export async function buildSiteMetadata(): Promise<Metadata> {
   const [siteSettings, seoSettings] = await Promise.all([getSiteSettings(), getSEOSettings()]);
@@ -22,7 +23,7 @@ export async function buildSiteMetadata(): Promise<Metadata> {
   }
 
   return {
-    metadataBase: new URL(siteSettings.url),
+    metadataBase: new URL(SITE_URL),
     title,
     description,
     keywords: seoSettings.keywords,
@@ -34,7 +35,7 @@ export async function buildSiteMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       locale: "en_US",
-      url: siteSettings.url,
+      url: SITE_URL,
       siteName: siteSettings.siteName,
       title: seoSettings.defaultTitle,
       description,

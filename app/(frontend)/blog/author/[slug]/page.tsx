@@ -8,6 +8,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { getAuthorBySlug } from "@/lib/cms/authors";
 import { getPublishedPosts } from "@/lib/cms/posts";
 import { getSiteSettings } from "@/lib/cms/settings";
+import { SITE_URL } from "@/lib/constants";
 
 type Params = {
   params: Promise<{ slug: string }>;
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: `/blog/author/${author.slug}` },
-    openGraph: { title, description, url: `${siteSettings.url}/blog/author/${author.slug}` },
+    openGraph: { title, description, url: `${SITE_URL}/blog/author/${author.slug}` },
     twitter: { title, description },
   };
 }

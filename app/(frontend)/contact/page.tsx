@@ -4,7 +4,7 @@ import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { getTurnstileSiteKey } from "@/lib/env";
 import { getSiteSettings } from "@/lib/cms/settings";
-import { SERVICES } from "@/lib/constants";
+import { SERVICES, SITE_URL } from "@/lib/constants";
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteSettings = await getSiteSettings();
@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: "/contact" },
-    openGraph: { title, description, url: `${siteSettings.url}/contact` },
+    openGraph: { title, description, url: `${SITE_URL}/contact` },
     twitter: { title, description },
   };
 }

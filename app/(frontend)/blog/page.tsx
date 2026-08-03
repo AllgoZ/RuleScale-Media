@@ -9,6 +9,7 @@ import { Reveal } from "@/components/ui/reveal";
 import { getCategories } from "@/lib/cms/categories";
 import { getFeaturedPost, getPublishedPosts } from "@/lib/cms/posts";
 import { getSiteSettings } from "@/lib/cms/settings";
+import { SITE_URL } from "@/lib/constants";
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteSettings = await getSiteSettings();
@@ -18,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: "/blog" },
-    openGraph: { title, description, url: `${siteSettings.url}/blog` },
+    openGraph: { title, description, url: `${SITE_URL}/blog` },
     twitter: { title, description },
   };
 }

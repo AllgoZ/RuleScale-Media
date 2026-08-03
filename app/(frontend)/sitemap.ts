@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 import { getAuthors } from "@/lib/cms/authors";
 import { getCategories } from "@/lib/cms/categories";
 import { getPublishedPosts } from "@/lib/cms/posts";
-import { getSiteSettings } from "@/lib/cms/settings";
 import { getTags } from "@/lib/cms/tags";
+import { SITE_URL } from "@/lib/constants";
 
 // Otherwise Next.js pre-renders sitemap.xml at build time by default, making
 // the build depend on Postgres being reachable from Vercel's build step —
@@ -12,8 +12,13 @@ import { getTags } from "@/lib/cms/tags";
 // dependency, not the caching.
 export const dynamic = "force-dynamic";
 
+// Uses SITE_URL (the code constant), not siteSettings.url (the CMS-editable,
+// unstable_cache-wrapped field) — a domain migration once left this route
+// serving stale cached URLs from the retired domain, since that cache has no
+// revalidate time and is invalidated only by a tag that doesn't always fire
+// (e.g. scripts running outside a request context). SITE_URL carries zero
+// caching risk, so the sitemap can't regress this way again.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteSettings = await getSiteSettings();
   const [posts, categories, tags, authors] = await Promise.all([
     getPublishedPosts({ limit: 1000 }),
     getCategories(),
@@ -23,35 +28,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     {
-      url: siteSettings.url,
+      url: SITE_URL,
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 1,
     },
     {
-      url: `${siteSettings.url}/blog`,
+      url: `${SITE_URL}/blog`,
       lastModified: new Date(),
       changeFrequency: "daily" as const,
       priority: 0.9,
     },
     ...posts.docs.map((post) => ({
-      url: `${siteSettings.url}/blog/${post.slug}`,
+      url: `${SITE_URL}/blog/${post.slug}`,
       lastModified: post.publishedDate ? new Date(post.publishedDate) : new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
     ...categories.map((category) => ({
-      url: `${siteSettings.url}/blog/category/${category.slug}`,
+      url: `${SITE_URL}/blog/category/${category.slug}`,
       changeFrequency: "weekly" as const,
       priority: 0.5,
     })),
     ...tags.map((tag) => ({
-      url: `${siteSettings.url}/blog/tag/${tag.slug}`,
+      url: `${SITE_URL}/blog/tag/${tag.slug}`,
       changeFrequency: "weekly" as const,
       priority: 0.4,
     })),
     ...authors.map((author) => ({
-      url: `${siteSettings.url}/blog/author/${author.slug}`,
+      url: `${SITE_URL}/blog/author/${author.slug}`,
       changeFrequency: "monthly" as const,
       priority: 0.4,
     })),

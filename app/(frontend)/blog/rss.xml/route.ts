@@ -1,5 +1,6 @@
 import { getPublishedPosts } from "@/lib/cms/posts";
 import { getSiteSettings } from "@/lib/cms/settings";
+import { SITE_URL } from "@/lib/constants";
 
 // force-dynamic, not revalidate: a `revalidate` export makes Next.js try to
 // statically pre-render this route *at build time*, which means the build
@@ -28,7 +29,7 @@ export async function GET() {
 
   const items = posts.docs
     .map((post) => {
-      const url = `${siteSettings.url}/blog/${post.slug}`;
+      const url = `${SITE_URL}/blog/${post.slug}`;
       const pubDate = post.publishedDate ? new Date(post.publishedDate).toUTCString() : null;
       return `
     <item>
@@ -47,8 +48,8 @@ export async function GET() {
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>${escapeXml(siteSettings.siteName)} Blog</title>
-    <link>${siteSettings.url}/blog</link>
-    <atom:link href="${siteSettings.url}/blog/rss.xml" rel="self" type="application/rss+xml" />
+    <link>${SITE_URL}/blog</link>
+    <atom:link href="${SITE_URL}/blog/rss.xml" rel="self" type="application/rss+xml" />
     <description>${escapeXml(description)}</description>
     <language>en-us</language>${items}
   </channel>
