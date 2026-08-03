@@ -36,7 +36,7 @@ export const SiteSettings: GlobalConfig = {
     {
       name: "url",
       type: "text",
-      defaultValue: "https://rulescale.in",
+      defaultValue: "https://www.rulescale.in",
     },
     {
       name: "contactEmail",
