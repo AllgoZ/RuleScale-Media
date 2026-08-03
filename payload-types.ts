@@ -75,6 +75,7 @@ export interface Config {
     tags: Tag;
     testimonials: Testimonial;
     'case-studies': CaseStudy;
+    portfolio: Portfolio;
     leads: Lead;
     clients: Client;
     projects: Project;
@@ -96,6 +97,7 @@ export interface Config {
     tags: TagsSelect<false> | TagsSelect<true>;
     testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
     'case-studies': CaseStudiesSelect<false> | CaseStudiesSelect<true>;
+    portfolio: PortfolioSelect<false> | PortfolioSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
     clients: ClientsSelect<false> | ClientsSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
@@ -339,6 +341,78 @@ export interface CaseStudy {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "portfolio".
+ */
+export interface Portfolio {
+  id: number;
+  title: string;
+  client: string;
+  slug: string;
+  /**
+   * Show this item in the homepage Featured Work section.
+   */
+  featured?: boolean | null;
+  mediaType: 'image' | 'video';
+  category?: string | null;
+  description?: string | null;
+  resultHeadline?: string | null;
+  services?:
+    | {
+        service: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Upload via the button below (requires Cloudinary to be configured), or paste a URL directly.
+   */
+  thumbnailUrl?: string | null;
+  thumbnailPublicId?: string | null;
+  thumbnailWidth?: number | null;
+  thumbnailHeight?: number | null;
+  thumbnailFormat?: string | null;
+  /**
+   * YouTube, Vimeo, or a direct Cloudinary-hosted MP4 URL.
+   */
+  videoUrl?: string | null;
+  caseStudyContent?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * If set, homepage cards link straight here instead of the internal case study page.
+   */
+  liveWebsite?: string | null;
+  /**
+   * Lower numbers show first in the Featured Work section.
+   */
+  sortOrder?: number | null;
+  publishedAt?: string | null;
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    canonicalUrl?: string | null;
+    /**
+     * Cloudinary URL. Defaults to the thumbnail if left blank.
+     */
+    metaImage?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "leads".
  */
 export interface Lead {
@@ -501,6 +575,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'case-studies';
         value: number | CaseStudy;
+      } | null)
+    | ({
+        relationTo: 'portfolio';
+        value: number | Portfolio;
       } | null)
     | ({
         relationTo: 'leads';
@@ -737,6 +815,47 @@ export interface CaseStudiesSelect<T extends boolean = true> {
   slug?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "portfolio_select".
+ */
+export interface PortfolioSelect<T extends boolean = true> {
+  title?: T;
+  client?: T;
+  slug?: T;
+  featured?: T;
+  mediaType?: T;
+  category?: T;
+  description?: T;
+  resultHeadline?: T;
+  services?:
+    | T
+    | {
+        service?: T;
+        id?: T;
+      };
+  thumbnailUrl?: T;
+  thumbnailPublicId?: T;
+  thumbnailWidth?: T;
+  thumbnailHeight?: T;
+  thumbnailFormat?: T;
+  videoUrl?: T;
+  caseStudyContent?: T;
+  liveWebsite?: T;
+  sortOrder?: T;
+  publishedAt?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        canonicalUrl?: T;
+        metaImage?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getAuthors } from "@/lib/cms/authors";
 import { getCategories } from "@/lib/cms/categories";
 import { getPublishedPosts } from "@/lib/cms/posts";
+import { getAllPortfolioItems } from "@/lib/cms/portfolio";
 import { getTags } from "@/lib/cms/tags";
 import { SITE_URL } from "@/lib/constants";
 
@@ -19,11 +20,12 @@ export const dynamic = "force-dynamic";
 // (e.g. scripts running outside a request context). SITE_URL carries zero
 // caching risk, so the sitemap can't regress this way again.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [posts, categories, tags, authors] = await Promise.all([
+  const [posts, categories, tags, authors, portfolioItems] = await Promise.all([
     getPublishedPosts({ limit: 1000 }),
     getCategories(),
     getTags(),
     getAuthors(),
+    getAllPortfolioItems(),
   ]);
 
   return [
@@ -59,6 +61,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${SITE_URL}/blog/author/${author.slug}`,
       changeFrequency: "monthly" as const,
       priority: 0.4,
+    })),
+    {
+      url: `${SITE_URL}/work/videos`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    },
+    ...portfolioItems.map((item) => ({
+      url:
+        item.mediaType === "video"
+          ? `${SITE_URL}/work/videos/${item.slug}`
+          : `${SITE_URL}/work/${item.slug}`,
+      lastModified: item.publishedAt ? new Date(item.publishedAt) : new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
     })),
   ];
 }

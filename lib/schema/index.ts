@@ -1,6 +1,7 @@
 import { SITE_URL } from "@/lib/constants";
 import type {
   FaqItemData,
+  PortfolioItemData,
   PostData,
   ServiceItemData,
   SiteSettingsData,
@@ -127,6 +128,43 @@ export function articleSchema(post: PostData, siteSettings: SiteSettingsData) {
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": url,
+    },
+  };
+}
+
+export function creativeWorkSchema(item: PortfolioItemData, siteSettings: SiteSettingsData) {
+  const url = `${SITE_URL}/work/${item.slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    "@id": `${url}/#work`,
+    name: item.title,
+    description: item.seo.metaDescription || item.description,
+    image: item.thumbnail?.url ? [item.thumbnail.url] : undefined,
+    creator: {
+      "@type": "Organization",
+      name: siteSettings.siteName,
+    },
+    about: item.client,
+    keywords: item.services.join(", ") || undefined,
+    url,
+  };
+}
+
+export function videoObjectSchema(item: PortfolioItemData, siteSettings: SiteSettingsData) {
+  const url = `${SITE_URL}/work/videos/${item.slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "@id": `${url}/#video`,
+    name: item.title,
+    description: item.seo.metaDescription || item.description,
+    thumbnailUrl: item.thumbnail?.url ? [item.thumbnail.url] : undefined,
+    uploadDate: item.publishedAt || undefined,
+    embedUrl: item.videoUrl || undefined,
+    publisher: {
+      "@type": "Organization",
+      name: siteSettings.siteName,
     },
   };
 }

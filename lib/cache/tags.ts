@@ -12,4 +12,9 @@ export const CACHE_TAGS = {
   /** Categories + tags + authors list/detail reads, shared since these are small,
    * rarely-edited collections — per-type tags would be needless granularity. */
   taxonomy: "taxonomy",
+  /** Any portfolio *list*-shaped read: featured homepage items, the video gallery,
+   * related work. */
+  portfolio: "portfolio",
+  /** The single full item read for one portfolio slug. */
+  portfolioBySlug: (slug: string) => `portfolio-${slug}`,
 } as const;

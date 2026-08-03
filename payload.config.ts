@@ -14,6 +14,7 @@ import { Files } from "./payload/collections/files";
 import { Leads } from "./payload/collections/leads";
 import { Media } from "./payload/collections/media";
 import { Meetings } from "./payload/collections/meetings";
+import { Portfolio } from "./payload/collections/portfolio";
 import { Posts } from "./payload/collections/posts";
 import { Projects } from "./payload/collections/projects";
 import { Tags } from "./payload/collections/tags";
@@ -55,6 +56,7 @@ export default buildConfig({
     Tags,
     Testimonials,
     CaseStudies,
+    Portfolio,
     Leads,
     Clients,
     Projects,

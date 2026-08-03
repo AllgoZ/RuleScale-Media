@@ -1,9 +1,10 @@
 import { getHomepage } from "@/lib/cms/homepage";
+import { getFeaturedPortfolioItems } from "@/lib/cms/portfolio";
 import { getSiteSettings } from "@/lib/cms/settings";
 import { SERVICES } from "@/lib/constants";
 import { getTurnstileSiteKey } from "@/lib/env";
-import { CaseStudies } from "@/sections/case-studies";
 import { FAQ } from "@/sections/faq";
+import { FeaturedWork } from "@/sections/featured-work";
 import { FinalCTA } from "@/sections/final-cta";
 import { Hero } from "@/sections/hero";
 import { Manifesto } from "@/sections/manifesto";
@@ -16,7 +17,11 @@ import { ToolsStack } from "@/sections/tools-stack";
 import { TrustLogos } from "@/sections/trust-logos";
 
 export default async function Home() {
-  const [homepage, siteSettings] = await Promise.all([getHomepage(), getSiteSettings()]);
+  const [homepage, siteSettings, featuredWork] = await Promise.all([
+    getHomepage(),
+    getSiteSettings(),
+    getFeaturedPortfolioItems(),
+  ]);
   const services = SERVICES.map((service) => service.title);
   const turnstileSiteKey = getTurnstileSiteKey();
   const linkedinUrl = siteSettings.sameAs.find((url) => url.includes("linkedin")) ?? null;
@@ -29,7 +34,7 @@ export default async function Home() {
       <Manifesto data={homepage.manifesto} />
       <Services data={homepage.services} />
       <TrustLogos data={homepage.trustLogos} />
-      <CaseStudies data={homepage.caseStudies} />
+      <FeaturedWork items={featuredWork} />
       <ToolsStack />
       <Process data={homepage.process} />
       <Testimonials data={homepage.testimonials} />

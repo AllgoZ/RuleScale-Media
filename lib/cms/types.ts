@@ -255,3 +255,41 @@ export type PaginatedPosts = {
   hasNextPage: boolean;
   hasPrevPage: boolean;
 };
+
+export type PortfolioContent = import("@/payload-types").Portfolio["caseStudyContent"];
+
+export type PortfolioThumbnail = {
+  url: string;
+  publicId: string;
+  width: number;
+  height: number;
+  format: string;
+} | null;
+
+export type PortfolioSummaryData = {
+  id: number;
+  title: string;
+  client: string;
+  slug: string;
+  featured: boolean;
+  mediaType: "image" | "video";
+  category: string;
+  resultHeadline: string;
+  description: string;
+  services: string[];
+  thumbnail: PortfolioThumbnail;
+  liveWebsite: string;
+  sortOrder: number;
+  publishedAt: string | null;
+};
+
+export type PortfolioItemData = PortfolioSummaryData & {
+  videoUrl: string;
+  caseStudyContent: PortfolioContent;
+  seo: {
+    metaTitle: string;
+    metaDescription: string;
+    canonicalUrl: string;
+    metaImage: string;
+  };
+};
