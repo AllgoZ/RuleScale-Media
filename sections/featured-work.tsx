@@ -1,4 +1,4 @@
-import { ArrowUpRight, Film } from "lucide-react";
+import { ArrowUpRight, ExternalLink, Film } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
@@ -6,19 +6,25 @@ import { Reveal } from "@/components/ui/reveal";
 import type { PortfolioSummaryData } from "@/lib/cms/types";
 
 function WorkCard({ item, index }: { item: PortfolioSummaryData; index: number }) {
-  const isExternal = Boolean(item.liveWebsite);
-  const href = isExternal ? item.liveWebsite : `/work/${item.slug}`;
-
   return (
     <Reveal delay={index * 0.1}>
       <article className="group relative flex h-full flex-col overflow-hidden rounded-[24px] border border-hairline bg-white shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift">
         <Link
-          href={href}
+          href={`/work/${item.slug}`}
           className="absolute inset-0 z-10"
-          aria-label={item.title}
-          target={isExternal ? "_blank" : undefined}
-          rel={isExternal ? "noopener noreferrer" : undefined}
+          aria-label={`View case study: ${item.title}`}
         />
+        {item.liveWebsite ? (
+          <a
+            href={item.liveWebsite}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Visit the live ${item.title} website`}
+            className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-ink shadow-soft backdrop-blur-sm transition-colors hover:bg-white hover:text-[var(--color-accent)]"
+          >
+            <ExternalLink size={15} />
+          </a>
+        ) : null}
         <div className="relative aspect-[16/10] overflow-hidden bg-ink/[0.04]">
           {item.thumbnail ? (
             <Image
@@ -59,6 +65,13 @@ function WorkCard({ item, index }: { item: PortfolioSummaryData; index: number }
               ))}
             </div>
           ) : null}
+          <div className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-ink transition-colors group-hover:text-[var(--color-accent)]">
+            View Case Study
+            <ArrowUpRight
+              size={15}
+              className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+            />
+          </div>
         </div>
       </article>
     </Reveal>
