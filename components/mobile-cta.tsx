@@ -3,10 +3,21 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export function MobileCTA() {
+  // Keyed on pathname so this fully remounts on every client-side navigation instead of just
+  // updating in place. This component lives in the root layout and never unmounts otherwise —
+  // without the remount, its visibility state (and the IntersectionObservers below, still
+  // watching whatever page they were set up on) would carry over stale onto a page with no
+  // #top/#final-cta section to observe at all, e.g. /form/influencer or /work/[slug].
+  const pathname = usePathname();
+  return <MobileCTAInner key={pathname} />;
+}
+
+function MobileCTAInner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
