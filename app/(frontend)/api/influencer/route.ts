@@ -53,6 +53,7 @@ export async function POST(request: Request) {
         creatorType: validated.data.creatorType as InfluencerApplication["creatorType"],
         participateEcommerce: (validated.data.participateEcommerce || undefined) as InfluencerApplication["participateEcommerce"],
         interestedCampaigns: validated.data.interestedCampaigns as InfluencerApplication["interestedCampaigns"],
+        creatorFaceType: validated.data.creatorFaceType as InfluencerApplication["creatorFaceType"],
         acceptingCollaborations: (validated.data.acceptingCollaborations || undefined) as InfluencerApplication["acceptingCollaborations"],
         availableForTravel: (validated.data.availableForTravel || undefined) as InfluencerApplication["availableForTravel"],
         heardAboutUs: (validated.data.heardAboutUs || undefined) as InfluencerApplication["heardAboutUs"],

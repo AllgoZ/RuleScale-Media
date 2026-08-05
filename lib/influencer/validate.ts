@@ -1,5 +1,6 @@
 import {
   CAMPAIGN_TYPE_VALUES,
+  CREATOR_FACE_TYPE_VALUES,
   CREATOR_TYPE_VALUES,
   GENDER_VALUES,
   HEARD_ABOUT_US_VALUES,
@@ -42,12 +43,20 @@ export type ValidatedInfluencerForm = {
   landmark: string;
   pincode: string;
   instagram: string;
+  instagramFollowers: number | undefined;
+  creatorFaceType: string[];
   secondInstagram: string;
+  secondInstagramFollowers: number | undefined;
   youtube: string;
+  youtubeFollowers: number | undefined;
   snapchat: string;
+  snapchatFollowers: number | undefined;
   facebook: string;
+  facebookFollowers: number | undefined;
   twitter: string;
+  twitterFollowers: number | undefined;
   linkedin: string;
+  linkedinFollowers: number | undefined;
   otherPlatforms: string;
   portfolioLink: string;
   mediaKitUrl: string;
@@ -208,12 +217,20 @@ export function validateInfluencerForm(
       landmark: text(input.landmark),
       pincode: text(input.pincode, 20),
       instagram,
+      instagramFollowers: optionalNumber(input.instagramFollowers),
+      creatorFaceType: stringArray(input.creatorFaceType, CREATOR_FACE_TYPE_VALUES),
       secondInstagram: text(input.secondInstagram),
+      secondInstagramFollowers: optionalNumber(input.secondInstagramFollowers),
       youtube: text(input.youtube),
+      youtubeFollowers: optionalNumber(input.youtubeFollowers),
       snapchat: text(input.snapchat),
+      snapchatFollowers: optionalNumber(input.snapchatFollowers),
       facebook: text(input.facebook),
+      facebookFollowers: optionalNumber(input.facebookFollowers),
       twitter: text(input.twitter),
+      twitterFollowers: optionalNumber(input.twitterFollowers),
       linkedin: text(input.linkedin),
+      linkedinFollowers: optionalNumber(input.linkedinFollowers),
       otherPlatforms: text(input.otherPlatforms, MAX_LONG_FIELD),
       portfolioLink: text(input.portfolioLink, MAX_LONG_FIELD),
       mediaKitUrl: text(input.mediaKitUrl, MAX_LONG_FIELD),

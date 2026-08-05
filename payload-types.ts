@@ -512,12 +512,23 @@ export interface InfluencerApplication {
   landmark?: string | null;
   pincode?: string | null;
   instagram: string;
+  instagramFollowers?: number | null;
+  /**
+   * Whether this creator shows their face in Instagram content.
+   */
+  creatorFaceType?: ('face-creator' | 'faceless-creator')[] | null;
   secondInstagram?: string | null;
+  secondInstagramFollowers?: number | null;
   youtube?: string | null;
+  youtubeFollowers?: number | null;
   snapchat?: string | null;
+  snapchatFollowers?: number | null;
   facebook?: string | null;
+  facebookFollowers?: number | null;
   twitter?: string | null;
+  twitterFollowers?: number | null;
   linkedin?: string | null;
+  linkedinFollowers?: number | null;
   /**
    * Other social profile links.
    */
@@ -1081,12 +1092,20 @@ export interface InfluencerApplicationsSelect<T extends boolean = true> {
   landmark?: T;
   pincode?: T;
   instagram?: T;
+  instagramFollowers?: T;
+  creatorFaceType?: T;
   secondInstagram?: T;
+  secondInstagramFollowers?: T;
   youtube?: T;
+  youtubeFollowers?: T;
   snapchat?: T;
+  snapchatFollowers?: T;
   facebook?: T;
+  facebookFollowers?: T;
   twitter?: T;
+  twitterFollowers?: T;
   linkedin?: T;
+  linkedinFollowers?: T;
   otherPlatforms?: T;
   portfolioLink?: T;
   mediaKitUrl?: T;

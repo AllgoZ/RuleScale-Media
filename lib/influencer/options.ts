@@ -87,6 +87,11 @@ export const TIER_OPTIONS = [
   { label: "Mega (1M+)", value: "mega" },
 ] as const;
 
+export const CREATOR_FACE_TYPE_OPTIONS = [
+  { label: "Face creator", value: "face-creator" },
+  { label: "Faceless creator", value: "faceless-creator" },
+] as const;
+
 export const PAYMENT_STATUS_OPTIONS = [
   { label: "Not applicable", value: "not-applicable" },
   { label: "Pending", value: "pending" },
@@ -103,4 +108,5 @@ export const PRIMARY_CATEGORY_VALUES = toValueSet(PRIMARY_CATEGORY_OPTIONS);
 export const CREATOR_TYPE_VALUES = toValueSet(CREATOR_TYPE_OPTIONS);
 export const YES_NO_VALUES = toValueSet(YES_NO_OPTIONS);
 export const CAMPAIGN_TYPE_VALUES = toValueSet(CAMPAIGN_TYPE_OPTIONS);
+export const CREATOR_FACE_TYPE_VALUES = toValueSet(CREATOR_FACE_TYPE_OPTIONS);
 export const HEARD_ABOUT_US_VALUES = toValueSet(HEARD_ABOUT_US_OPTIONS);

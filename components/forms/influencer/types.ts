@@ -23,12 +23,20 @@ export type InfluencerFormState = {
   landmark: string;
   pincode: string;
   instagram: string;
+  instagramFollowers: string;
+  creatorFaceType: string[];
   secondInstagram: string;
+  secondInstagramFollowers: string;
   youtube: string;
+  youtubeFollowers: string;
   snapchat: string;
+  snapchatFollowers: string;
   facebook: string;
+  facebookFollowers: string;
   twitter: string;
+  twitterFollowers: string;
   linkedin: string;
+  linkedinFollowers: string;
   otherPlatforms: string;
   portfolioLink: string;
   mediaKitUrl: string;
@@ -89,12 +97,20 @@ export const INITIAL_INFLUENCER_FORM_STATE: InfluencerFormState = {
   landmark: "",
   pincode: "",
   instagram: "",
+  instagramFollowers: "",
+  creatorFaceType: [],
   secondInstagram: "",
+  secondInstagramFollowers: "",
   youtube: "",
+  youtubeFollowers: "",
   snapchat: "",
+  snapchatFollowers: "",
   facebook: "",
+  facebookFollowers: "",
   twitter: "",
+  twitterFollowers: "",
   linkedin: "",
+  linkedinFollowers: "",
   otherPlatforms: "",
   portfolioLink: "",
   mediaKitUrl: "",
