@@ -33,6 +33,19 @@ export function InfluencerForm() {
   const [state, setState] = useState<SubmitState>("idle");
   const [submitError, setSubmitError] = useState("");
   const hydrated = useRef(false);
+  const formTopRef = useRef<HTMLDivElement>(null);
+  const isFirstStepRender = useRef(true);
+
+  // Scroll the form back to its top on every step change (Next/Back, clicking a progress dot,
+  // or jumping to the first invalid step on submit) — otherwise the newly-rendered step renders
+  // at whatever scroll position the previous, possibly longer, step left the page at.
+  useEffect(() => {
+    if (isFirstStepRender.current) {
+      isFirstStepRender.current = false;
+      return;
+    }
+    formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [step]);
 
   // Restore an autosaved draft on mount, so a refresh mid-application doesn't lose progress.
   // The read is deferred into a microtask (rather than called synchronously in the effect body)
@@ -175,7 +188,7 @@ export function InfluencerForm() {
   const isLastStep = step === INFLUENCER_FORM_SECTIONS.length - 1;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div ref={formTopRef} className="flex flex-col gap-8 scroll-mt-24">
       <ProgressBar step={step} onStepClick={setStep} />
 
       <div>

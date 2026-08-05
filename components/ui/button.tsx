@@ -4,7 +4,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { type VariantProps, cva } from "class-variance-authority";
 import { motion, useReducedMotion, useSpring } from "framer-motion";
 import type { ButtonHTMLAttributes, MouseEvent } from "react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -50,11 +50,18 @@ const MotionSlot = motion.create(Slot);
 export function Button({ className, variant, size, asChild, onMouseMove, onMouseLeave, ...props }: ButtonProps) {
   const ref = useRef<HTMLButtonElement>(null);
   const prefersReducedMotion = useReducedMotion();
+  // Touch devices fire a single synthetic mousemove at the tap point (with no matching
+  // mouseleave afterward), which offset the button toward that point and left it stuck there —
+  // the "buttons just move" bug. The magnetic follow-cursor effect only makes sense for an
+  // actual mouse, so it's gated on "(pointer: fine)" (also implied by "(hover: hover)").
+  const [canHover] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches
+  );
   const x = useSpring(0, { stiffness: 300, damping: 20, mass: 0.4 });
   const y = useSpring(0, { stiffness: 300, damping: 20, mass: 0.4 });
 
   function handleMouseMove(event: MouseEvent<HTMLButtonElement>) {
-    if (!prefersReducedMotion && ref.current) {
+    if (!prefersReducedMotion && canHover && ref.current) {
       const rect = ref.current.getBoundingClientRect();
       x.set((event.clientX - rect.left - rect.width / 2) * 0.25);
       y.set((event.clientY - rect.top - rect.height / 2) * 0.3);
