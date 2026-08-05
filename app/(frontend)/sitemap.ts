@@ -68,6 +68,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.7,
     },
+    {
+      url: `${SITE_URL}/form/influencer`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    },
     ...portfolioItems.map((item) => ({
       url:
         item.mediaType === "video"

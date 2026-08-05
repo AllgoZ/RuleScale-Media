@@ -14,16 +14,31 @@ npm run build                # production build — must be clean before conside
 npm run lint                 # must be clean
 npm run generate:types       # regenerate payload-types.ts after changing a collection/global schema
 npm run generate:importmap   # regenerate app/(payload)/admin/importMap.js after admin UI changes
+npm run payload migrate:create <name>   # generate a migration after any collection/global change
+npm run payload migrate                 # apply pending migrations to whatever DATABASE_URL points at
 npm run seed                  # one-time: seed testimonials/case-studies + wire them into Homepage
 ```
+
+**Schema changes require a real migration now, including in local dev** — `push: false` is set on
+the `postgresAdapter` in `payload.config.ts`, so Payload's dev-mode auto-push (`pushDevSchema()`)
+never runs anywhere, not just in production. Local dev and production point at the *same* Supabase
+database, so this was made permanent after a local script re-triggered a real production build
+crash by re-inserting a dev-push marker into the shared migration ledger — see
+`Architecture files/CHANGELOG.md` 2026-07-30 (second entry) for the full incident. After changing
+any collection/global field: `npm run payload migrate:create <name>`, review the generated SQL,
+`npm run payload migrate` to apply it to the shared DB, then `npm run generate:types`.
 
 Requires a `.env.local` (see `.env.example`): `DATABASE_URL` (Postgres/Supabase connection
 string), `PAYLOAD_SECRET`, and `PREVIEW_SECRET` (draft-mode preview link token). Without a real
 `DATABASE_URL`, the frontend still works (every `lib/cms/*.ts` getter falls back to
 `lib/constants.ts` on any Payload/DB error), but `/admin` will 500 with a clear connection error.
-Optional (Phase 3): `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY` —
+Optional: `RESEND_API_KEY`, `TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (Phase 3) —
 the contact form and lead pipeline work fully without these (emails log to the console instead of
-sending, Turnstile verification is skipped), see `lib/env.ts`.
+sending, Turnstile verification is skipped). `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`,
+`CLOUDINARY_API_SECRET` (Portfolio, 2026-08-03) — without these the admin upload button shows a
+clear error, but editors can still paste a thumbnail URL manually. `NEXT_PUBLIC_SITE_URL` —
+optional override for `SITE_URL` (defaults to `https://www.rulescale.in`); see `lib/env.ts` for
+all of the above.
 
 `curl http://localhost:3000/api/health` reports `{status, checks: {app, database}}` — `200` when
 Postgres is reachable, `503` otherwise. Cheapest way to confirm the DB connection is alive.
@@ -46,23 +61,35 @@ app/
                       stay on the same dynamic-route + tag-cache model as everything else, so an
                       admin save shows up live without a rebuild.
   (frontend)/contact/   the contact page (Phase 3) — the site's only lead-capture form
+  (frontend)/work/      Portfolio detail pages (2026-08-03) — [slug]/page.tsx (image case study),
+                      videos/page.tsx (gallery), videos/[slug]/page.tsx (video detail). All CMS-
+                      driven via lib/cms/portfolio.ts, zero hardcoded project data.
   (frontend)/api/contact/  the one backend endpoint the contact form posts to (Phase 3):
                       validation, honeypot, DB-backed rate limiting, optional Turnstile, then
                       payload.create() via the Local API (bypasses access control by design)
   (frontend)/api/leads/export/  admin-only CSV export of the leads collection (Phase 3)
+  (frontend)/api/portfolio/upload/  admin/editor-only Cloudinary upload endpoint (2026-08-03) —
+                      streams a multipart file straight to Cloudinary via lib/cloudinary.ts,
+                      returns only metadata, never touches Payload/local storage
+  (frontend)/sitemap.ts  lives inside (frontend) (unlike robots.ts, see below) — includes
+                      posts/categories/tags/authors (Phase 2) and every portfolio item + /work/videos
+                      (2026-08-03), all keyed off SITE_URL not siteSettings.url (see "Conventions")
   (payload)/          Payload-generated admin/API routes — do NOT hand-edit, regenerate instead
                       (`npm run generate:importmap`)
-  robots.ts, sitemap.ts, icon.tsx, opengraph-image.tsx  top-level on purpose, NOT inside
-                      (frontend) — robots.ts specifically silently stops working if moved into a
-                      route group on this Next/Turbopack version, see CHANGELOG 2026-07-27.
-                      sitemap.ts now also includes posts/categories/tags/authors (Phase 2).
+  robots.ts, icon.tsx, opengraph-image.tsx  top-level on purpose, NOT inside (frontend) —
+                      robots.ts specifically silently stops working if moved into a route group
+                      on this Next/Turbopack version, see CHANGELOG 2026-07-27.
 payload.config.ts    Payload config root — collections, globals, db adapter, secret,
                       admin.components (custom dashboard view + nav link, Phase 3)
 payload/
   collections/         users (has `role`: admin/editor), media, categories, authors, posts, tags,
-                        testimonials, case-studies, leads, clients, projects, contracts, files,
-                        meetings (the last 5 are Phase 3 placeholders: admin.hidden: true, no
-                        real UI/workflow yet, for a future client-portal phase)
+                        testimonials, case-studies (superseded for display by `portfolio`, still
+                        holds its original 3 entries, untouched — see CHANGELOG 2026-08-03),
+                        portfolio (2026-08-03: image/video projects, Cloudinary-hosted media,
+                        services, rich-text case study content, SEO group, draft/publish), leads,
+                        clients, projects, contracts, files, meetings (the last 5 are Phase 3
+                        placeholders: admin.hidden: true, no real UI/workflow yet, for a future
+                        client-portal phase)
   globals/              homepage (drafts + preview enabled), navigation, footer, site-settings,
                         seo-settings
   access.ts             shared RBAC helpers (isAdmin, isAdminOrEditor, isAdminOrSelf) — reused
@@ -76,20 +103,27 @@ payload/
                         call inside this function, never a new hook wired into leads.ts. Always
                         `await`ed by the collection hook (not fire-and-forget) so a serverless
                         response can't return — freezing the function — before emails finish.
-  admin-views/           custom Payload admin components (Phase 3): business-dashboard.tsx
-                        (custom view at /admin/business-dashboard, registered via
-                        payload.config.ts's admin.components.views), leads-export-button.tsx
-                        (beforeList button on the Leads collection), dashboard-nav-link.tsx
-                        (sidebar link via admin.components.afterNavLinks — custom views don't
-                        auto-appear in the nav). Plain HTML/inline styles, not Tailwind classes —
-                        Payload's admin bundle doesn't run this repo's Tailwind build. Any new
-                        admin component needs `npm run generate:importmap` afterward.
+  admin-views/           custom Payload admin components: business-dashboard.tsx (Phase 3, custom
+                        view at /admin/business-dashboard, registered via payload.config.ts's
+                        admin.components.views), leads-export-button.tsx (Phase 3, beforeList
+                        button on the Leads collection), dashboard-nav-link.tsx (Phase 3, sidebar
+                        link via admin.components.afterNavLinks — custom views don't auto-appear
+                        in the nav), cloudinary-upload-field.tsx (2026-08-03 — a custom Field
+                        component, not a view, registered on Portfolio's `thumbnailUrl` field via
+                        that field's own `admin.components.Field`; uses `useField`/`useFormFields`
+                        from `@payloadcms/ui` to write returned upload metadata into sibling
+                        hidden fields). Plain HTML/inline styles, not Tailwind classes — Payload's
+                        admin bundle doesn't run this repo's Tailwind build. Any new admin
+                        component needs `npm run generate:importmap` afterward.
   seed.ts               one-time data seed, run via `npm run seed`
 lib/
   cms/                 the ONLY code that talks to Payload — getHomepage(), getNavigation(),
                         getFooter(), getSiteSettings(), getSEOSettings(), getCategories(),
                         getTags(), getAuthors(), getPublishedPosts(), getPostBySlug(),
-                        getFeaturedPost(), getRelatedPosts(), getAdjacentPosts(). Each is
+                        getFeaturedPost(), getRelatedPosts(), getAdjacentPosts(),
+                        getFeaturedPortfolioItems(), getVideoPortfolioItems(),
+                        getPortfolioItemBySlug(), getRelatedPortfolioItems(),
+                        getAllPortfolioItems() (2026-08-03). Each is
                         `cache(unstable_cache(fetchFn, [tag], {tags:[tag]}))` — React cache() for
                         per-request dedupe, unstable_cache() for cross-request persistence,
                         invalidated by the matching payload/*/hooks.ts on save. The homepage-era
@@ -99,17 +133,28 @@ lib/
                         forever. The blog getters have no fallback (no pre-CMS blog content
                         exists) — they return empty results on error and every blog page renders
                         the same empty-state UI for "no data" and "fetch failed."
-                        getHomepage()/getPostBySlug() additionally branch on next/headers
-                        draftMode() before the cached path — draft reads always hit Payload live,
-                        uncached, `draft: true`. **Every public post query must also explicitly
-                        filter `{_status: {equals: "published"}}`** — Payload's `draft` find
-                        option does NOT exclude `_status: "draft"` documents by itself, a real bug
-                        caught during Phase 2 verification, see CHANGELOG 2026-07-29. Never import
-                        `payload` or query Payload from a section/blog component.
+                        getHomepage()/getPostBySlug()/getPortfolioItemBySlug() additionally branch
+                        on next/headers draftMode() before the cached path — draft reads always
+                        hit Payload live, uncached, `draft: true`. **Every public post/portfolio
+                        query must also explicitly filter `{_status: {equals: "published"}}`** —
+                        Payload's `draft` find option does NOT exclude `_status: "draft"`
+                        documents by itself, a real bug caught during Phase 2 verification, see
+                        CHANGELOG 2026-07-29. Never import `payload` or query Payload from a
+                        section/blog component.
+  cloudinary.ts          uploadImage()/deleteImage()/transformImage() (2026-08-03) — server-only,
+                        wraps the official `cloudinary` SDK, gated by lib/env.ts's
+                        getCloudinaryConfig(). transformImage() splices a transformation string
+                        into an already-uploaded delivery URL by plain string manipulation rather
+                        than calling the SDK, so generating an OG-sized crop needs no live
+                        Cloudinary config at page-render time, only at original upload time.
+  video.ts               parseVideoUrl() (2026-08-03) — detects YouTube/Vimeo/direct-Cloudinary-MP4
+                        from a plain URL string, used by the video portfolio pages to choose
+                        <iframe> vs <video>.
   cache/tags.ts          CACHE_TAGS — single source of truth for cache tag strings, imported by
                         both lib/cms/*.ts and payload/**/*.ts hooks so they can't drift apart.
                         Blog tags: `posts` (any list-shaped read), `postBySlug(slug)` (single
-                        article), `taxonomy` (categories+tags+authors, shared).
+                        article), `taxonomy` (categories+tags+authors, shared). Portfolio tags:
+                        `portfolio` (any list-shaped read), `portfolioBySlug(slug)` (single item).
   blog/                 reading-time.ts (word count / 200wpm from the Lexical JSON, computed at
                         read time, not stored), toc.ts (extractHeadings() + the shared
                         createHeadingIdAssigner() factory that both the TOC and
@@ -117,11 +162,19 @@ lib/
   seo/metadata.ts        buildSiteMetadata() — assembles the Next Metadata object from
                         SiteSettings + SEOSettings, called from layout.tsx's generateMetadata()
   constants.ts          fallback source of truth if Payload is unreachable/unseeded — not dead
-                        code, still actively used
+                        code, still actively used. Also defines `SITE_URL`
+                        (`process.env.NEXT_PUBLIC_SITE_URL || "https://www.rulescale.in"`), the
+                        ONLY thing every SEO-critical surface (sitemap, RSS, metadataBase,
+                        canonical/OG, JSON-LD) reads for the domain — deliberately NOT
+                        `siteSettings.url` (the CMS-editable field), whose `unstable_cache` has no
+                        revalidate time and once served a stale domain for a while after a fix
+                        shipped, since a standalone script's `revalidateTag()` silently no-ops
+                        outside a real request context. See CHANGELOG 2026-08-03.
   schema/index.ts        JSON-LD builders — pure functions taking siteSettings/services/faq/post
                         as params (no internal fetching). breadcrumbSchema() takes an optional
                         `items` trail (defaults to just Home, the original homepage behavior);
-                        articleSchema() is new for blog posts.
+                        articleSchema() (blog posts), creativeWorkSchema()/videoObjectSchema()
+                        (2026-08-03, portfolio items) all use SITE_URL directly, same reasoning.
   utils.ts               cn() class-merge helper
   leads/                 validate.ts, rate-limit.ts, attribution.ts, turnstile.ts (Phase 3) —
                         the /api/contact security/validation layer. rate-limit.ts is DB-backed
@@ -132,16 +185,25 @@ lib/
                         templates/ (@react-email/components, brand colors inlined as literal hex
                         since email clients don't support CSS custom properties),
                         send-lead-emails.tsx (Phase 3)
-  env.ts                 getResendApiKey() / getTurnstileSecretKey() / getTurnstileSiteKey() —
-                        warn once and return null when an optional integration key is unset,
-                        rather than throwing (Phase 3)
+  env.ts                 getResendApiKey() / getTurnstileSecretKey() / getTurnstileSiteKey() /
+                        getCloudinaryConfig() (2026-08-03) — warn once and return null when an
+                        optional integration key is unset, rather than throwing
 sections/            one component per page section, in page order (Header/Footer included).
                      Each takes CMS content as a `data` prop (or `navigation`/`footer`/etc. for
                      Header/Footer) — fetched once in layout.tsx/page.tsx, not per-section.
+                     featured-work.tsx (2026-08-03) replaced case-studies.tsx in the homepage's
+                     render list (same `id="case-studies"` anchor, Portfolio-collection-driven
+                     instead) — case-studies.tsx still exists in the tree, just unreferenced.
+                     Current homepage redesigned 2026-07-30 to a card/pill/gradient system — see
+                     `Architecture files/systemstatus.md` §2, not the pre-redesign doodle system
+                     `components/doodles/` still literally contains (see below).
 components/
   ui/                generic primitives — Button, Container, Reveal, Accordion, Spotlight,
-                      RollingNumber, Marquee
-  doodles/            hand-drawn brand accents — LogoMark, HandArrow, PaperClip, ScribbleUnderline
+                      RollingNumber, Marquee, whatsapp-button.tsx (2026-07-30, floating global CTA)
+  doodles/            hand-drawn brand accents — LogoMark, HandArrow, PaperClip, ScribbleUnderline.
+                      Still used on the blog (Phase 2) and /contact (Phase 3), which the
+                      2026-07-30 redesign deliberately left untouched; no longer used on the
+                      homepage itself.
   blog/               PostCard, FeaturedPost, CategoryPill, AuthorByline, TableOfContents,
                       RelatedPosts, PostNavigation, ShareButtons, NewsletterCta (static
                       placeholder, no signup wiring), SearchBox, Pagination, ArticleContent
@@ -202,7 +264,19 @@ claude files/
 - Brand tokens live in `app/(frontend)/globals.css` (`--color-ink`, `--color-paper`,
   `--color-accent`, `--color-ink-soft`, `--color-hairline`) and are exposed as Tailwind utilities
   (`bg-ink`, `text-accent`, `border-hairline`, ...). Use those, don't hardcode hex values for new
-  work.
+  work. The 2026-07-30 homepage redesign added a second namespace (`--color-accent-from/via/to/
+  solid`, `--color-home-bg`, `.gradient-text`, `.gradient-bg`, `.pill-badge`) deliberately kept
+  separate from `--color-accent` so the blog/`/contact` pages stay unaffected — use the gradient
+  tokens for anything on the homepage or the new `/work/*` pages, the plain `--color-accent`
+  tokens for anything on the blog or `/contact`. Full detail: `systemstatus.md` §2.
+- **Every in-page anchor link needs a leading `/`** (`/#case-studies`, not `#case-studies`) — a
+  bare hash is harmless on the homepage itself but breaks navigation from any other route (e.g.
+  clicking a nav link from `/blog` just appends the hash to the current URL instead of going
+  home). This bit every hardcoded link AND every CMS-stored `navigation`/`footer`/`homepage` CTA
+  href at once — fixing the code wasn't enough, the already-persisted documents needed a one-off
+  script too. See CHANGELOG 2026-07-30 (second entry that day).
+- **Domain/URL generation must use `SITE_URL`** (`lib/constants.ts`), never `siteSettings.url` —
+  see the `constants.ts` entry in the file tree above and CHANGELOG 2026-08-03 for why.
 - Tailwind v4 here — theme is CSS-first (`@theme` in `globals.css`), there is no
   `tailwind.config.js`.
 - `Button` (`components/ui/button.tsx`) must stay `"use client"`. It uses Radix `Slot`, which
@@ -245,6 +319,20 @@ claude files/
   `payload run` script — there's no Next.js request context outside a real HTTP request, so a
   script-driven write won't invalidate the running dev/prod server's cache; restart the server (or
   hit the write through `/admin`/the REST API instead) if you need the change to show up live.
+- **`payload run <script>.ts` calls `process.exit(0)` the instant the dynamic `import()` of your
+  script resolves** — which happens as soon as the module's top-level synchronous code finishes
+  running, not when an un-awaited async function inside it finishes. A script whose top-level code
+  is `run().then(...)` (fire-and-forget) gets killed mid-flight with zero output and no error; a
+  script whose top-level code is `await run()` (or just inlined top-level `await` statements, since
+  these scripts run as ESM) blocks the module from resolving until the work is actually done. Always
+  use top-level `await`, never a bare `.then()`/`.catch()` chain, in a one-off `payload run` script.
+- No helper exists for constructing Lexical rich-text content programmatically (e.g. from a
+  one-off seed script) — build the plain JSON AST by hand: a `root` node wrapping `children`
+  (`paragraph`/`heading`/`list`/`listitem` nodes, each with `direction`/`format`/`indent`/`version`
+  keys), each `text` node needs `{type: "text", text, format: 0, detail: 0, mode: "normal", style:
+  "", version: 1}`. See the one-off script referenced in `CHANGELOG.md` 2026-08-03 for a working
+  set of builder functions (`paragraph()`, `heading()`, `bulletList()`, `richText()`) if writing
+  another one.
 
 ## Verifying UI changes
 
@@ -263,7 +351,14 @@ see `Architecture files/currentphase.md`'s "Known gap.")
 
 ## Brand quick reference
 
-Ink `#201e1d` · Paper `#f3f2f2` · Accent Red `#ec3013` (the *only* accent — used sparingly) ·
-Ink-soft `#6f6b68`. Archivo for all type; Caveat only for small hand-drawn label accents. Full
+Ink `#201e1d` · Paper `#f3f2f2` · Accent Red `#ec3013` · Ink-soft `#6f6b68` — the original system,
+still exactly what the blog and `/contact` use, Accent Red the only accent on those pages, used
+sparingly. **The homepage (and the new `/work/*` pages) use a second, separate token namespace**
+added by the 2026-07-30 redesign: a 3-stop gradient literally blending the same Accent Red through
+purple `#a855f7` to blue `#3b82f6` (`--color-accent-from/via/to`, `.gradient-text`, `.gradient-bg`),
+plus a flat `--color-accent-solid` (`#8b5cf6`) and light `--color-home-bg` (`#f7f8fc`) — the two
+systems coexist by design, not by oversight, specifically so this rule can stay simple: blog/
+contact → plain `--color-accent`; homepage/`/work/*` → gradient tokens. Archivo for all type;
+Caveat only for small hand-drawn label accents (blog/contact only, not the homepage). Full
 rationale and the historical superseded palette: `claude files/CLAUDE.MD`. Full token/usage
 detail: `Architecture files/systemstatus.md` §2.

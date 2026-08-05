@@ -14,6 +14,7 @@ const FALLBACK_FOOTER: FooterData = {
     { label: "Social Media", href: "/#services" },
     { label: "Video Production", href: "/#services" },
     { label: "Brand Strategy", href: "/#services" },
+    { label: "Influencer Program", href: "/form/influencer" },
   ],
   legalLinks: [
     { label: "Privacy Policy", href: "/#top" },

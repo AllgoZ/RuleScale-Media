@@ -6,6 +6,235 @@ why, and (for the non-obvious ones) how it was diagnosed. Add new entries at the
 
 ---
 
+## 2026-08-05 — Influencer creator-network application form (`/form/influencer`)
+
+New public page, `prompts/forms/influencer.md`. The spec asked for a raw Supabase table +
+Supabase Storage bucket, written as if no CMS existed yet — but this repo already stores
+everything in the same Supabase Postgres via Payload collections, and already uses Cloudinary
+(not Supabase Storage) for file uploads. Confirmed the deviation with the user before building:
+implemented as a new `influencer-applications` Payload collection instead of a parallel
+raw-Supabase-client data path, so it gets Payload admin (list/filter/search, versioning, RBAC) for
+free rather than needing a bespoke admin UI built later — directly satisfies the spec's "Admin
+Ready" requirement.
+
+**New `influencer-applications` Payload collection**
+(`payload/collections/influencer-applications.ts`): ~50 fields covering the spec's 8 form sections
+(personal, creator, location, social, audience, collaboration, additional, consent) plus
+admin-only CRM fields (status, tier, verification, assigned manager, payment status,
+last-contact/next-followup dates) and an attribution group, same pattern as `leads`. Public REST
+create is closed (`access.create: () => false`) — only `/api/influencer`'s route handler can
+write, via the Local API. Needed an explicit `dbName: "influencer_apps"` — the full slug
+(`influencer-applications`) combined with `versions: true`'s generated enum type names
+(`enum__<name>_v_version_<field>`) blew past Postgres's 63-character identifier limit on the
+longest field name. Required fields intentionally match the spec's explicit "Required fields"
+list, not every field marked `*` in the form-section outline (broader, includes the full postal
+address) — the itemized list reads as the more deliberate source of truth, and gating an
+applicant on a full address to apply would hurt conversion for no stated reason.
+
+**Submission pipeline**: `/api/influencer` (honeypot, `lib/influencer/validate.ts` server-side
+validation, DB-backed rate limiting, and a 24h duplicate-application check by email+Instagram) and
+`/api/influencer/upload` (public, unauthenticated by necessity since it runs before an applicant
+has submitted anything — bounded by strict PDF-only/10MB checks). PDFs (Media Kit, Rate Card) go
+to Cloudinary's `raw` resource type rather than Supabase Storage; `lib/cloudinary.ts`'s
+`uploadImage`/`deleteImage` were extended to accept it.
+
+**Client**: `components/forms/influencer/` — an 8-step wizard (progress bar, localStorage
+autosave/restore, per-step client validation, XHR-based upload progress, animated success screen
+with a "Back to Homepage" CTA), built entirely from the existing design system components (Button,
+Container, Reveal, brand tokens) — no new visual language. Page background uses `bg-dot-grid-light`
+(same class the homepage's `<main>` already uses) for the grid-on-light-background treatment.
+
+**Navigation and footer**: added an "Influencers" link to `navigation.links` (right after
+"Services") and an "Influencer Program" link to `footer.serviceLinks` (after the existing service
+items) — both in the collection `defaultValue`s (`payload/globals/navigation.ts`,
+`payload/globals/footer.ts`, plus their `lib/constants.ts`/`lib/cms/footer.ts` fallbacks) and, via
+a one-off `payload run` script, in the already-seeded live global documents — same as every prior
+case where a `defaultValue` change doesn't retroactively touch a singleton global already sitting
+in the database. The footer's "Company" column already mirrors the full nav array, so the new link
+appears there too automatically; not deliberate, but harmless.
+
+**Real gotcha, worth remembering**: right after the DB update, `npm run dev` kept serving the old
+nav/footer even after clearing `.next/cache` and a full process restart. Root cause wasn't the
+already-documented Turbopack `unstable_cache` dev-mode artifact (see the 2026-07-29 entry) — it
+was a leftover **production build** sitting in `.next` from an earlier `npm run build` in the same
+session, including prerendered static HTML for `/`. `next dev` reused that static output instead
+of rendering fresh; `rm -rf .next/cache` doesn't touch `.next/server`'s actual prerendered pages.
+Fix: delete the entire `.next` directory (not just `.next/cache`) before starting `dev` again after
+a `build` has run against the same working tree.
+
+Verified against a real production build (`next build && next start`, not just `next dev`, given
+the caching gotcha above): title/canonical/OG tags render correctly, honeypot/validation/
+duplicate-check/rate-limit all behave correctly against the real database, nav/footer show the new
+link. One real end-to-end test submission was made and immediately deleted via a one-off script
+after confirming duplicate-detection worked — no test data left in the shared database. Known gap,
+same as every other phase: no browser-automation tool available this session, so a real mobile/
+desktop click-through of the 8-step wizard hasn't been done.
+
+---
+
+## 2026-08-03 — CMS-driven Portfolio system, real client case studies, Cloudinary
+
+Replaced the static "Case Studies" homepage section (a bare `case-studies` collection — client,
+industry, result, summary, tags, no thumbnail, no rich content, no publish workflow) with a real
+portfolio subsystem, per a full written spec. Went through formal plan mode first given the scope
+(new external service, new collection, five new routes, custom admin UI) — plan approved before
+any code was written.
+
+**New `portfolio` Payload collection** (`payload/collections/portfolio.ts`): title, client, slug,
+`featured` boolean, `mediaType` (image/video), category, description, resultHeadline, services
+(array), thumbnail (url/publicId/width/height/format), videoUrl, `caseStudyContent` (richText),
+liveWebsite, sortOrder, publishedAt, an SEO group, `versions.drafts: true`. A real migration
+(`migrations/20260803_091008_add_portfolio_collection.ts`) was generated and applied to the shared
+dev/prod database — required now that `push: false` (2026-07-30 entry below) means nothing gets a
+table without one, local dev included.
+
+**Cloudinary, not Payload storage, for all portfolio media** — the explicit requirement. Official
+`cloudinary` SDK wrapped in `lib/cloudinary.ts` (`uploadImage`/`deleteImage`/`transformImage`),
+gated behind a new `getCloudinaryConfig()` in `lib/env.ts` that follows the same
+optional-key-degrades-gracefully pattern as `RESEND_API_KEY`/`TURNSTILE_SECRET_KEY` (warns once,
+returns `null`, never throws at boot) — the collection had to be fully usable before real
+Cloudinary keys existed ("will be provided later" in the original spec). Uploads go through a new
+authenticated route, `app/(frontend)/api/portfolio/upload/route.ts` (admin/editor only, same
+`payload.auth()` pattern as `/api/leads/export`), which streams straight to Cloudinary and returns
+only metadata — no file ever touches Payload or local disk. `transformImage()` does the
+OG-image-sized crop by string-splicing the transformation into an already-uploaded delivery URL
+(`.../upload/f_auto,q_auto,c_fill,w_1200,h_630/...`) rather than calling the SDK, so it keeps
+working to render pages even if Cloudinary env vars are later unset or rotated.
+
+**Custom Payload admin field** (`payload/admin-views/cloudinary-upload-field.tsx`): replaces the
+default text input for `thumbnailUrl` with a file picker + "Upload to Cloudinary" button, using
+`useField`/`useFormFields` from `@payloadcms/ui` to write the returned metadata into the sibling
+(hidden) `thumbnailPublicId`/`Width`/`Height`/`Format` fields on success. `thumbnailUrl` itself
+stays a real, visible, directly-editable text input underneath the button — an editor can paste a
+URL manually as a fallback with zero Cloudinary configuration, so the collection was genuinely
+usable end-to-end before real API keys arrived. Needed `npm run generate:importmap` after adding
+it — Payload's admin bundle only knows about a custom component once it's in the import map.
+
+**New routes**, all `SITE_URL`-based (not `siteSettings.url` — see the domain-migration entry
+below, same lesson applied proactively here): `/work/[slug]` (image-project case study detail —
+hero, description, resultHeadline, services, `caseStudyContent` rendered via
+`@payloadcms/richtext-lexical/react`'s `RichText`, related work, `CreativeWork` + breadcrumb
+JSON-LD), `/work/videos` (grid of published video items), `/work/videos/[slug]` (embedded player —
+`lib/video.ts`'s `parseVideoUrl()` detects YouTube/Vimeo/direct-Cloudinary-MP4 and picks
+`<iframe>` vs `<video>` accordingly — plus `VideoObject` + breadcrumb JSON-LD). All three added to
+`sitemap.ts`.
+
+**Homepage**: new `sections/featured-work.tsx` (`getFeaturedPortfolioItems()` — `featured: true`,
+`mediaType: "image"` only, published, sorted by `sortOrder`) replaces the old
+`case-studies`-collection-driven section in `app/(frontend)/page.tsx`. Deliberately kept the same
+`id="case-studies"` anchor the old section used, so the nav "Work" link, hero secondary CTA, and
+the CMS `navigation` document's stored href — all fixed to point at `/#case-studies` in the
+2026-07-30 entry below — kept working with zero further changes. The old collection and its 3
+placeholder entries (Marlow & Finch, Northbound Outfitters, Ferra Skincare) were left completely
+alone, just no longer rendered — nothing was deleted.
+
+**Real content**: uploaded the four supplied client project images to Cloudinary and created the
+matching Portfolio documents — Mylini and Kodai Golden Honey (E-commerce Website) and LightPic (AI
+SaaS Platform) are published and featured, with full case-study rich text (Overview/Challenge/
+Solution/SEO Highlights/Outcome) built programmatically as Lexical AST nodes in a one-off script
+(no existing helper for this in the codebase) from the supplied case-study briefs. A fourth,
+Fairyland Resort, was uploaded and stored but saved with `_status: "draft"` — "keep it hidden, do
+not delete" — which correctly excludes it from every public query (`getFeaturedPortfolioItems`,
+`getPortfolioItemBySlug`, `getAllPortfolioItems`) including direct URL access (`/work/
+fairyland-resort` → 404), without touching the record. Each real project's `liveWebsite` was later
+set to its actual production URL (mylini.com, lightpic.in, kodaigoldenhoney.com).
+
+**Real bug, caught from a live report, not a test**: setting `liveWebsite` made the *entire*
+homepage card an external link (the original card component had one click target that branched
+external-vs-internal), so there was no longer any way to reach `/work/[slug]` from the homepage —
+the spec's own "View Case Study button" had never actually been built as a distinct element. Fixed
+by always linking the card body to the internal case study page and moving the external link to a
+small separate icon button in the card's corner (`stopPropagation`-free since it's a sibling
+absolutely-positioned element at a higher z-index, not nested inside the card's own link).
+
+Verified throughout the same way as every other phase: `npm run lint`/`build` clean at each stage,
+a real end-to-end round-trip (create a test item → confirm it renders on the homepage and its
+detail page with correct JSON-LD → delete it) before touching real content, `POST /api/leads` still
+`403` and `/admin` still loads after every change (backend untouched). Known gap, same as always:
+no browser-automation tool available this session, so the admin upload button's actual click-through
+UX (file picker → preview → sibling-field population) is verified against Payload's real hook
+signatures and API shapes, not a live browser interaction.
+
+---
+
+## 2026-08-03 — Domain migration: rulescalemedia.com → www.rulescale.in, twice
+
+Google Search Console reported `sitemap.xml` "Couldn't fetch" / "URL not allowed" against the
+retired `rulescalemedia.com` domain. Audited the entire repo for the string (`lib/constants.ts`'s
+`SITE_URL`, `payload/globals/site-settings.ts`'s `url` field default; `migrations/*` left alone as
+historical DDL, and two false positives correctly left untouched — the `instagram.com/
+rulescalemedia` / `linkedin.com/company/rulescale-media` social handles, and a seed-admin email
+mention in `prompts/results/phase1result.md`). Fixed `SITE_URL` to
+`process.env.NEXT_PUBLIC_SITE_URL || "https://rulescale.in"`, fixed the Payload default, and
+patched the live `siteSettings.url` document directly (same pattern as the earlier nav-link fix) —
+though it turned out someone had already corrected that field via the admin UI before this session,
+so the live document was already right; only the code-level fallbacks needed the fix at that point.
+
+**Google Search Console still showed the old domain after that fix shipped.** Root cause: every
+SEO-critical surface (`sitemap.ts`, `blog/rss.xml/route.ts`, `lib/seo/metadata.ts`'s
+`metadataBase`/OG, `lib/schema/index.ts`'s JSON-LD builders, every blog page's canonical/OG) read
+the domain from `siteSettings.url` — a Payload global cached via `unstable_cache` with **no
+revalidate time**, invalidated only by a tag that reliably fails when a document is updated from a
+standalone script (no Next.js request context to call `revalidateTag` from — the exact same
+limitation noted in the 2026-07-30 entry below). Vercel's Data Cache for that tag was still serving
+a pre-fix snapshot. Fix: stopped using `siteSettings.url` for domain construction entirely across
+every one of those files — replaced with the `SITE_URL` code constant, which carries zero caching
+risk since it's evaluated fresh on every import. `siteSettings.url` remains in Payload as an
+editable, admin-visible field, just no longer wired into anything that generates a URL.
+
+**Domain corrected a second time same day**: the actual live Vercel routing turned out to be
+`https://www.rulescale.in` (the `www` variant), not the bare apex — `SITE_URL`'s default and the
+Payload field's default were both updated from `https://rulescale.in` to `https://www.rulescale.in`
+to match. Verified via `curl`: `/sitemap.xml`, `/robots.txt`, canonical/OG/Twitter meta tags,
+`Organization` JSON-LD, and the RSS feed all confirmed emitting `www.rulescale.in` exclusively, zero
+`rulescalemedia.com` references left anywhere live.
+
+---
+
+## 2026-08-01 — Google Tag Manager
+
+Added GTM (`GTM-K28PK4V6`) to the public site only — `app/(frontend)/layout.tsx`, not the separate
+`app/(payload)/layout.tsx` admin layout, so it fires on every public page (home, blog, contact) but
+never inside `/admin`. Used `next/script` with `strategy="beforeInteractive"` — Next's own
+documented pattern for GTM — rather than a raw `<script>` tag in `<head>`: `beforeInteractive`
+scripts get injected into the initial HTML and execute before hydration and before any other page
+script, which is the actual intent behind GTM's own "as high in `<head>` as possible" instruction
+(confirmed via rendered-HTML inspection: the script appears as literally the first thing in
+`<body>`, ahead of the JSON-LD and everything else, regardless of its JSX position). The required
+`<noscript>` iframe fallback is the first element inside `<body>`.
+
+---
+
+## 2026-07-30 — Cross-page in-page-scroll links; permanent dev-push lockout
+
+**Bug**: navigating to `/blog` and clicking "Work" in the header nav (or the logo, or the mobile
+CTA, or a footer link) produced `/blog#case-studies` instead of returning to the homepage. Root
+cause: every in-page anchor across the whole site (`#case-studies`, `#services`, `#process`,
+`#faq`, `#final-cta`, `#top`) was a *bare* hash with no leading `/` — harmless on the homepage
+itself, but from any other route a bare `#anchor` just appends to the current URL rather than
+navigating home. Fixed by prefixing all of them with `/` across every source location: the
+CMS-editable defaults (`payload/globals/navigation.ts`, `footer.ts`, `homepage.ts`'s hero CTAs),
+the code-level fallbacks (`lib/constants.ts`, `lib/cms/*.ts`), and the hardcoded logo/footer/
+mobile-CTA links — then patched the already-persisted `navigation`/`footer`/`homepage` documents
+in the live database to match, since fixing only the defaultValue doesn't touch a document that
+already exists (the same lesson as every other "fix the default AND the live row" fix this
+project has needed).
+
+**While testing that fix, re-broke the exact production build crash from the 2026-07-30 entry
+below.** Running the verification script (`payload run` outside `NODE_ENV=production`) re-triggered
+Payload's dev-mode schema auto-push against the shared database, re-inserting the `{name: "dev",
+batch: -1}` migration-ledger marker that causes an unanswerable interactive prompt on the next
+Vercel build — because local dev and production point at the *same* database, and nothing had
+previously stopped dev-push from running locally between deploys. Root-caused this time instead of
+just re-patching the ledger again: added `push: false` to `postgresAdapter(...)` in
+`payload.config.ts`. Per the adapter's own source (`this.push !== false` gates `pushDevSchema()`),
+this permanently disables auto-push everywhere, not just in production — local dev now behaves
+exactly like production, schema changes only ever land via a real `payload migrate:create` +
+committed migration file. Re-corrected the ledger once more after adding the flag, confirmed no
+recurrence.
+
+---
+
 ## 2026-07-30 — Homepage UI/UX redesign, refinements, and first production deploy
 
 Two threads of work: a full visual redesign of the homepage (UI/UX only, explicitly no backend/

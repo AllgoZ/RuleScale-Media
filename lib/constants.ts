@@ -9,6 +9,7 @@ export const CONTACT_EMAIL = "hello@rulescale.media";
 export const NAV_LINKS = [
   { label: "Work", href: "/#case-studies" },
   { label: "Services", href: "/#services" },
+  { label: "Influencers", href: "/form/influencer" },
   { label: "Process", href: "/#process" },
   { label: "FAQ", href: "/#faq" },
   { label: "Blog", href: "/blog" },

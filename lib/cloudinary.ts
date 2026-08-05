@@ -27,7 +27,7 @@ function configureCloudinary() {
  * an upload the editor explicitly triggered should never appear to succeed when it didn't. */
 export async function uploadImage(
   fileBuffer: Buffer,
-  options?: { folder?: string; resourceType?: "image" | "video" | "auto" }
+  options?: { folder?: string; resourceType?: "image" | "video" | "raw" | "auto" }
 ): Promise<CloudinaryUploadResult> {
   const client = configureCloudinary();
   if (!client) {
@@ -61,12 +61,15 @@ export async function uploadImage(
   };
 }
 
-export async function deleteImage(publicId: string): Promise<void> {
+export async function deleteImage(
+  publicId: string,
+  options?: { resourceType?: "image" | "video" | "raw" }
+): Promise<void> {
   const client = configureCloudinary();
   if (!client) {
     throw new Error("Cloudinary is not configured (missing CLOUDINARY_* env vars).");
   }
-  await client.uploader.destroy(publicId);
+  await client.uploader.destroy(publicId, { resource_type: options?.resourceType || "image" });
 }
 
 /** Inserts a transformation segment into an already-uploaded Cloudinary delivery URL

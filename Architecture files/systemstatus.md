@@ -1,6 +1,6 @@
 # RuleScale Media — Landing Page: System Status
 
-Last updated: 2026-07-30
+Last updated: 2026-08-03
 Repo: https://github.com/AllgoZ/RuleScale-Media (branch `main`)
 
 For "what phase are we in right now and what's next" in 30 seconds, read `currentphase.md`
@@ -27,6 +27,7 @@ tech stack, brand system, CMS architecture, and every section top to bottom.
 | Primitives | Radix UI (`react-accordion`, `react-slot`) |
 | Utilities | `class-variance-authority`, `clsx`, `tailwind-merge` |
 | React | 19.2 |
+| Media hosting | Cloudinary (`cloudinary` official SDK) — Portfolio collection only, not Payload's own upload storage |
 
 Next.js is pinned to 16.2.12 specifically because every published Payload version's `next` peer
 range excludes 15.5.x entirely (only 15.2.9/15.3.9/15.4.11 or 16.2.6+ are supported) — see
@@ -39,46 +40,70 @@ app/
     blog/      the blog (Phase 2) — index, [slug], category/[slug], tag/[slug], author/[slug],
                search, rss.xml
     contact/   the contact page (Phase 3) — the site's only lead-capture form
+    work/      Portfolio detail pages — [slug] (image case study), videos/ (gallery),
+               videos/[slug] (video detail) — all CMS-driven, no hardcoded project data
     api/contact/    the one backend endpoint the contact form posts to (Phase 3)
     api/leads/export/   admin-only CSV export of the leads collection (Phase 3)
+    api/portfolio/upload/   admin/editor-only Cloudinary upload endpoint for the Portfolio
+               collection's thumbnail field — streams straight to Cloudinary, never touches disk
   (payload)/   Payload-generated admin + REST/GraphQL API routes (never hand-edited)
   robots.ts, sitemap.ts, icon.tsx, opengraph-image.tsx   top-level, outside both route groups
-                 (sitemap.ts now also includes posts/categories/tags/authors, Phase 2)
+                 (sitemap.ts now also includes posts/categories/tags/authors, Phase 2, plus
+                 Portfolio items and /work/videos, 2026-08-03)
 payload.config.ts   Payload config root (collections, globals, db adapter, admin.components)
 payload/
   collections/  users (role: admin/editor), media, categories, authors, posts, tags,
-                 testimonials, case-studies, leads, clients, projects, contracts, files,
-                 meetings (the last 5 are Phase 3 placeholders, admin.hidden: true)
+                 testimonials, case-studies (superseded — see "Portfolio" in §1d below),
+                 portfolio, leads, influencer-applications (§1f), clients, projects, contracts,
+                 files, meetings (clients/projects/contracts/files/meetings are Phase 3
+                 placeholders, admin.hidden: true)
   globals/       homepage (drafts + preview), navigation, footer, site-settings, seo-settings
   access.ts      shared RBAC helpers (isAdmin, isAdminOrEditor, isAdminOrSelf)
   hooks/         revalidateTagSafely() (cache invalidation) and dispatchLeadEvent() (Phase 3 —
                  the single seam Leads afterChange events flow through, currently email only)
-  admin-views/   custom Payload admin components (Phase 3) — business-dashboard.tsx,
-                 leads-export-button.tsx, dashboard-nav-link.tsx
-  seed.ts        one-time seed for testimonials/case-studies (npm run seed)
+  admin-views/   custom Payload admin components — business-dashboard.tsx, leads-export-button.tsx,
+                 dashboard-nav-link.tsx (Phase 3), cloudinary-upload-field.tsx (Portfolio, a
+                 custom Field component wired via admin.components.Field, not a view)
+  seed.ts        one-time seed for testimonials/case-studies (npm run seed) — predates Portfolio,
+                 which was seeded via one-off `payload run` scripts instead (see CHANGELOG 2026-08-03)
 lib/
   cms/          getHomepage() / getNavigation() / getFooter() / getSiteSettings() /
                  getSEOSettings() / getCategories() / getTags() / getAuthors() / getPublishedPosts()
-                 / getPostBySlug() / getFeaturedPost() / getRelatedPosts() / getAdjacentPosts() —
-                 the only code that talks to Payload. Each is cache(unstable_cache(...)) with
-                 tag-based invalidation; the homepage-era getters fall back to lib/constants.ts
-                 (uncached) on error, the blog getters return empty results on error (no
-                 pre-CMS blog content to fall back to). getHomepage()/getPostBySlug() branch on
+                 / getPostBySlug() / getFeaturedPost() / getRelatedPosts() / getAdjacentPosts() /
+                 getFeaturedPortfolioItems() / getVideoPortfolioItems() / getPortfolioItemBySlug()
+                 / getRelatedPortfolioItems() / getAllPortfolioItems() — the only code that talks
+                 to Payload. Each is cache(unstable_cache(...)) with tag-based invalidation; the
+                 homepage-era getters fall back to lib/constants.ts (uncached) on error, the blog
+                 and portfolio getters return empty results on error (no pre-CMS content to fall
+                 back to). getHomepage()/getPostBySlug()/getPortfolioItemBySlug() branch on
                  Next draft mode before the cached path
   cache/tags.ts  CACHE_TAGS — shared between lib/cms and the payload/*/hooks
   blog/          reading-time.ts, toc.ts (heading extraction + id assignment for the article TOC)
   leads/         validate.ts, rate-limit.ts, attribution.ts, turnstile.ts (Phase 3 — the
                  /api/contact security/validation layer, none of it Payload-specific)
   email/         resend-client.ts, send-lead-emails.tsx, templates/ (Phase 3, React Email)
-  env.ts         optional-integration-key accessors (RESEND_API_KEY, TURNSTILE_*) — warn once
-                 and degrade gracefully rather than throw when unset (Phase 3)
+  env.ts         optional-integration-key accessors (RESEND_API_KEY, TURNSTILE_*,
+                 getCloudinaryConfig()) — warn once and degrade gracefully rather than throw when
+                 unset
+  cloudinary.ts  uploadImage() / deleteImage() / transformImage() — server-only, wraps the
+                 official SDK; transformImage() splices a transformation string into an
+                 already-uploaded delivery URL rather than calling the SDK, so it needs no live
+                 config at read time
+  video.ts       parseVideoUrl() — detects YouTube/Vimeo/direct-Cloudinary-MP4 from a plain URL
+                 string, used by the video portfolio pages to pick <iframe> vs <video>
   seo/metadata.ts  buildSiteMetadata(), called from layout.tsx's generateMetadata()
-  constants.ts  fallback source of truth (no longer the primary content source, still live)
+  constants.ts  fallback source of truth (no longer the primary content source, still live) —
+                 also the single source of truth for SITE_URL, which every SEO-critical surface
+                 (sitemap, RSS, metadataBase, canonical/OG, JSON-LD) reads directly, not the
+                 CMS-editable siteSettings.url (see §7 and CHANGELOG 2026-08-03)
   schema/index.ts  JSON-LD builders — pure functions taking CMS data as params (Organization,
-                 LocalBusiness, Service, FAQPage, BreadcrumbList, Article)
+                 LocalBusiness, Service, FAQPage, BreadcrumbList, Article, CreativeWork, VideoObject)
   utils.ts      cn() class-merge helper
 sections/     one file per page section (Header, Hero, Problem, ... Footer), each consuming
-              CMS content via a `data` (or `navigation`/`footer`) prop, not a direct import
+              CMS content via a `data` (or `navigation`/`footer`) prop, not a direct import.
+              featured-work.tsx (2026-08-03) replaced case-studies.tsx in the homepage's section
+              list — same `id="case-studies"` anchor, different data source (Portfolio, not the
+              old case-studies collection). case-studies.tsx itself still exists, just unused.
 components/
   ui/         generic primitives (Button, Container, Reveal, Accordion, Spotlight, RollingNumber, Marquee)
   doodles/    hand-drawn brand accents (LogoMark, HandArrow, PaperClip, ScribbleUnderline)
@@ -245,6 +270,94 @@ the DB-backed rate-limit decision, why `versions: true` instead of a bespoke aud
 
 ---
 
+## 1e. Portfolio system (Cloudinary-hosted case studies)
+
+Added 2026-08-03 per `prompts/v2/casestudy.md` (architecture) and
+`prompts/projects_images/casestudy.md` (real content) — went through formal plan mode first given
+the scope; full reasoning and the bugs found along the way are in `CHANGELOG.md`.
+
+- **`portfolio` collection** (`payload/collections/portfolio.ts`) — a new collection, not an
+  extension of the pre-existing `case-studies` collection (client confirmed keeping the old one
+  untouched rather than migrating it). Fields: title, client, slug, `featured` boolean, `mediaType`
+  (image/video), category, description, resultHeadline, services (array), thumbnail
+  (url/publicId/width/height/format — the width/height/format/publicId fields are `admin.hidden`,
+  populated programmatically, never hand-edited), videoUrl, `caseStudyContent` (richText),
+  liveWebsite, sortOrder, publishedAt, an SEO group, `versions.drafts: true`.
+- **Cloudinary, not Payload storage**: `lib/cloudinary.ts` wraps the official SDK
+  (`uploadImage`/`deleteImage`/`transformImage`), gated by `lib/env.ts`'s `getCloudinaryConfig()`
+  — same graceful-degradation pattern as Resend/Turnstile (warns once, returns `null`, never
+  throws). A custom Payload admin Field component
+  (`payload/admin-views/cloudinary-upload-field.tsx`) replaces the default `thumbnailUrl` text
+  input with a file picker + "Upload to Cloudinary" button, wired through an authenticated route
+  (`app/(frontend)/api/portfolio/upload/route.ts`, admin/editor only) that streams straight to
+  Cloudinary and returns only metadata. `thumbnailUrl` stays directly editable underneath the
+  button, so an editor can paste a URL manually if Cloudinary isn't configured.
+- **Homepage**: `sections/featured-work.tsx` (new) reads `getFeaturedPortfolioItems()` —
+  `featured: true`, `mediaType: "image"` only (videos never show on the homepage), published,
+  sorted by `sortOrder` — and replaced `sections/case-studies.tsx` in `app/(frontend)/page.tsx`'s
+  render list. Kept the same `id="case-studies"` section anchor so the nav "Work" link / hero CTA
+  needed no further changes. Each card links to `/work/[slug]` (the "View Case Study" affordance);
+  if `liveWebsite` is set, a small separate icon in the card's corner links out to the live site —
+  originally the *whole card* linked externally when `liveWebsite` was set, which silently removed
+  any way to reach the internal case study page; fixed same day once reported live.
+- **Routes**: `/work/[slug]` (image case study — hero, description, resultHeadline, services,
+  `caseStudyContent` rendered via `RichText` from `@payloadcms/richtext-lexical/react`, related
+  work, `CreativeWork` + breadcrumb JSON-LD), `/work/videos` (grid of published video items),
+  `/work/videos/[slug]` (embedded player — `lib/video.ts`'s `parseVideoUrl()` picks `<iframe>` for
+  YouTube/Vimeo or `<video>` for a direct Cloudinary MP4 — plus `VideoObject` + breadcrumb JSON-LD).
+  All added to `sitemap.ts`. Every generated URL uses `SITE_URL` directly, not `siteSettings.url`
+  (see §7) — applied proactively here after the domain-migration incident on the same day.
+- **Real content**: Mylini and Kodai Golden Honey (E-commerce Website) and LightPic (AI SaaS
+  Platform) are published and featured, each with a full case-study write-up (Overview/Challenge/
+  Solution/SEO Highlights/Outcome) and a real `liveWebsite` URL. A fourth, Fairyland Resort, is
+  uploaded to Cloudinary and stored but kept `_status: "draft"` — invisible to every public query
+  and even direct URL access, without being deleted. The old `case-studies` collection's 3
+  placeholder entries (Marlow & Finch, Northbound Outfitters, Ferra Skincare) are still in the
+  database, untouched, just no longer rendered anywhere.
+- **Verification caveat**: same as every other phase — no browser-automation tool available, so
+  the admin upload button's actual click-through UX is verified against Payload's real hook
+  signatures and API response shapes, not a live browser interaction. No video portfolio item has
+  been published yet, so `/work/videos` has only ever been exercised against its empty state.
+
+---
+
+## 1f. Influencer application system (`/form/influencer`)
+
+Added 2026-08-05 per `prompts/forms/influencer.md`, which specified a raw Supabase table +
+Supabase Storage bucket as if no CMS existed. Confirmed with the user first, then built as a
+Payload collection instead — same Supabase Postgres, gets admin list/filter/search/versioning for
+free instead of needing a bespoke admin UI. Full reasoning in `CHANGELOG.md` 2026-08-05.
+
+- **`influencer-applications` collection** (`payload/collections/influencer-applications.ts`,
+  `dbName: "influencer_apps"` — the full slug plus `versions: true`'s generated enum type names
+  exceeded Postgres's 63-character identifier limit) — ~50 fields across the spec's 8 form
+  sections plus admin-only CRM fields (status, tier, verification, assigned manager, payment
+  status, last-contact/next-followup) and an attribution group, same shape as `leads`. Public REST
+  create is closed (`access.create: () => false`); only `/api/influencer`'s route handler writes,
+  via the Local API.
+- **`/api/influencer`** — honeypot, `lib/influencer/validate.ts` (required-field set matches the
+  spec's explicit "Required fields" list, not every field marked `*` in the broader form-section
+  outline), DB-backed rate limiting (`lib/influencer/rate-limit.ts`), and a 24h duplicate-
+  application check by email or Instagram (`lib/influencer/duplicate-check.ts`).
+- **`/api/influencer/upload`** — public/unauthenticated (runs before an applicant has submitted
+  anything to authenticate against), bounded by strict PDF-only/10MB validation. Media Kit/Rate
+  Card PDFs go to Cloudinary's `raw` resource type, not Supabase Storage — `lib/cloudinary.ts`'s
+  `uploadImage`/`deleteImage` were extended to accept it.
+- **Client** (`components/forms/influencer/`): an 8-step wizard — progress bar, localStorage
+  autosave/restore, per-step validation, XHR upload progress, animated success screen — built from
+  existing design-system primitives only (Button, Container, Reveal, brand tokens), no new visual
+  language. Page background: `bg-dot-grid-light` (same class the homepage `<main>` uses).
+- **Navigation/footer**: "Influencers" added to `navigation.links` (after "Services"),
+  "Influencer Program" added to `footer.serviceLinks` (after the existing service items) — both in
+  the Payload global `defaultValue`s and, via a one-off script, in the already-seeded live global
+  documents (a `defaultValue` change alone doesn't touch a singleton global already in the DB).
+- **Verification caveat**: same as every other phase — no browser-automation tool available, so
+  the wizard's click-through UX is verified via curl/HTTP checks against a real production build
+  (`next build && next start`), not a live browser interaction. One real end-to-end test
+  submission was made and immediately deleted after confirming duplicate-detection worked.
+
+---
+
 ## 2. Brand system
 
 > **2026-07-29/30 update**: the sections below describe the *original* ink/red/paper editorial
@@ -378,9 +491,21 @@ never duplicates the real CTA.
 
 ## 4. Page sections, top to bottom
 
-Order in `app/page.tsx`: **Hero → TrustLogos → Problem → Manifesto → Process → Services →
-Results → CaseStudies → Testimonials → FAQ → FinalCTA** (Header/Footer wrap all of this in the
-layout).
+> **2026-07-30 update**: the section-by-section detail below (hand-drawn doodles, ScribbleUnderline,
+> PaperClip, mock-browser-window case study cards, zig-zag SVG process lines, italic-serif Manifesto
+> reveal) describes the *pre-redesign* homepage and is now stale — see the §2 callout for what
+> replaced it (a clean card/pill/gradient system). **Current section order in
+> `app/(frontend)/page.tsx`** (as of 2026-08-03): **Hero → Results → Problem → Manifesto →
+> Services → TrustLogos → FeaturedWork → ToolsStack → Process → Testimonials → FAQ → FinalCTA**
+> (Header/Footer/MobileCTA/WhatsAppButton wrap all of this in `layout.tsx`). Two sections below no
+> longer exist in the form described: "Case studies" (§4.8) was replaced outright by
+> `sections/featured-work.tsx` — a Portfolio-collection-driven grid of real client project cards
+> (thumbnail, category pill, result headline, description, service tags, "View Case Study" link to
+> `/work/[slug]`, plus a small external-link icon if the item has a `liveWebsite` URL) — see §1e.
+> "Tools & Platforms" and a floating WhatsApp button were added during the redesign and were never
+> given their own entry here. Treat the sub-sections below as historical/superseded except where
+> a component name still matches something current (Hero, Services, Results, FAQ, Footer still
+> exist, just re-skinned — see §2).
 
 ### 1. Hero (`sections/hero.tsx` + `components/hero-collage.tsx`)
 - Asymmetric 12-col grid: copy in the left 7 columns, floating collage in the right 5.
@@ -507,28 +632,63 @@ the Results rebuild made them unused — no dead code left in the tree.
 
 ## 6. Content & data model
 
-All copy lives in **`lib/constants.ts`** — no hardcoded strings in section files:
-`SITE_*` (name/tagline/description/URL), `NAV_LINKS`, `TRUST_LOGOS`, `PROBLEM_CARDS`,
-`MANIFESTO`, `PROCESS_STEPS` (5), `SERVICES` (12, each with an `icon` key), `RESULTS_STATS` (4),
-`CASE_STUDIES` (3), `TESTIMONIALS` (4), `FAQS` (6).
+**Stale as of Phase 1 (2026-07-27)** — this described the pre-CMS, pure-`lib/constants.ts` site.
+Since Phase 1, all real content lives in **Payload**, backed by Postgres:
 
-`lib/schema.ts` builds 5 JSON-LD objects (`organizationSchema`, `localBusinessSchema`,
-`serviceSchema`, `faqSchema`, `breadcrumbSchema`) directly from the same constants, so schema
-and on-page copy can't drift apart.
+- **Globals** (singleton documents): `homepage` (hero/trustLogos/problem/manifesto/process/
+  services/results/caseStudies/testimonials/faq/finalCta groups, `versions.drafts: true` +
+  `admin.preview`), `navigation`, `footer`, `siteSettings`, `seoSettings`.
+- **Collections**: `users`, `media`, `categories`, `authors`, `posts` (blog, Phase 2,
+  `versions.drafts: true`), `tags`, `testimonials`, `case-studies` (superseded by `portfolio` for
+  display purposes, still holds its original 3 entries — see §1e), `portfolio` (2026-08-03, see
+  §1e), `leads` (CRM, Phase 3), `clients`/`projects`/`contracts`/`files`/`meetings` (Phase 3
+  placeholders, `admin.hidden: true`).
+- **`lib/constants.ts` is the fallback, not the source of truth** — every `lib/cms/*.ts` getter
+  (`getHomepage()`, `getNavigation()`, `getFooter()`, `getSiteSettings()`, `getSEOSettings()`, the
+  blog getters, the portfolio getters) tries Payload first and falls back to a matching constant
+  only if Payload is unreachable or the query throws. `SITE_URL` is the one exception that's
+  *never* CMS-sourced by design — see §7.
+- **`lib/schema/index.ts`** builds JSON-LD objects (`organizationSchema`, `localBusinessSchema`,
+  `serviceSchema`, `faqSchema`, `breadcrumbSchema`, `articleSchema`, `creativeWorkSchema`,
+  `videoObjectSchema`) as pure functions taking CMS data as params — no internal fetching, so
+  schema output can't drift from whatever the page actually rendered.
 
 ---
 
 ## 7. SEO implementation
 
-- `generateMetadata`-equivalent static `Metadata` export in `layout.tsx`: title template, full
-  description/keywords, canonical, complete Open Graph + Twitter card, robots directives.
-- `app/robots.ts`, `app/sitemap.ts` — file-convention routes.
+- **`SITE_URL`** (`lib/constants.ts`, `process.env.NEXT_PUBLIC_SITE_URL || "https://www.rulescale.in"`)
+  is the single source of truth for every generated absolute URL — `metadataBase`, canonical,
+  Open Graph, Twitter, all JSON-LD `@id`/`url` fields, `sitemap.ts`, `robots.ts`,
+  `blog/rss.xml/route.ts`. **Deliberately not `siteSettings.url`** (the CMS-editable field) for
+  any of this — that field is cached via `unstable_cache` with no revalidate time, and a domain
+  migration once shipped that didn't take effect for a while because a standalone script's
+  `revalidateTag()` call silently no-ops outside a real Next.js request context. `siteSettings.url`
+  still exists and is admin-editable, it's just not wired into anything that emits a URL. Full
+  incident writeup: `CHANGELOG.md` 2026-08-03.
+- `buildSiteMetadata()` (`lib/seo/metadata.ts`) assembles the Next `Metadata` object from
+  `siteSettings`/`seoSettings` (title template, description, keywords, robots directives) plus
+  `SITE_URL` (metadataBase, OG/Twitter urls), called from `layout.tsx`'s `generateMetadata()`.
+  Every blog and portfolio detail page has its own `generateMetadata()` that layers
+  page-specific title/description/canonical/OG/Twitter on top.
+- `app/robots.ts`, `app/(frontend)/sitemap.ts` (note: `sitemap.ts` lives *inside* the `(frontend)`
+  route group, `robots.ts` deliberately does not — see §8) — both `force-dynamic`, not
+  build-time-static, so neither depends on Postgres being reachable during a Vercel build.
+  `sitemap.ts` includes the homepage, `/blog` + every post/category/tag/author, `/work/videos` +
+  every portfolio item (routed to `/work/[slug]` or `/work/videos/[slug]` by `mediaType`).
 - `app/icon.tsx`, `app/opengraph-image.tsx` — dynamically generated (`next/og`) using the real
-  brand mark and colors, not static files.
-- 5 JSON-LD blocks injected in `<body>`: Organization, LocalBusiness, Service (all 12 offerings),
-  FAQPage (all 6 Q&As), BreadcrumbList.
-- Semantic sectioning (`<section>`/`<header>`/`<footer>`), heading hierarchy (single `h1` in
-  Hero, `h2` per section), `aria-label`s on icon-only controls, `aria-hidden` on decorative SVGs.
+  brand mark and colors. Blog posts and portfolio items instead use a real uploaded/Cloudinary
+  image as their OG image (`post.seo.ogImage || post.featuredImage`, or
+  `item.seo.metaImage || item.thumbnail.url` transformed to `1200×630` via
+  `lib/cloudinary.ts`'s `transformImage()`) rather than a per-page generated `ImageResponse`.
+- JSON-LD blocks (see §6) injected in `<body>` — Organization/LocalBusiness/Service/FAQPage/
+  BreadcrumbList site-wide (`layout.tsx`), plus Article (blog posts), CreativeWork (`/work/[slug]`)
+  and VideoObject (`/work/videos/[slug]`) on their respective detail pages.
+- Semantic sectioning (`<section>`/`<header>`/`<footer>`), heading hierarchy (single `h1` per
+  page), `aria-label`s on icon-only controls, `aria-hidden` on decorative SVGs.
+- **Google Tag Manager** (`GTM-K28PK4V6`) is live on every public page (`app/(frontend)/
+  layout.tsx`, `next/script` `strategy="beforeInteractive"`), not inside `/admin`
+  (`app/(payload)/layout.tsx` is untouched).
 
 ---
 
@@ -573,17 +733,23 @@ and on-page copy can't drift apart.
 
 - Git initialized, pushed to `https://github.com/AllgoZ/RuleScale-Media` on `main`. See
   `CHANGELOG.md` and `git log` for the actual commit-by-commit history.
-- **Live on Vercel** as of 2026-07-30, connected to the same Supabase Postgres project used in
-  local dev (confirmed by the user). No GitHub Actions/other CI configured — Vercel's own
-  git-push-triggered build is the only pipeline.
-- **Production schema is now migration-based, not dev-push.** Payload hard-disables its
-  auto-push-on-boot behavior whenever `NODE_ENV === "production"` (confirmed from the installed
-  `@payloadcms/db-postgres` source) and instead applies `postgresAdapter({ prodMigrations })` on
-  boot — `payload.config.ts` now wires this to `migrations/`, whose first entry
-  (`20260730_041032_initial_schema.ts`) represents the full schema as of this writing. **Any new
-  collection/field change now needs a real `payload migrate:create` + a reviewed migration file
-  committed alongside it** — `npm run dev`'s auto-push still works locally but no longer has any
-  effect on what production sees.
+- **Live on Vercel** at `https://www.rulescale.in` (canonical domain, migrated from the retired
+  `rulescalemedia.com` — see `CHANGELOG.md` 2026-08-03), connected to the same Supabase Postgres
+  project used in local dev (confirmed by the user). No GitHub Actions/other CI configured —
+  Vercel's own git-push-triggered build is the only pipeline.
+- **Schema is migration-based everywhere, dev-push is permanently off, local included.** Payload
+  hard-disables its auto-push-on-boot behavior whenever `NODE_ENV === "production"` (confirmed
+  from the installed `@payloadcms/db-postgres` source) and instead applies
+  `postgresAdapter({ prodMigrations })` on boot — `payload.config.ts` wires this to `migrations/`
+  (`20260730_041032_initial_schema.ts`, `20260803_091008_add_portfolio_collection.ts`, then
+  `20260805_150921_add_influencer_applications.ts`).
+  **`push: false` is also set** on the same adapter config, which additionally disables dev-push
+  in `npm run dev` locally, not just in production — added after a local verification script
+  re-triggered the exact interactive-prompt build crash described below by re-inserting a
+  dev-push marker into the shared database's migration ledger (`CHANGELOG.md` 2026-07-30, second
+  entry). **Any new collection/field change now needs a real `payload migrate:create` + a
+  reviewed migration file, applied to the shared DB, before local dev or production will see it
+  at all** — there's no other path anymore.
 - First deploy surfaced three separate, now-fixed issues — full diagnostic writeups in
   `CHANGELOG.md`'s 2026-07-30 entry: (1) `/admin` 500 + missing Blog nav link, caused by
   production never having received any schema changes since Phase 1 (fixed by the migrations
@@ -599,7 +765,10 @@ and on-page copy can't drift apart.
 - `.env*` is gitignored. `DATABASE_URL` and `PAYLOAD_SECRET` are required (see `.env.example`) —
   the frontend degrades gracefully via the `lib/cms` fallback without them, but `/admin` needs a
   real `DATABASE_URL` to function at all. **Always copy the real value from `.env.local` into
-  Vercel's env vars — never retype `.env.example`'s placeholder.**
+  Vercel's env vars — never retype `.env.example`'s placeholder.** `CLOUDINARY_CLOUD_NAME`/
+  `CLOUDINARY_API_KEY`/`CLOUDINARY_API_SECRET` are configured with real values in `.env.local`
+  (Portfolio uploads are live, not just built-and-waiting) — confirm they're set in Vercel's
+  environment variables too before relying on the admin upload button in production.
 
 ---
 

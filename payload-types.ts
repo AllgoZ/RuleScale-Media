@@ -77,6 +77,7 @@ export interface Config {
     'case-studies': CaseStudy;
     portfolio: Portfolio;
     leads: Lead;
+    'influencer-applications': InfluencerApplication;
     clients: Client;
     projects: Project;
     contracts: Contract;
@@ -99,6 +100,7 @@ export interface Config {
     'case-studies': CaseStudiesSelect<false> | CaseStudiesSelect<true>;
     portfolio: PortfolioSelect<false> | PortfolioSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
+    'influencer-applications': InfluencerApplicationsSelect<false> | InfluencerApplicationsSelect<true>;
     clients: ClientsSelect<false> | ClientsSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
     contracts: ContractsSelect<false> | ContractsSelect<true>;
@@ -466,6 +468,159 @@ export interface Lead {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "influencer-applications".
+ */
+export interface InfluencerApplication {
+  id: number;
+  fullName: string;
+  contactNumber: string;
+  alternativeContact?: string | null;
+  email: string;
+  gender?: ('female' | 'male' | 'non-binary' | 'prefer-not-to-say') | null;
+  age?: number | null;
+  /**
+   * Languages the creator speaks/writes, not necessarily content language.
+   */
+  languages?: string[] | null;
+  primaryCategory:
+    | 'fashion-style'
+    | 'beauty-skincare'
+    | 'fitness-health'
+    | 'food-cooking'
+    | 'travel'
+    | 'tech-gadgets'
+    | 'gaming'
+    | 'lifestyle-vlogging'
+    | 'comedy-entertainment'
+    | 'education'
+    | 'finance'
+    | 'parenting-family'
+    | 'other';
+  subcategory?: string | null;
+  creatorType: 'content-creator' | 'influencer' | 'ugc-creator' | 'photographer' | 'videographer' | 'model' | 'other';
+  bio?: string | null;
+  yearsAsCreator?: number | null;
+  currentOccupation?: string | null;
+  country?: string | null;
+  state?: string | null;
+  city?: string | null;
+  district?: string | null;
+  area?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  houseNumber?: string | null;
+  landmark?: string | null;
+  pincode?: string | null;
+  instagram: string;
+  secondInstagram?: string | null;
+  youtube?: string | null;
+  snapchat?: string | null;
+  facebook?: string | null;
+  twitter?: string | null;
+  linkedin?: string | null;
+  /**
+   * Other social profile links.
+   */
+  otherPlatforms?: string | null;
+  /**
+   * Drive / portfolio website link.
+   */
+  portfolioLink?: string | null;
+  /**
+   * Cloudinary URL of the uploaded PDF.
+   */
+  mediaKitUrl?: string | null;
+  mediaKitPublicId?: string | null;
+  /**
+   * Cloudinary URL of the uploaded PDF.
+   */
+  rateCardUrl?: string | null;
+  rateCardPublicId?: string | null;
+  audienceCountry?: string | null;
+  /**
+   * e.g. 18–24
+   */
+  audienceAge?: string | null;
+  audienceGender?: string | null;
+  monthlyReach?: number | null;
+  monthlyImpressions?: number | null;
+  averageStoryViews?: number | null;
+  averageReelViews?: number | null;
+  averageLast5VideoViews: number;
+  /**
+   * Percentage, e.g. 4.5
+   */
+  engagementRate?: number | null;
+  participateEcommerce?: ('yes' | 'no') | null;
+  interestedCampaigns?:
+    | (
+        | 'paid-campaigns'
+        | 'affiliate'
+        | 'ugc'
+        | 'long-term-partnerships'
+        | 'product-reviews'
+        | 'brand-ambassador'
+        | 'events'
+        | 'creator-workshops'
+      )[]
+    | null;
+  /**
+   * Price for one reel.
+   */
+  commercialReel: number;
+  /**
+   * Price for one story.
+   */
+  commercialStory: number;
+  monthlyCampaignCapacity?: number | null;
+  acceptingCollaborations?: ('yes' | 'no') | null;
+  availableForTravel?: ('yes' | 'no') | null;
+  previousBrandCollaborations: string;
+  industriesInterested?: string[] | null;
+  industriesWontPromote?: string[] | null;
+  contentLanguage: string;
+  /**
+   * Other platforms this creator publishes on.
+   */
+  contentPlatforms?: string | null;
+  heardAboutUs?:
+    | ('instagram' | 'google-search' | 'creator-referral' | 'brand-referral' | 'linkedin' | 'event-workshop' | 'other')
+    | null;
+  additionalInfo?: string | null;
+  /**
+   * Confirms the information provided is accurate and consents to RuleScale Media storing it for collaboration opportunities, per the Terms.
+   */
+  termsAccepted: boolean;
+  /**
+   * Agrees to the Privacy Policy.
+   */
+  privacyAccepted: boolean;
+  status?: ('applied' | 'reviewing' | 'shortlisted' | 'approved' | 'rejected' | 'onboarded') | null;
+  internalNotes?: string | null;
+  assignedManager?: (number | null) | User;
+  verificationStatus?: ('unverified' | 'verified' | 'flagged') | null;
+  creatorScore?: number | null;
+  tier?: ('nano' | 'micro' | 'mid-tier' | 'macro' | 'mega') | null;
+  lastContactDate?: string | null;
+  nextFollowup?: string | null;
+  paymentStatus?: ('not-applicable' | 'pending' | 'paid' | 'overdue') | null;
+  contractSigned?: boolean | null;
+  /**
+   * Captured automatically from the application form — not visitor-editable.
+   */
+  attribution?: {
+    ipAddress?: string | null;
+    userAgent?: string | null;
+    referrer?: string | null;
+    landingPage?: string | null;
+    device?: string | null;
+    browser?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "clients".
  */
 export interface Client {
@@ -583,6 +738,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'leads';
         value: number | Lead;
+      } | null)
+    | ({
+        relationTo: 'influencer-applications';
+        value: number | InfluencerApplication;
       } | null)
     | ({
         relationTo: 'clients';
@@ -887,6 +1046,95 @@ export interface LeadsSelect<T extends boolean = true> {
         utmCampaign?: T;
         utmTerm?: T;
         utmContent?: T;
+        device?: T;
+        browser?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "influencer-applications_select".
+ */
+export interface InfluencerApplicationsSelect<T extends boolean = true> {
+  fullName?: T;
+  contactNumber?: T;
+  alternativeContact?: T;
+  email?: T;
+  gender?: T;
+  age?: T;
+  languages?: T;
+  primaryCategory?: T;
+  subcategory?: T;
+  creatorType?: T;
+  bio?: T;
+  yearsAsCreator?: T;
+  currentOccupation?: T;
+  country?: T;
+  state?: T;
+  city?: T;
+  district?: T;
+  area?: T;
+  addressLine1?: T;
+  addressLine2?: T;
+  houseNumber?: T;
+  landmark?: T;
+  pincode?: T;
+  instagram?: T;
+  secondInstagram?: T;
+  youtube?: T;
+  snapchat?: T;
+  facebook?: T;
+  twitter?: T;
+  linkedin?: T;
+  otherPlatforms?: T;
+  portfolioLink?: T;
+  mediaKitUrl?: T;
+  mediaKitPublicId?: T;
+  rateCardUrl?: T;
+  rateCardPublicId?: T;
+  audienceCountry?: T;
+  audienceAge?: T;
+  audienceGender?: T;
+  monthlyReach?: T;
+  monthlyImpressions?: T;
+  averageStoryViews?: T;
+  averageReelViews?: T;
+  averageLast5VideoViews?: T;
+  engagementRate?: T;
+  participateEcommerce?: T;
+  interestedCampaigns?: T;
+  commercialReel?: T;
+  commercialStory?: T;
+  monthlyCampaignCapacity?: T;
+  acceptingCollaborations?: T;
+  availableForTravel?: T;
+  previousBrandCollaborations?: T;
+  industriesInterested?: T;
+  industriesWontPromote?: T;
+  contentLanguage?: T;
+  contentPlatforms?: T;
+  heardAboutUs?: T;
+  additionalInfo?: T;
+  termsAccepted?: T;
+  privacyAccepted?: T;
+  status?: T;
+  internalNotes?: T;
+  assignedManager?: T;
+  verificationStatus?: T;
+  creatorScore?: T;
+  tier?: T;
+  lastContactDate?: T;
+  nextFollowup?: T;
+  paymentStatus?: T;
+  contractSigned?: T;
+  attribution?:
+    | T
+    | {
+        ipAddress?: T;
+        userAgent?: T;
+        referrer?: T;
+        landingPage?: T;
         device?: T;
         browser?: T;
       };

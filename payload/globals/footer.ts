@@ -33,6 +33,7 @@ export const Footer: GlobalConfig = {
         { label: "Social Media", href: "/#services" },
         { label: "Video Production", href: "/#services" },
         { label: "Brand Strategy", href: "/#services" },
+        { label: "Influencer Program", href: "/form/influencer" },
       ],
       fields: [
         { name: "label", type: "text", required: true },

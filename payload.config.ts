@@ -11,6 +11,7 @@ import { Categories } from "./payload/collections/categories";
 import { Clients } from "./payload/collections/clients";
 import { Contracts } from "./payload/collections/contracts";
 import { Files } from "./payload/collections/files";
+import { InfluencerApplications } from "./payload/collections/influencer-applications";
 import { Leads } from "./payload/collections/leads";
 import { Media } from "./payload/collections/media";
 import { Meetings } from "./payload/collections/meetings";
@@ -58,6 +59,7 @@ export default buildConfig({
     CaseStudies,
     Portfolio,
     Leads,
+    InfluencerApplications,
     Clients,
     Projects,
     Contracts,

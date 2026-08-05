@@ -23,6 +23,7 @@ export const Navigation: GlobalConfig = {
       defaultValue: [
         { label: "Work", href: "/#case-studies" },
         { label: "Services", href: "/#services" },
+        { label: "Influencers", href: "/form/influencer" },
         { label: "Process", href: "/#process" },
         { label: "FAQ", href: "/#faq" },
         { label: "Blog", href: "/blog" },
