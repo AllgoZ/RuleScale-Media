@@ -6,7 +6,12 @@ export const Users: CollectionConfig = {
   admin: {
     useAsTitle: "email",
   },
-  auth: true,
+  // useAPIKey lets a user authenticate REST/GraphQL requests with a static
+  // `Authorization: users API-Key <key>` header instead of a session/JWT login — the mechanism
+  // for giving an external tool (e.g. an agent posting blog content) programmatic access without
+  // a browser. The key is generated per-user in /admin (or via a one-off script) and is only
+  // ever shown in plaintext once, at generation time.
+  auth: { useAPIKey: true },
   access: {
     // Widened from isAdminOrSelf so the Leads "Assigned User" relationship field's admin-UI
     // dropdown can list every staff member (Payload resolves relationship options through the
