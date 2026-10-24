@@ -283,6 +283,11 @@ export interface Post {
     [k: string]: unknown;
   };
   featuredImage?: (number | null) | Media;
+  /**
+   * Cloudinary (or other https) image URL. Used when no Featured Image upload is set - this is what the content API writes, since Payload's local media storage doesn't persist on Vercel.
+   */
+  featuredImageUrl?: string | null;
+  featuredImageAlt?: string | null;
   category?: (number | null) | Category;
   tags?: (number | Tag)[] | null;
   author?: (number | null) | Author;
@@ -932,6 +937,8 @@ export interface PostsSelect<T extends boolean = true> {
   excerpt?: T;
   content?: T;
   featuredImage?: T;
+  featuredImageUrl?: T;
+  featuredImageAlt?: T;
   category?: T;
   tags?: T;
   author?: T;

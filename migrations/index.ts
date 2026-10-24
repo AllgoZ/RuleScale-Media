@@ -3,6 +3,7 @@ import * as migration_20260803_091008_add_portfolio_collection from './20260803_
 import * as migration_20260805_150921_add_influencer_applications from './20260805_150921_add_influencer_applications';
 import * as migration_20260805_160816_add_influencer_social_followers from './20260805_160816_add_influencer_social_followers';
 import * as migration_20260808_084309_enable_user_api_keys from './20260808_084309_enable_user_api_keys';
+import * as migration_20261024_140605_add_post_featured_image_url from './20261024_140605_add_post_featured_image_url';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20260808_084309_enable_user_api_keys.up,
     down: migration_20260808_084309_enable_user_api_keys.down,
-    name: '20260808_084309_enable_user_api_keys'
+    name: '20260808_084309_enable_user_api_keys',
+  },
+  {
+    up: migration_20261024_140605_add_post_featured_image_url.up,
+    down: migration_20261024_140605_add_post_featured_image_url.down,
+    name: '20261024_140605_add_post_featured_image_url'
   },
 ];

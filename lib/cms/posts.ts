@@ -30,7 +30,11 @@ function normalizeSummary(doc: Post): PostSummaryData {
     title: doc.title,
     slug: doc.slug,
     excerpt: doc.excerpt,
-    featuredImage: normalizeMediaImage(doc.featuredImage),
+    featuredImage:
+      normalizeMediaImage(doc.featuredImage) ??
+      (doc.featuredImageUrl
+        ? { url: doc.featuredImageUrl, alt: doc.featuredImageAlt || "", width: null, height: null }
+        : null),
     category:
       doc.category && typeof doc.category === "object"
         ? {

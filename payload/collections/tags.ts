@@ -1,6 +1,6 @@
 import type { CollectionConfig } from "payload";
 import { CACHE_TAGS } from "@/lib/cache/tags";
-import { isAdmin } from "../access";
+import { isAdmin, isAdminOrEditor } from "../access";
 import { revalidateTagSafely } from "../hooks/revalidate";
 
 export const Tags: CollectionConfig = {
@@ -10,7 +10,7 @@ export const Tags: CollectionConfig = {
   },
   access: {
     read: () => true,
-    create: isAdmin,
+    create: isAdminOrEditor,
     update: isAdmin,
     delete: isAdmin,
   },

@@ -3,7 +3,9 @@
 Quick technical reference for any coding agent working in this repo. For "what phase are we in
 right now" read `Architecture files/currentphase.md` first; for deep architecture detail read
 `Architecture files/systemstatus.md`; for dated change history and full bug-diagnosis writeups
-read `Architecture files/CHANGELOG.md`; for brand/creative direction read `claude files/CLAUDE.MD`.
+read `Architecture files/CHANGELOG.md`; for brand/creative direction read `CLAUDE.MD` (repo root).
+To publish blog posts or edit case studies over HTTP with an API key, read
+`Architecture files/content-api.md`.
 
 ## Setup & commands
 
@@ -216,8 +218,6 @@ components/
 Architecture files/
   systemstatus.md      current-state snapshot: brand tokens, every section, component library, SEO
   CHANGELOG.md          dated log of what changed and why, including full bug-diagnosis writeups
-claude files/
-  CLAUDE.MD             creative brief / brand direction (read this for the "why")
 ```
 
 ## Conventions
@@ -360,5 +360,5 @@ plus a flat `--color-accent-solid` (`#8b5cf6`) and light `--color-home-bg` (`#f7
 systems coexist by design, not by oversight, specifically so this rule can stay simple: blog/
 contact → plain `--color-accent`; homepage/`/work/*` → gradient tokens. Archivo for all type;
 Caveat only for small hand-drawn label accents (blog/contact only, not the homepage). Full
-rationale and the historical superseded palette: `claude files/CLAUDE.MD`. Full token/usage
+rationale and the historical superseded palette: `CLAUDE.MD` (repo root). Full token/usage
 detail: `Architecture files/systemstatus.md` §2.

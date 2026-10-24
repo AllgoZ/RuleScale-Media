@@ -69,6 +69,18 @@ export const Posts: CollectionConfig = {
       relationTo: "media",
     },
     {
+      name: "featuredImageUrl",
+      type: "text",
+      admin: {
+        description:
+          "Cloudinary (or other https) image URL. Used when no Featured Image upload is set - this is what the content API writes, since Payload's local media storage doesn't persist on Vercel.",
+      },
+    },
+    {
+      name: "featuredImageAlt",
+      type: "text",
+    },
+    {
       name: "category",
       type: "relationship",
       relationTo: "categories",

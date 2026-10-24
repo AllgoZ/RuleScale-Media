@@ -6,6 +6,36 @@ why, and (for the non-obvious ones) how it was diagnosed. Add new entries at the
 
 ---
 
+## 2026-10-24 - Content API for agent-driven blog + case study publishing
+
+Goal: let Claude publish blog posts and edit portfolio case studies directly using a Payload API
+key (the key mechanism itself shipped 2026-08-08 in `a15890b`). Raw Payload REST needs rich text as
+Lexical JSON, so the real gap was ergonomics and a few permission/storage holes.
+
+- **`POST/GET /api/content/posts` and `/api/content/portfolio`** (`app/(frontend)/api/content/*`,
+  helpers in `lib/content-api.ts`): upsert-by-slug, partial updates, Markdown in (via
+  `convertMarkdownToLexical`) and Markdown out on GET (`convertLexicalToMarkdown`) so existing
+  content can be fetched, edited and re-posted. Auth is plain Payload (`payload.auth` on request
+  headers, `admin`/`editor` only). No DELETE by design. Defaults to publishing immediately
+  (user's choice); `"status":"draft"` available.
+- **Categories/tags**: `create` widened from `isAdmin` to `isAdminOrEditor` so the endpoint can
+  auto-create them. Update/delete stay admin-only. Authors stay admin-only (endpoint resolves an
+  existing author slug, defaulting to the first author).
+- **Posts gained `featuredImageUrl` / `featuredImageAlt`** (migration
+  `20261024_140605_add_post_featured_image_url`, applied to the shared DB). `normalizeSummary` in
+  `lib/cms/posts.ts` falls back to it when the `featuredImage` upload relation is empty, so every
+  existing blog component, OG tag and JSON-LD image works unchanged. Reason: the `media`
+  collection stores on local disk, which does not persist on Vercel.
+- Guide for the agent: `Architecture files/content-api.md`.
+- Gotcha hit while building: a Python `open()` edit on Windows wrote an em dash as cp1252, which
+  made Turbopack fail with "invalid utf-8 sequence". Write files as UTF-8 explicitly.
+- Verified: `tsc` and `next build` clean; against a production build, unauthenticated and bad-key
+  requests return 401 and anonymous `POST /api/categories` still 403. **Not yet verified:** an
+  authenticated create/update round trip with a real editor key (creating a temporary key-bearing
+  user in the shared DB was declined), so Markdown -> Lexical rendering on a live post is untested.
+
+---
+
 ## 2026-08-05 — Influencer creator-network application form (`/form/influencer`)
 
 New public page, `prompts/forms/influencer.md`. The spec asked for a raw Supabase table +

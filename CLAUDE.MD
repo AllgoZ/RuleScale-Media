@@ -9,6 +9,11 @@ a senior Next.js engineer, working on the RuleScale Media marketing landing page
 > `Architecture files/CHANGELOG.md`. This file explains the *why*; those explain *what's
 > actually there*. For quick technical/operational reference, see `AGENT.md`.
 
+> **Working in this repo as an agent:** read `handover.md` first (current state, what's unverified,
+> what's next). To publish blog posts or edit case studies over HTTP with an API key, read
+> `Architecture files/content-api.md` and `Architecture files/blogcontentbrief.md` (voice/SEO) —
+> content written through the API must follow the brand voice in this file and that brief.
+
 The agency specializes in: Website Design & Development, SEO, Digital Media Planning, Social
 Media Marketing, Influencer Marketing, Programmatic Advertising, Video Production & Marketing,
 Content Marketing, Content & SEO Strategy, Multi-Lingual Marketing, Marketing Strategy
@@ -126,7 +131,7 @@ TECH STACK (as actually built)
 Next.js 16.2.12 (App Router) · TypeScript · Tailwind CSS v4 (CSS-first `@theme`, no
 `tailwind.config.js`) · Framer Motion · Lucide Icons · Radix UI primitives (hand-built
 `components/ui/` primitives in the shadcn spirit — not the shadcn CLI itself) · Payload CMS 3.86.0
-+ PostgreSQL (Supabase) as of the backend phases — see `Architecture files/currentphase.md` for
++ PostgreSQL (Supabase) as of the backend phases (plus Cloudinary for portfolio/blog images) — see `Architecture files/currentphase.md` for
 what phase the backend is in right now.
 
 ```
