@@ -56,7 +56,7 @@ export const Footer: GlobalConfig = {
       name: "socialLinks",
       type: "array",
       defaultValue: [
-        { platform: "instagram", url: "/#top" },
+        { platform: "instagram", url: "https://www.instagram.com/rulescalemedia?lqvp=MXhocXAweWJ0cDJ2aw==" },
         { platform: "linkedin", url: "/#top" },
         { platform: "youtube", url: "/#top" },
       ],

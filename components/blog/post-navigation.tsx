@@ -13,17 +13,14 @@ export function PostNavigation({
   if (!previous && !next) return null;
 
   return (
-    <nav
-      aria-label="More posts"
-      className="grid gap-4 border-t border-hairline pt-8 sm:grid-cols-2"
-    >
+    <nav aria-label="More posts" className="grid gap-4 border-t border-hairline pt-8 sm:grid-cols-2">
       {previous ? (
         <Link
           href={`/blog/${previous.slug}`}
-          className="group flex flex-col gap-1 rounded-2xl border border-hairline p-5 transition-colors hover:border-accent/30"
+          className="group flex flex-col gap-2 rounded-md border border-hairline p-5 transition-colors hover:border-ink"
         >
-          <span className="inline-flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-ink-soft">
-            <ArrowLeft size={13} className="transition-transform group-hover:-translate-x-0.5" />
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+            <ArrowLeft size={14} aria-hidden="true" className="transition-transform group-hover:-translate-x-0.5" />
             Previous
           </span>
           <span className="font-heading font-bold text-ink">{previous.title}</span>
@@ -35,13 +32,13 @@ export function PostNavigation({
         <Link
           href={`/blog/${next.slug}`}
           className={cn(
-            "group flex flex-col gap-1 rounded-2xl border border-hairline p-5 text-right transition-colors hover:border-accent/30",
-            "sm:items-end"
+            "group flex flex-col gap-2 rounded-md border border-hairline p-5 transition-colors hover:border-ink",
+            "sm:items-end sm:text-right"
           )}
         >
-          <span className="inline-flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-ink-soft">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
             Next
-            <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+            <ArrowRight size={14} aria-hidden="true" className="transition-transform group-hover:translate-x-0.5" />
           </span>
           <span className="font-heading font-bold text-ink">{next.title}</span>
         </Link>

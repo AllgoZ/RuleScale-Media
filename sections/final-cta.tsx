@@ -1,71 +1,79 @@
-import { Briefcase, Mail, Phone } from "lucide-react";
-import { ContactForm } from "@/components/contact/contact-form";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+import { BrandDevice } from "@/components/doodles/brand-device";
+import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import type { FinalCtaData } from "@/lib/cms/types";
+import { WHATSAPP_DISPLAY, WHATSAPP_URL } from "@/lib/contact";
 
-const WHATSAPP_NUMBER = "919500381132";
-const WHATSAPP_DISPLAY = "+91 95003 81132";
+const contactLink =
+  "group flex min-h-14 items-center justify-between gap-4 py-3 font-heading text-xl font-bold tracking-tight text-paper transition-colors hover:text-white md:text-2xl";
 
+/**
+ * Closing call to action. The full enquiry form lives at /contact (unchanged).
+ * Left: the headline and one clear button. Right: direct contact methods as
+ * large links. The brand device sits cropped behind.
+ */
 export function FinalCTA({
   data,
   contactEmail,
-  linkedinUrl,
-  services,
-  turnstileSiteKey,
+  instagramUrl,
 }: {
   data: FinalCtaData;
   contactEmail: string;
-  linkedinUrl: string | null;
-  services: string[];
-  turnstileSiteKey: string | null;
+  instagramUrl: string | null;
 }) {
   return (
-    <section id="final-cta" className="py-20 md:py-28">
-      <Container>
-        <div className="grid gap-2 overflow-hidden rounded-3xl border border-hairline bg-white p-2 lg:grid-cols-2">
-          <Reveal className="gradient-bg flex flex-col justify-center rounded-[20px] p-8 text-white md:p-12">
-            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/15 px-4 py-2 text-sm font-medium">
-              {data.eyebrow}
-            </span>
-            <h2 className="mt-6 font-heading text-3xl font-extrabold leading-tight text-balance md:text-4xl">
+    <section
+      id="final-cta"
+      aria-labelledby="cta-heading"
+      className="section on-ink relative overflow-hidden"
+    >
+      <BrandDevice className="pointer-events-none absolute -left-[14%] -top-[38%] w-[62%] max-w-[780px] text-paper/[0.06]" />
+
+      <Container className="relative">
+        <div className="grid gap-14 lg:grid-cols-12 lg:items-end lg:gap-12">
+          <Reveal className="lg:col-span-7">
+            <h2
+              id="cta-heading"
+              className="text-balance font-heading text-[clamp(2.25rem,1rem+4.6vw,5rem)] font-extrabold leading-[0.98] tracking-[-0.04em]"
+            >
               {data.heading}
             </h2>
-            <p className="mt-4 max-w-md text-white/80">{data.subheading}</p>
-
-            <div className="mt-8 flex flex-col gap-3">
-              <a
-                href={`mailto:${contactEmail}`}
-                className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm transition-colors hover:bg-white/15"
-              >
-                <Mail size={16} />
-                {contactEmail}
-              </a>
-              <a
-                href={`https://wa.me/${WHATSAPP_NUMBER}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm transition-colors hover:bg-white/15"
-              >
-                <Phone size={16} />
-                {WHATSAPP_DISPLAY}
-              </a>
-              {linkedinUrl ? (
-                <a
-                  href={linkedinUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-xl bg-white/10 px-4 py-3 text-sm transition-colors hover:bg-white/15"
-                >
-                  <Briefcase size={16} />
-                  LinkedIn
-                </a>
-              ) : null}
-            </div>
+            <p className="text-lead mt-6 max-w-md">{data.subheading}</p>
+            <Button asChild variant="accent" size="lg" className="mt-10 hover:bg-paper hover:text-ink">
+              <Link href="/contact">
+                Start a project
+                <ArrowRight size={18} />
+              </Link>
+            </Button>
           </Reveal>
 
-          <Reveal delay={0.1} className="p-8 md:p-12">
-            <ContactForm services={services} turnstileSiteKey={turnstileSiteKey} />
+          <Reveal delay={0.08} className="lg:col-span-5">
+            <p className="eyebrow">Or reach us directly</p>
+            <ul className="mt-3 divide-y divide-paper/15">
+              <li>
+                <a href={`mailto:${contactEmail}`} className={contactLink}>
+                  <span className="break-all">{contactEmail}</span>
+                  <ArrowUpRight size={22} aria-hidden="true" className="shrink-0 text-accent" />
+                </a>
+              </li>
+              <li>
+                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className={contactLink}>
+                  <span>WhatsApp {WHATSAPP_DISPLAY}</span>
+                  <ArrowUpRight size={22} aria-hidden="true" className="shrink-0 text-accent" />
+                </a>
+              </li>
+              {instagramUrl ? (
+                <li>
+                  <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className={contactLink}>
+                    <span>Instagram</span>
+                    <ArrowUpRight size={22} aria-hidden="true" className="shrink-0 text-accent" />
+                  </a>
+                </li>
+              ) : null}
+            </ul>
           </Reveal>
         </div>
       </Container>

@@ -1,6 +1,10 @@
 # Current Phase
 
-Last updated: 2026-08-05
+> **2026-11-24:** the redesign, new logo, performance pass, animations and hero project wheel were pushed to
+> `main`. Read `handover.md` (state, open owner decisions, post-deploy checklist) and `ARCHITECTURE.md` (how it is
+> built) first; the rows below that mention the older homepage describe history, not the current site.
+
+Last updated: 2026-11-24
 
 This is a fast pointer doc — "what phase is this project in, right now, and what's next." For
 the full architecture snapshot read `systemstatus.md`; for the dated history of *why* and *how*
@@ -16,7 +20,9 @@ don't let it drift into a second changelog.
 | Phase 1.5 — Production Hardening | `prompts/backend/phase1_5.md` | `prompts/results/phase1_5result.md` | ✅ Complete |
 | Phase 2 — Blog / Publishing Platform | `prompts/backend/phase2.md` | `prompts/results/phase2result.md` | ✅ Complete |
 | Phase 3 — Agency Operations Platform | `prompts/backend/phase3.md` | `prompts/results/phase3result.md` | ✅ Complete |
-| Homepage UI/UX redesign | user request (not a numbered backend phase) | — | ✅ Complete |
+| Homepage UI/UX redesign | user request (not a numbered backend phase) | — | ✅ Complete (superseded by the 2026-11-22 redesign below) |
+| Frontend redesign v1-v3 (Ink/Paper/Red, Archivo, grid layout system) | `prompts/redesignui.md`, `redesignv2.md`, `redesignv3.md` | `redesign-handoff/` | ✅ Pushed to `main` 2026-11-24 |
+| New logo, performance pass, animations, hero project wheel, contact/Instagram update | user requests | `Architecture files/performance-audit.md`, `animation-plan.md` | ✅ Pushed to `main` 2026-11-24 |
 | Production deploy fixes (Vercel) | — | — | ✅ Complete |
 | SEO domain migration (→ www.rulescale.in) | — | — | ✅ Complete |
 | Google Tag Manager | `prompts/gooleTagManager/googletagmanager..md` | — | ✅ Complete |

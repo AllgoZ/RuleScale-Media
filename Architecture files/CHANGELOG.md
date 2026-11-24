@@ -6,6 +6,198 @@ why, and (for the non-obvious ones) how it was diagnosed. Add new entries at the
 
 ---
 
+## 2026-11-24 (shipped) - Committed and pushed to `main`
+
+- One commit containing the whole 2026-11-22 redesign (3 iterations), the new logo, the performance pass,
+  prerendered blog/case-study/blog-index routes, the animation pass, the hero project wheel (desktop + mobile polish), the
+  contact email / Instagram change, and the new docs (`ARCHITECTURE.md`, `performance-audit.md`, `animation-plan.md`).
+  Pushed to `origin/main`; Vercel deploys on push.
+- Not committed on purpose: `l.html`, `live.html`, `sites/`, `claude files/logo2.png`, the 6 MB reference PDF in
+  `redesign-handoff/`, git-ignored `media/`. No secrets in the change set (checked `.env*` ignore rules and a pattern scan).
+- Final pre-push checks: `tsc` 0, eslint 0 errors, clean `npm run build` (0 DB errors, route table: `/`, `/contact`,
+  `/form/influencer`, `/work/videos`, `/blog` static; blog/work detail + `/blog/page/N` SSG).
+
+---
+
+## 2026-11-24 (final) - Contact email + Instagram
+
+- Contact email `hello@rulescale.media` -> `rulescalemedia@gmail.com`; final CTA's LinkedIn link -> Instagram
+  (`INSTAGRAM_URL` in `lib/constants.ts`, `sections/final-cta.tsx` prop `instagramUrl`, `app/(frontend)/page.tsx`).
+  Code defaults updated (`lib/constants.ts`, `lib/cms/{settings,footer,homepage}.ts`, Payload `defaultValue`s); schema.org
+  `sameAs` is now Instagram only. **The CMS values were also updated in the shared database** (Site Settings
+  `contactEmail` + `sameAs`; Footer Instagram row), because CMS wins over code fallbacks.
+- **Lesson**: a script run outside a request cannot `revalidateTag` ("static generation store missing"), and cached CMS
+  reads have no expiry, so a DB edit is not visible until the cache is cleared (locally `rm -rf .next`; in production save
+  the global in `/admin`). `payload run <script>` exits as soon as the script is imported: use top-level `await` and write
+  results to a file (console output is lost).
+- Verified on a rebuilt (clean `.next`) production build: home/contact/footer show the new email and the Instagram link;
+  JSON-LD `email` and `sameAs` updated; no old email or LinkedIn company URL on the sampled pages; 0 DB errors.
+
+---
+
+## 2026-11-24 (latest) - Hero project wheel
+
+- `sections/hero.tsx` + new `components/hero/project-wheel.tsx`: the two static tiles became a rotary "dial" of
+  up to 5 project cards. Front card full size; the others smaller, darker and curving away like a drum; page
+  scroll rolls the front card up and out and rotates the next forward. Tall track + sticky stage, rAF-eased,
+  transform/opacity only; the server renders the resting state (`wheelStyle(d)` uses `--wheel-h` fractions) so
+  there is no jump. Headline column sticky on `lg`; `overflow-hidden` -> `overflow-clip` on the hero and panel.
+  Reduced motion = static list (CSS). Frontend only; same data; page still static.
+- **Polish pass (same day, after review of a 1500x722 screenshot)**: the first wheel looked clumsy (squashed, hard-cropped
+  neighbour; bare red above the front card; "ghost" see-through while a card rolled over the next). Fixes: gentler
+  curve (28deg step, 0.55 tilt), tighter spacing, card width capped to the stage height (`--wheel-h`*0.82) so short
+  windows are not crowded, a soft mask fading the stage top/bottom, 4px corners, the departing card stays opaque and
+  travels faster so it clears the next (it only fades at the very end), the arriving card wins the layering at the
+  halfway point. Checked at 1500x722, 1366x768, 1440x900 and 390x844 at rest and mid-roll.
+- **Mobile pass (same day, after a 342px-wide screenshot)**: cards were small (~280x187) in an inset red panel with a lot of
+  empty red. Now: the red panel bleeds to the screen edges on <lg (`-mx-5 sm:-mx-8`, a background; the cards keep the container
+  gutters), the stage fills the pinned viewport height on every size (`--wheel-h: 100svh - header`, no 34rem cap), and on <lg each
+  card gets a caption strip under the image (title, category, arrow; the overlay chip is `lg` only), so cards are ~302x265 at 342px
+  and ~350x295 at 390px. `REST_LIFT` 0.05 -> 0.11 trims the empty red above the front card (also helps desktop). Checked at
+  342x780, 390x844, 768x1024, 1500x722, 1366x768, 1440x900: no overflow, no console errors, last card reachable.
+- First iteration was a flat sticky stack (cards sliding over each other); replaced because the brief was a
+  curved, rolling dial. Cards behind are dimmed with an ink overlay (`--shade`), not transparency, which washed
+  them out against the red.
+- Verified: build clean (0 DB errors); order and last card reachable in Chromium/Firefox/WebKit at 4 widths; no
+  overflow or console errors; reduced-motion list.
+
+---
+
+## 2026-11-24 (later) - Animation pass
+
+Plan: `Architecture files/animation-plan.md`. Frontend only; no data, route, copy or SEO change.
+
+- **Added**: hero load-in (`.hero-in` / `.hero-slide`, transform-only on the headline and tiles so LCP is not
+  delayed); `data-anim` scroll reveals (37 targets on the homepage: work, services, results, process,
+  testimonials, FAQ; also blog cards and video tiles) driven by one `components/ui/animation-observer.tsx`;
+  page transition `app/(frontend)/template.tsx` (client navigations only); `Button` press/lift/arrow nudge;
+  header nav underline; smooth Services `<details>`.
+- **Design decisions**: visible without JS and under reduced motion; observer leaves on-screen content alone
+  and hands styling back (`data-anim-state="done"`) so hover transforms/transitions are not overridden;
+  no animation library; ~2 KB JS.
+- **Bug caught in testing**: Tailwind v4 `hover:-translate-y-*` uses the `translate` property, so listing
+  `transform` in `transition-[...]` made the lift snap; fixed by listing `translate,scale`.
+- **Test artefact worth knowing**: with `scroll-behavior: smooth`, scripted `scrollTo` in Firefox is slow and
+  looked like stuck reveals; use `behavior: 'instant'` in tests.
+- **Verified**: tsc 0, eslint clean, build clean (0 DB errors, route table unchanged); all reveal targets reveal and
+  settle in Chromium/Firefox/WebKit; reduced motion and JS-off keep everything visible; no console errors;
+  CLS 0; mobile LCP 244-252 ms (unchanged); 3 engines x 5 viewports x 7 pages clean.
+
+---
+
+## 2026-11-24 - New logo, performance pass, docs
+
+Not committed or deployed. Details: `Architecture files/performance-audit.md`; system model: `ARCHITECTURE.md`.
+
+- **Logo**: `claude files/logo.png` is now the mark everywhere: `public/logo.png`, `LogoMark` (plain `<img>`),
+  `favicon.ico` + `icon.png` (generated `icon.tsx` removed), and the Open Graph image. An earlier attempt used
+  `next/image` for it, which threw `images.localPatterns` and broke the page (a React "script tag" warning was a
+  side effect of the resulting client re-render); fixed by using `<img>`.
+- **Static rendering**: `generateStaticParams` + `revalidate = 900` on `blog/[slug]`, `work/[slug]`,
+  `work/videos/[slug]` (detail pages 0.65-4 s cold -> 10-40 ms). `/blog` made static; `/blog?page=N` rewritten
+  (`next.config.ts`) to the new internal `/blog/page/[page]`; shared body in `components/blog/blog-index.tsx`.
+- **Client JS / paint**: `Reveal` rewritten as CSS + IntersectionObserver (visible by default, below-fold
+  blocks fade in once); Framer Motion now only on the influencer form (~100 KB less JS per page).
+- **Other**: GTM `afterInteractive`; removed below-the-fold `priority` image; image optimiser cache 30 days;
+  `/logo.png` cache headers; `poweredByHeader: false`; `optimizePackageImports`; `data-scroll-behavior="smooth"`.
+- **Build discipline**: 1 worker / concurrency 1. A first attempt at 2 x 4 hit `EMAXCONNSESSION` and baked posts
+  without prev/next links; final build: 0 DB errors, 93 pages in ~46 s.
+- **Lesson**: `next start` on an occupied port exits silently, so measurements kept hitting the previous server.
+- **Verified**: tsc 0, eslint clean on touched files, build clean; Chromium/Firefox/WebKit x 5 viewports x 7 pages
+  with no overflow, broken images or console errors; `/blog?page=N` behaviour checked. Not run: Lighthouse, axe,
+  throttled or real-device tests.
+- **Docs**: `CLAUDE.MD` (status, logo, motion, performance rules), `handover.md` rewritten, `ARCHITECTURE.md` created.
+
+---
+
+## 2026-11-22 (iteration 3) - Layout system fix (per `prompts/redesignv3.md`)
+
+Layout/alignment only; visual design, copy, colours and SEO unchanged. Plan: `redesign-handoff/REDESIGN-V3-PLAN.md`.
+
+- **Root causes removed**: magic-number `gutter-l/r` calc paddings, negative margins, `%`-width/absolute image
+  placement (hero, work lead), hard-coded offsets (`mt-32`, `pt-16`, `pt-24`, `pl-[5.75rem]`, `right-[22%]`),
+  and narrow widths applied to `Container` itself (re-centred columns, so the left edge moved page to page).
+- **One system**: `Container` (1280px, 20/32/48px) is the only horizontal boundary; narrow reading columns are
+  inner, left-aligned blocks. `.section` is the only vertical rhythm; `.text-section` the only section-heading
+  style; offsets come from 12-column grid placement, never margins.
+- **Hero** = `.split-bg` (paper|red on the container's centre line) + one container, `lg:grid-cols-2`, two
+  contained tiles in the right column (no overlap/clipping). **Header** = 3-column grid, nav truly centred.
+- **Work** re-laid on the grid (lead + caption share a grid row; B bottom-aligned; index = fixed column grid with
+  thumbnails). **Services** intro/rows share `--row-pad`; expanded content reuses the summary column template.
+  Testimonials quote mark is in flow; Process numerals fixed to the right edge; Results sized to the column;
+  video wall + footer wordmark moved inside the container; blog article gets a sticky TOC in the right column.
+- **Verification**: automated layout test (7 widths x 8 pages = 56 combos): no horizontal overflow, header
+  centres within 1px, nav centred, every content element inside the container edges, headings on the left edge,
+  hero tiles not overlapping. The test was proven able to fail by injecting a misalignment. Visual review at
+  390/768/1440. tsc 0, eslint 0 errors, build OK, SEO diff vs production identical, 0 console 500s over 30 runs.
+- **Lesson**: leftover local `next dev/start` servers exhaust Supabase's 15-connection session pool
+  (`EMAXCONNSESSION`); a build then silently falls back to placeholder content and pages show intermittent 500s.
+  Kill stray servers before building or testing.
+
+---
+
+## 2026-11-22 (iteration 2) - Art-direction pass (per `prompts/redesignv2.md`)
+
+v1 was aligned but generic (one background tone, one section recipe, dividers, red-dot labels, cards).
+v2 changes composition and contrast. Plan: `redesign-handoff/REDESIGN-V2-PLAN.md`. Frontend only.
+
+- **Signature elements**: the logo's ring+bolt drawn huge and cropped (`components/doodles/brand-device.tsx`),
+  full-bleed brand red as a surface, alternating paper / ink / white / red sections, real project mockups as
+  the visual lead, a bolt-separated client marquee.
+- **Sections** (each its own composition): split hero with red panel + overlapping projects; ink client
+  marquee; work = full-bleed lead with overlapping ink caption, landscape + portrait crop, big-type index
+  with hover preview; ink video wall (staggered 9:16, no cards, hover text); services = native
+  `<details name>` editorial menu (descriptions stay in the DOM); red "why us" split (Problem + Manifesto
+  merged in `sections/why.tsx`); giant-numeral stats; ink zig-zag process with outlined numerals; one huge
+  featured testimonial; white FAQ; CTA with contact links; footer with giant wordmark.
+- **Removed**: red-dot eyebrows (`.eyebrow` is plain small caps now), divider-as-structure, equal card grids,
+  `sections/problem.tsx`, `sections/manifesto.tsx`.
+- `/work/videos` is now a dark wall page. Homepage video band still renders only when >=1 video is published.
+- Verified: tsc 0, eslint 0 errors, `next build` OK; Playwright at 390/768/1440 (no overflow, one H1, alt
+  present); video wall + lightbox 18/18 at 3 breakpoints (temporary fixture, removed); SEO diff vs production
+  identical (10 pages, robots, 145-URL sitemap).
+- Known: intermittent `/_next` 500s seen once during one automated scroll against a production build
+  (not reproduced in 4 reruns; likely the image optimizer fetching from Cloudinary). Not verified: Lighthouse,
+  axe, real devices, a published video.
+
+---
+
+## 2026-11-22 - Full frontend redesign (per `prompts/redesignui.md`)
+
+Frontend only. No Payload schema/collection/route/sitemap/robots/metadata/JSON-LD changes. Plan and
+decisions: `redesign-handoff/REDESIGN-IMPLEMENTATION-PLAN.md`; the "before" audit: `redesign-handoff/SITE-BRIEF.md`.
+
+- **One design system** (`app/(frontend)/globals.css`): Ink/Paper/Red, Archivo variable only. Brand red
+  `#ec3013` for display accents/rules; tonal `--color-accent-deep #d1260b` for button fills and small red
+  text (AA). Removed the red->purple->blue gradient namespace, grain/vignette/atmosphere overlays, dot grid,
+  Caveat, doodles, glass header, magnetic buttons, rolling-number odometer, auto-rotating testimonials,
+  sticky mobile CTA, hard-coded Tools tiles. Legacy tokens (`accent-solid`, `home-bg`, `gradient-*`,
+  `pill-badge`, `font-hand`) no longer exist.
+- **Homepage order**: Hero -> Clients -> Work -> Videos (only if >=1 published) -> Services (grouped) ->
+  Results -> Problem -> Manifesto -> Process -> Testimonials (static) -> FAQ -> Final CTA. Anchor ids
+  (`#top #case-studies #services #process #faq #final-cta #site-footer`) kept.
+- **Copy ownership**: hero + work/video/clients framing live in `lib/home-copy.ts`; everything else still
+  reads the CMS `homepage` global. CMS `hero`, `trustLogos` fields are no longer rendered. Header nav is
+  `lib/nav.ts` (full CMS nav still in the footer). The homepage no longer embeds the contact form
+  (`/contact` unchanged).
+- **Video showcase**: `components/video/*` (9:16 grid, native `<dialog>` lightbox, posters only until
+  opened). Data = existing `portfolio` items with `mediaType: video`. Only data-layer change:
+  `videoUrl` added to `PortfolioSummaryData` / `normalizeSummary` (additive).
+- **Blog/work/contact/influencer** restyled; imageless posts get a branded typographic cover; the
+  non-functional "newsletter coming soon" block became `ArticleCta`. Branded `not-found.tsx` / `error.tsx`
+  (unmatched URLs outside route handlers still use Next's default 404).
+- **Footer** hides social/legal links whose URL is the `/#top` placeholder (they were dead links).
+- Dead code deleted: mobile-cta, hero-collage, hand-arrow, paper-clip, scribble-underline, spotlight,
+  marquee, rolling-number, google/meta icons, tools-stack, case-studies section, newsletter-cta.
+- Verified: `tsc` 0 errors, `eslint` 0 errors (24 pre-existing warnings in generated migrations),
+  `next build` OK, Playwright at 390/768/1440 over 10 page types (no horizontal overflow, one H1, no missing
+  alt), video lightbox 41/41 checks (against a temporary local fixture, since removed), mobile-menu/skip-link/
+  reduced-motion checks, SEO diff vs production identical (metadata, OG/Twitter, JSON-LD types, robots,
+  145-URL sitemap).
+- Not verified: Lighthouse/axe, real-device testing, a published video item in production.
+
+---
+
 ## 2026-10-24 - Content API for agent-driven blog + case study publishing
 
 Goal: let Claude publish blog posts and edit portfolio case studies directly using a Payload API

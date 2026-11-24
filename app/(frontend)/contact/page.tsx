@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ContactForm } from "@/components/contact/contact-form";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
+import { WHATSAPP_DISPLAY, WHATSAPP_URL } from "@/lib/contact";
 import { getTurnstileSiteKey } from "@/lib/env";
 import { getSiteSettings } from "@/lib/cms/settings";
 import { SERVICES, SITE_URL } from "@/lib/constants";
@@ -25,26 +26,46 @@ export default async function ContactPage() {
   const turnstileSiteKey = getTurnstileSiteKey();
 
   return (
-    <main className="py-16 md:py-24">
-      <Container className="max-w-2xl">
-        <Reveal>
-          <span className="font-hand -rotate-1 inline-block text-base text-accent">
-            let&apos;s talk
-          </span>
-          <h1 className="text-editorial mt-2 text-ink text-balance">Tell us about your project</h1>
-          <p className="mt-4 max-w-xl text-lg text-ink-soft">
-            Fill out the form below and someone from the {siteSettings.siteName} team will get
-            back to you within one business day — or email us directly at{" "}
-            <a href={`mailto:${siteSettings.contactEmail}`} className="text-ink underline">
-              {siteSettings.contactEmail}
-            </a>
-            .
-          </p>
-        </Reveal>
+    <main className="section">
+      <Container>
+        <div className="grid gap-14 lg:grid-cols-12 lg:gap-20">
+          <Reveal className="lg:col-span-5">
+            <p className="eyebrow">Let&apos;s talk</p>
+            <h1 className="text-editorial mt-5 text-balance">Tell us about your project</h1>
+            <p className="text-lead mt-6 max-w-md">
+              Share a few details and someone from the {siteSettings.siteName} team will reply
+              within one business day.
+            </p>
+            <ul className="mt-10 flex flex-col gap-2 border-t border-hairline pt-6 text-[15px]">
+              <li>
+                <span className="eyebrow">Email</span>
+                <a
+                  href={`mailto:${siteSettings.contactEmail}`}
+                  className="mt-1 flex min-h-11 items-center font-heading text-lg font-bold text-ink underline decoration-accent decoration-2 underline-offset-4 hover:text-accent-deep"
+                >
+                  {siteSettings.contactEmail}
+                </a>
+              </li>
+              <li className="mt-2">
+                <span className="eyebrow">WhatsApp</span>
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 flex min-h-11 items-center font-heading text-lg font-bold text-ink underline decoration-accent decoration-2 underline-offset-4 hover:text-accent-deep"
+                >
+                  {WHATSAPP_DISPLAY}
+                </a>
+              </li>
+            </ul>
+          </Reveal>
 
-        <Reveal delay={0.1} className="mt-10">
-          <ContactForm services={services} turnstileSiteKey={turnstileSiteKey} />
-        </Reveal>
+          <Reveal delay={0.08} className="lg:col-span-7">
+            <div className="rounded-md bg-paper-2 p-6 md:p-10">
+              <ContactForm services={services} turnstileSiteKey={turnstileSiteKey} />
+            </div>
+          </Reveal>
+        </div>
       </Container>
     </main>
   );

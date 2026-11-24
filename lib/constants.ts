@@ -4,7 +4,10 @@ export const SITE_TAGLINE = "We grow brands people remember.";
 export const SITE_DESCRIPTION =
   "RuleScale Media is a full-service marketing agency for website design & development, SEO, social, influencer, video, and performance advertising — built to turn attention into revenue.";
 
-export const CONTACT_EMAIL = "hello@rulescale.media";
+export const CONTACT_EMAIL = "rulescalemedia@gmail.com";
+/** The agency's Instagram profile (shown in the final CTA; also the schema.org `sameAs` entry). */
+export const INSTAGRAM_URL =
+  "https://www.instagram.com/rulescalemedia?lqvp=MXhocXAweWJ0cDJ2aw==";
 
 export const NAV_LINKS = [
   { label: "Work", href: "/#case-studies" },

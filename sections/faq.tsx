@@ -10,32 +10,33 @@ import type { FaqData } from "@/lib/cms/types";
 
 export function FAQ({ data }: { data: FaqData }) {
   return (
-    <section id="faq" className="py-20 md:py-28">
-      <Container className="max-w-2xl">
-        <Reveal className="text-center">
-          <span className="pill-badge inline-flex">
-            <span className="gradient-bg h-1.5 w-1.5 rounded-full" />
-            {data.eyebrow}
-          </span>
-          <h2 className="mt-4 font-heading text-3xl font-extrabold tracking-tight text-ink text-balance md:text-4xl">
+    <section id="faq" aria-labelledby="faq-heading" className="section bg-white">
+      <Container className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+        <Reveal className="lg:sticky lg:top-28 lg:col-span-4 lg:self-start">
+          <p className="eyebrow">{data.eyebrow}</p>
+          <h2
+            id="faq-heading"
+            className="text-section mt-3"
+          >
             {data.heading}
           </h2>
         </Reveal>
 
-        <Reveal className="mt-12 flex flex-col gap-3">
+        <div className="lg:col-span-8">
           <Accordion type="single" collapsible>
-            {data.items.map((faq) => (
+            {data.items.map((faq, index) => (
               <AccordionItem
                 key={faq.question}
                 value={faq.question}
-                className="mb-3 rounded-[24px] border border-hairline bg-white px-6 last:mb-0"
+                data-anim="up"
+                data-anim-step={(index % 3) + 1}
               >
-                <AccordionTrigger className="py-5 text-base">{faq.question}</AccordionTrigger>
+                <AccordionTrigger>{faq.question}</AccordionTrigger>
                 <AccordionContent>{faq.answer}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
-        </Reveal>
+        </div>
       </Container>
     </section>
   );

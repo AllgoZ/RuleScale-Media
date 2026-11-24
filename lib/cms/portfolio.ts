@@ -36,6 +36,7 @@ function normalizeSummary(doc: Portfolio): PortfolioSummaryData {
     services: (doc.services ?? []).map((entry) => entry.service),
     thumbnail: normalizeThumbnail(doc),
     liveWebsite: doc.liveWebsite || "",
+    videoUrl: doc.videoUrl || "",
     sortOrder: doc.sortOrder ?? 0,
     publishedAt: doc.publishedAt || null,
   };
@@ -44,7 +45,6 @@ function normalizeSummary(doc: Portfolio): PortfolioSummaryData {
 function normalize(doc: Portfolio): PortfolioItemData {
   return {
     ...normalizeSummary(doc),
-    videoUrl: doc.videoUrl || "",
     caseStudyContent: doc.caseStudyContent,
     seo: {
       metaTitle: doc.seo?.metaTitle || "",

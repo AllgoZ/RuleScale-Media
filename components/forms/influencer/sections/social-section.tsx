@@ -49,7 +49,7 @@ function PlatformCard({
   children?: ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-hairline bg-white">
+    <div className="overflow-hidden rounded-md border border-hairline bg-white">
       <button
         type="button"
         onClick={required ? undefined : onToggle}
@@ -62,17 +62,17 @@ function PlatformCard({
         <span
           className={cn(
             "flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-colors",
-            expanded ? "border-accent-solid bg-accent-solid text-white" : "border-hairline bg-paper"
+            expanded ? "border-accent-deep bg-accent-deep text-white" : "border-hairline bg-paper"
           )}
         >
           {expanded ? <Check size={14} /> : null}
         </span>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-solid/10 text-accent-solid">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-deep/10 text-accent-deep">
           <Icon size={17} />
         </span>
         <span className="flex-1 font-medium text-ink">{label}</span>
         {required ? (
-          <span className="rounded-full bg-accent-solid/10 px-2.5 py-1 text-xs font-medium text-accent-solid">
+          <span className="rounded-full bg-accent-deep/10 px-2.5 py-1 text-xs font-medium text-accent-deep">
             Required
           </span>
         ) : (
@@ -178,9 +178,9 @@ export function SocialSection({
           <button
             type="button"
             onClick={() => setShowSecondInstagram(true)}
-            className="flex items-center gap-2 self-start text-sm font-medium text-accent-solid"
+            className="flex items-center gap-2 self-start text-sm font-medium text-accent-deep"
           >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-solid/10">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-deep/10">
               <Plus size={14} />
             </span>
             Have a second Instagram account? Add it

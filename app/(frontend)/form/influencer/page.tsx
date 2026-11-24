@@ -24,24 +24,20 @@ export function generateMetadata(): Metadata {
 
 export default function InfluencerFormPage() {
   return (
-    <main className="bg-dot-grid-light py-16 md:py-24" style={{ backgroundColor: "var(--color-home-bg)" }}>
-      <Container className="max-w-3xl">
+    <main className="section">
+      <Container>
         <Reveal>
-          <span className="font-hand -rotate-1 inline-block text-base text-accent-solid">
-            join the network
-          </span>
-          <h1 className="text-editorial mt-2 text-ink text-balance">
-            Become a <span className="gradient-text">RuleScale</span> creator
-          </h1>
-          <p className="mt-4 max-w-xl text-lg text-ink-soft">
+          <p className="eyebrow">Join the network</p>
+          <h1 className="text-editorial mt-5 text-balance">Become a RuleScale creator</h1>
+          <p className="text-lead mt-6 max-w-xl">
             Tell us about yourself and your audience. Our team reviews every application and
             reaches out when there&apos;s a fit with a live campaign.
           </p>
         </Reveal>
 
-        <Reveal delay={0.1} className="mt-10 rounded-3xl border border-hairline bg-white p-6 md:p-10">
+        <div className="mt-10 max-w-3xl rounded-md bg-paper-2 p-6 md:mt-12 md:p-10">
           <InfluencerForm />
-        </Reveal>
+        </div>
       </Container>
     </main>
   );

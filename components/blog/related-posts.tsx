@@ -1,4 +1,3 @@
-import { Reveal } from "@/components/ui/reveal";
 import type { PostSummaryData } from "@/lib/cms/types";
 import { PostCard } from "./post-card";
 
@@ -6,18 +5,14 @@ export function RelatedPosts({ posts }: { posts: PostSummaryData[] }) {
   if (!posts.length) return null;
 
   return (
-    <section className="border-t border-hairline pt-14">
-      <Reveal>
-        <span className="font-hand -rotate-1 inline-block text-base text-accent">
-          keep reading
-        </span>
-        <h2 className="mt-2 font-heading text-2xl font-extrabold text-ink">Related posts</h2>
-      </Reveal>
-      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {posts.map((post, index) => (
-          <Reveal key={post.id} delay={index * 0.08}>
-            <PostCard post={post} />
-          </Reveal>
+    <section className="border-t border-hairline pt-14" aria-labelledby="related-heading">
+      <p className="eyebrow">Keep reading</p>
+      <h2 id="related-heading" className="mt-4 font-heading text-3xl font-extrabold tracking-tight text-ink">
+        Related posts
+      </h2>
+      <div className="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        {posts.map((post) => (
+          <PostCard key={post.id} post={post} />
         ))}
       </div>
     </section>

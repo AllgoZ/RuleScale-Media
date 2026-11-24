@@ -1,77 +1,61 @@
-"use client";
-
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import type { TestimonialsData } from "@/lib/cms/types";
-import { cn } from "@/lib/utils";
 
+/**
+ * One large featured quote with the rest set small beside it. All static — no
+ * carousel, nothing auto-advances. Quotes are rendered exactly as stored in the CMS.
+ */
 export function Testimonials({ data }: { data: TestimonialsData }) {
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-
-  useEffect(() => {
-    if (paused) return;
-    const id = setInterval(() => {
-      setIndex((i) => (i + 1) % data.items.length);
-    }, 5200);
-    return () => clearInterval(id);
-  }, [paused, data.items.length]);
-
-  const active = data.items[index];
+  const [featured, ...others] = data.items;
+  if (!featured) return null;
 
   return (
-    <section className="py-20 md:py-28">
-      <Container className="max-w-2xl">
-        <Reveal className="text-center">
-          <span className="pill-badge inline-flex">
-            <span className="gradient-bg h-1.5 w-1.5 rounded-full" />
-            {data.eyebrow}
+    <section aria-labelledby="testimonials-heading" className="section bg-paper">
+      <Container>
+        <h2 id="testimonials-heading" className="sr-only">
+          What clients say
+        </h2>
+        <div className="grid gap-x-16 gap-y-10 lg:grid-cols-12">
+          {/* The quote mark is an ordinary row above the quote, not an absolutely positioned glyph. */}
+          <span
+            aria-hidden="true"
+            className="block h-[0.55em] select-none font-heading text-[8rem] font-extrabold leading-[0.9] text-accent md:text-[11rem] lg:col-span-8"
+          >
+            &ldquo;
           </span>
-        </Reveal>
 
-        <div
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          className="relative mt-8 min-h-[14rem]"
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={active.name}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="rounded-[24px] border border-hairline bg-white p-8 text-center shadow-soft"
-            >
-              <p className="font-heading text-xl font-medium leading-snug text-ink text-balance">
-                &ldquo;{active.quote}&rdquo;
-              </p>
-              <p className="mt-5 text-sm font-semibold text-ink">{active.name}</p>
-              <p className="text-sm text-ink-soft">{active.title}</p>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+          <Reveal className="lg:col-span-8 lg:row-start-2">
+            <figure>
+              <blockquote className="font-heading text-[clamp(1.75rem,1rem+2.8vw,3.5rem)] font-extrabold leading-[1.08] tracking-[-0.03em] text-ink text-balance">
+                <p>{featured.quote}</p>
+              </blockquote>
+              <figcaption className="mt-8">
+                <span className="block font-heading text-lg font-bold text-ink">{featured.name}</span>
+                <span className="block text-ink-soft">{featured.title}</span>
+              </figcaption>
+            </figure>
+          </Reveal>
 
-        <div className="mt-8 flex items-center justify-center gap-2">
-          {data.items.map((testimonial, i) => (
-            <button
-              key={testimonial.name}
-              type="button"
-              onClick={() => setIndex(i)}
-              aria-label={`Show testimonial from ${testimonial.name}`}
-              aria-current={i === index}
-              className="p-1.5"
-            >
-              <span
-                className={cn(
-                  "block h-1.5 rounded-full transition-all duration-300",
-                  i === index ? "gradient-bg w-6" : "w-1.5 bg-ink/15"
-                )}
-              />
-            </button>
-          ))}
+          {others.length ? (
+            <div className="flex flex-col gap-8 lg:col-span-4 lg:row-start-2">
+              {others.map((item, index) => (
+                <figure
+                  key={`${item.name}-${item.title}`}
+                  data-anim="up"
+                  data-anim-step={Math.min(index + 1, 5)}
+                >
+                  <blockquote className="text-[15px] leading-relaxed text-ink">
+                    <p>&ldquo;{item.quote}&rdquo;</p>
+                  </blockquote>
+                  <figcaption className="mt-3 text-sm">
+                    <span className="font-semibold text-ink">{item.name}</span>
+                    <span className="text-ink-soft"> · {item.title}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          ) : null}
         </div>
       </Container>
     </section>

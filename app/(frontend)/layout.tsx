@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Caveat } from "next/font/google";
+import { Archivo } from "next/font/google";
 import Script from "next/script";
-import { MobileCTA } from "@/components/mobile-cta";
+import { AnimationObserver } from "@/components/ui/animation-observer";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { getFooter } from "@/lib/cms/footer";
 import { getHomepage } from "@/lib/cms/homepage";
@@ -21,17 +21,10 @@ import "./globals.css";
 
 const GTM_ID = "GTM-K28PK4V6";
 
+// One variable Archivo file (all weights/widths in a single request) — the brand's only typeface.
 const archivo = Archivo({
   variable: "--font-archivo",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  display: "swap",
-});
-
-const caveat = Caveat({
-  variable: "--font-caveat",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
   display: "swap",
 });
 
@@ -69,7 +62,8 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${archivo.variable} ${caveat.variable} h-full antialiased`}
+      data-scroll-behavior="smooth"
+      className={`${archivo.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
         {/* Google Tag Manager (noscript) */}
@@ -84,7 +78,7 @@ export default async function RootLayout({
         {/* End Google Tag Manager (noscript) */}
         <Script
           id="gtm-script"
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -100,20 +94,26 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
           />
         ))}
-        <div className="bg-atmosphere" aria-hidden="true" />
-        <div className="grain-overlay" aria-hidden="true" />
-        <div className="bg-vignette" aria-hidden="true" />
-        <div className="relative z-10 flex min-h-full flex-1 flex-col">
+        <a
+          href="#content"
+          className="fixed left-4 top-4 z-[100] -translate-y-24 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-paper transition-transform focus:translate-y-0"
+        >
+          Skip to content
+        </a>
+        <div className="relative flex min-h-full flex-1 flex-col">
           <Header navigation={navigation} siteName={siteSettings.siteName} />
-          {children}
+          <div id="content" tabIndex={-1} className="flex flex-1 flex-col outline-none">
+            {children}
+          </div>
           <Footer
             footer={footer}
             companyLinks={navigation.links}
             siteName={siteSettings.siteName}
+            contactEmail={siteSettings.contactEmail}
           />
         </div>
-        <MobileCTA />
         <WhatsAppButton />
+        <AnimationObserver />
       </body>
     </html>
   );

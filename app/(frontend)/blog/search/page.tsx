@@ -28,10 +28,10 @@ export default async function BlogSearchPage({
   const posts = query ? await getPublishedPosts({ page, search: query }) : null;
 
   return (
-    <main className="py-16 md:py-24">
+    <main className="section">
       <Container>
         <Reveal>
-          <span className="font-hand -rotate-1 inline-block text-base text-accent">search</span>
+          <p className="eyebrow">search</p>
           <h1 className="text-editorial mt-2 text-ink text-balance">
             {query ? `Results for "${query}"` : "Search the blog"}
           </h1>
@@ -44,7 +44,7 @@ export default async function BlogSearchPage({
           {posts ? (
             <PostGrid posts={posts.docs} emptyMessage={`No posts found for "${query}".`} />
           ) : (
-            <div className="rounded-2xl border border-dashed border-hairline py-20 text-center">
+            <div className="rounded-md border border-dashed border-hairline py-20 text-center">
               <p className="text-ink-soft">Enter a search term to find articles.</p>
             </div>
           )}

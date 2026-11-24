@@ -4,14 +4,14 @@ export function TableOfContents({ headings }: { headings: Heading[] }) {
   if (headings.length < 2) return null;
 
   return (
-    <nav aria-label="Table of contents" className="rounded-2xl border border-hairline p-5">
-      <span className="font-hand -rotate-1 inline-block text-sm text-accent">on this page</span>
-      <ul className="mt-3 flex flex-col gap-2">
+    <nav aria-label="Table of contents" className="border-y border-hairline py-5">
+      <p className="eyebrow">On this page</p>
+      <ul className="mt-4 flex flex-col gap-2.5">
         {headings.map((heading) => (
-          <li key={heading.id} style={{ paddingLeft: (heading.level - 2) * 12 }}>
+          <li key={heading.id} style={{ paddingLeft: (heading.level - 2) * 14 }}>
             <a
               href={`#${heading.id}`}
-              className="text-sm text-ink-soft transition-colors hover:text-accent"
+              className="text-[15px] text-ink-soft transition-colors hover:text-accent-deep"
             >
               {heading.text}
             </a>

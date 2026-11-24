@@ -1,118 +1,187 @@
-import { ArrowUpRight, ExternalLink, Film } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import type { PortfolioSummaryData } from "@/lib/cms/types";
+import { WORK_COPY } from "@/lib/home-copy";
+import { cn } from "@/lib/utils";
 
-function WorkCard({ item, index }: { item: PortfolioSummaryData; index: number }) {
+const metaLine = (item: PortfolioSummaryData, max = 2) =>
+  [item.category, ...item.services.slice(0, max)]
+    .filter(Boolean)
+    .filter((value, index, all) => all.indexOf(value) === index)
+    .join("  ·  ");
+
+function Cover({
+  item,
+  className,
+  sizes,
+  priority,
+  position,
+}: {
+  item: PortfolioSummaryData;
+  className: string;
+  sizes: string;
+  priority?: boolean;
+  position?: string;
+}) {
   return (
-    <Reveal delay={index * 0.1}>
-      <article className="group relative flex h-full flex-col overflow-hidden rounded-[24px] border border-hairline bg-white shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift">
-        <Link
-          href={`/work/${item.slug}`}
-          className="absolute inset-0 z-10"
-          aria-label={`View case study: ${item.title}`}
+    <div data-anim="scale" className={cn("relative overflow-hidden bg-surface", className)}>
+      {item.thumbnail ? (
+        <Image
+          src={item.thumbnail.url}
+          alt={`${item.title}: ${item.category || "project"} by RuleScale Media`}
+          fill
+          priority={priority}
+          sizes={sizes}
+          style={position ? { objectPosition: position } : undefined}
+          className="object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.035]"
         />
-        {item.liveWebsite ? (
-          <a
-            href={item.liveWebsite}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`Visit the live ${item.title} website`}
-            className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-ink shadow-soft backdrop-blur-sm transition-colors hover:bg-white hover:text-[var(--color-accent)]"
-          >
-            <ExternalLink size={15} />
-          </a>
-        ) : null}
-        <div className="relative aspect-[16/10] overflow-hidden bg-ink/[0.04]">
-          {item.thumbnail ? (
-            <Image
-              src={item.thumbnail.url}
-              alt={item.title}
-              fill
-              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : null}
-        </div>
-        <div className="flex flex-1 flex-col gap-3 p-6">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-ink-soft">{item.client}</span>
-            {item.category ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-accent)]/10 px-3 py-1 text-xs font-semibold text-[var(--color-accent)]">
-                {item.category}
-              </span>
-            ) : null}
-          </div>
-          {item.resultHeadline ? (
-            <h3 className="font-heading text-xl font-bold leading-snug text-ink">
-              {item.resultHeadline}
-            </h3>
-          ) : null}
-          {item.description ? (
-            <p className="line-clamp-2 flex-1 text-sm text-ink-soft">{item.description}</p>
-          ) : null}
-          {item.services.length ? (
-            <div className="flex flex-wrap gap-2 border-t border-hairline pt-4">
-              {item.services.map((service) => (
-                <span
-                  key={service}
-                  className="rounded-full bg-ink/[0.04] px-3 py-1 text-xs font-medium text-ink-soft"
-                >
-                  {service}
-                </span>
-              ))}
-            </div>
-          ) : null}
-          <div className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-ink transition-colors group-hover:text-[var(--color-accent)]">
-            View Case Study
-            <ArrowUpRight
-              size={15}
-              className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-            />
-          </div>
-        </div>
-      </article>
-    </Reveal>
+      ) : null}
+    </div>
   );
 }
 
+/** Shared caption: title + number, then one meta line. Same structure for every project. */
+function Caption({
+  item,
+  index,
+  className,
+}: {
+  item: PortfolioSummaryData;
+  index: number;
+  className?: string;
+}) {
+  return (
+    <div data-anim="up" data-anim-step="1" className={className}>
+      <div className="flex items-baseline justify-between gap-4">
+        <h3 className="font-heading text-2xl font-extrabold tracking-tight">
+          <Link href={`/work/${item.slug}`} className="after:absolute after:inset-0 after:content-['']">
+            {item.title}
+          </Link>
+        </h3>
+        <span className="text-sm text-ink-soft">{String(index).padStart(2, "0")}</span>
+      </div>
+      <p className="mt-1 text-sm text-ink-soft">{metaLine(item)}</p>
+    </div>
+  );
+}
+
+/**
+ * Editorial portfolio on the page's 12-column grid. Different compositions
+ * come from grid placement, not margins:
+ *  A  lead image (cols 1-9) with an ink caption panel (cols 8-12) sharing its row
+ *  B  large landscape (cols 1-7) + smaller 4:3 (cols 8-12), bottom-aligned
+ *  C  the rest as an index: number · thumbnail · title · category · arrow
+ */
 export function FeaturedWork({ items }: { items: PortfolioSummaryData[] }) {
   if (!items.length) return null;
 
+  const [lead, second, third, ...rest] = items;
+
   return (
-    <section id="case-studies" className="py-20 md:py-28">
+    <section id="case-studies" aria-labelledby="work-heading" className="section overflow-hidden bg-white">
       <Container>
-        <Reveal className="mx-auto flex max-w-2xl flex-col items-center text-center">
-          <span className="pill-badge mx-auto inline-flex">
-            <span className="gradient-bg h-1.5 w-1.5 rounded-full" />
-            Featured Work
-          </span>
-          <h2 className="mt-4 font-heading text-3xl font-extrabold tracking-tight text-ink text-balance md:text-4xl">
-            Projects we&apos;re proud of
-          </h2>
-        </Reveal>
-
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item, index) => (
-            <WorkCard key={item.slug} item={item} index={index} />
-          ))}
-        </div>
-
-        <Reveal className="mt-10 flex justify-center">
+        <Reveal className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="eyebrow">{WORK_COPY.eyebrow}</p>
+            <h2 id="work-heading" className="text-section mt-3 max-w-xl">
+              {WORK_COPY.heading}
+            </h2>
+          </div>
           <Link
-            href="/work/videos"
-            className="group inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-6 py-3 text-sm font-semibold text-ink transition-colors hover:border-ink"
+            href={WORK_COPY.cta.href}
+            className="inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap font-heading font-semibold text-ink underline decoration-accent decoration-2 underline-offset-4 hover:text-accent-deep"
           >
-            <Film size={16} />
-            View All Video Work
-            <ArrowUpRight
-              size={16}
-              className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-            />
+            {WORK_COPY.cta.label}
+            <ArrowUpRight size={18} />
           </Link>
         </Reveal>
+
+        <div className="mt-12 flex flex-col gap-16 md:mt-16 md:gap-24">
+          {/* A */}
+          <article className="group relative grid grid-cols-1 lg:grid-cols-12">
+            <Cover
+              item={lead}
+              sizes="(min-width: 1280px) 880px, (min-width: 1024px) 70vw, 100vw"
+              className="aspect-[16/10] lg:col-span-9 lg:col-start-1 lg:row-start-1"
+            />
+            <div data-anim="up" data-anim-step="2" className="bg-ink p-7 text-paper lg:z-10 lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:self-end lg:p-9">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-paper/60">01 — Featured</p>
+              <h3 className="mt-4 font-heading text-3xl font-extrabold tracking-tight md:text-4xl">
+                <Link href={`/work/${lead.slug}`} className="after:absolute after:inset-0 after:content-['']">
+                  {lead.title}
+                </Link>
+              </h3>
+              <p className="mt-2 text-sm text-paper/70">{metaLine(lead, 3)}</p>
+              {lead.resultHeadline && lead.resultHeadline !== lead.title ? (
+                <p className="mt-5 font-heading text-lg font-semibold leading-snug">{lead.resultHeadline}</p>
+              ) : null}
+              <span className="mt-7 inline-flex items-center gap-2 font-heading text-sm font-semibold">
+                View case study
+                <ArrowUpRight
+                  size={18}
+                  aria-hidden="true"
+                  className="text-accent transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                />
+              </span>
+            </div>
+          </article>
+
+          {/* B */}
+          {second ? (
+            <div className="grid grid-cols-1 gap-16 md:gap-24 lg:grid-cols-12 lg:items-end lg:gap-x-8 lg:gap-y-0">
+              <article className="group relative lg:col-span-7">
+                <Cover item={second} sizes="(min-width: 1024px) 55vw, 100vw" className="aspect-[16/10]" />
+                <Caption item={second} index={2} className="mt-4" />
+              </article>
+              {third ? (
+                <article className="group relative lg:col-span-5">
+                  <Cover
+                    item={third}
+                    sizes="(min-width: 1024px) 40vw, 100vw"
+                    className="aspect-[16/10]"
+                  />
+                  <Caption item={third} index={3} className="mt-4" />
+                </article>
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* C */}
+          {rest.length ? (
+            <div>
+              <p className="eyebrow">More work</p>
+              <ul className="mt-6">
+                {rest.map((item, index) => (
+                  <li key={item.id} data-anim="up">
+                    <Link
+                      href={`/work/${item.slug}`}
+                      className="group grid grid-cols-[2rem_4rem_1fr_auto] items-center gap-x-4 py-4 transition-colors hover:bg-paper md:grid-cols-[2.5rem_6rem_1fr_auto_auto] md:gap-x-6 md:px-4"
+                    >
+                      <span className="text-sm text-ink-soft">{String(index + 4).padStart(2, "0")}</span>
+                      <span className="relative block aspect-[16/10] overflow-hidden bg-surface">
+                        {item.thumbnail ? (
+                          <Image src={item.thumbnail.url} alt="" fill sizes="96px" className="object-cover" />
+                        ) : null}
+                      </span>
+                      <span className="font-heading text-[clamp(1.25rem,0.8rem+1.6vw,2.5rem)] font-extrabold leading-tight tracking-[-0.03em]">
+                        {item.title}
+                      </span>
+                      <span className="hidden text-sm text-ink-soft md:block">{item.category}</span>
+                      <ArrowUpRight
+                        size={22}
+                        aria-hidden="true"
+                        className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent-deep"
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
       </Container>
     </section>
   );

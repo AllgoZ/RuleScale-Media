@@ -109,7 +109,7 @@ const FALLBACK_HOMEPAGE: HomepageData = {
     heading: "Ready to become the brand everyone remembers?",
     subheading:
       "Tell us where you're stuck. We'll tell you exactly how we'd fix it — no obligation, no jargon.",
-    cta: { label: "Start Growing", href: "mailto:hello@rulescale.media" },
+    cta: { label: "Start Growing", href: "mailto:rulescalemedia@gmail.com" },
   },
 };
 

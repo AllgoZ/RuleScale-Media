@@ -5,7 +5,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 export const inputClass =
-  "w-full rounded-xl border border-hairline bg-paper px-4 py-2.5 text-sm text-ink placeholder:text-ink-soft/60 focus:border-accent-solid/40 focus:outline-none";
+  "w-full rounded-md border border-ink/30 bg-paper-2 px-4 py-3 text-base text-ink placeholder:text-ink-soft focus:border-ink";
 
 export function Field({
   label,
@@ -24,11 +24,11 @@ export function Field({
     <label className="flex flex-col gap-1.5 text-sm">
       <span className="font-medium text-ink">
         {label}
-        {required ? <span className="text-accent-solid"> *</span> : null}
+        {required ? <span className="text-accent-deep"> *</span> : null}
       </span>
       {children}
       {hint ? <span className="text-xs text-ink-soft">{hint}</span> : null}
-      {error ? <span className="text-xs text-accent-solid">{error}</span> : null}
+      {error ? <span className="text-xs text-accent-deep">{error}</span> : null}
     </label>
   );
 }
@@ -52,7 +52,7 @@ export function TextInput({
       value={value}
       placeholder={placeholder}
       onChange={(event) => onChange(event.target.value)}
-      className={cn(inputClass, invalid && "border-accent-solid/60")}
+      className={cn(inputClass, invalid && "border-accent-deep")}
     />
   );
 }
@@ -73,7 +73,7 @@ export function TextAreaInput({
       value={value}
       rows={rows}
       onChange={(event) => onChange(event.target.value)}
-      className={cn(inputClass, invalid && "border-accent-solid/60")}
+      className={cn(inputClass, invalid && "border-accent-deep")}
     />
   );
 }
@@ -95,7 +95,7 @@ export function SelectInput({
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className={cn(inputClass, invalid && "border-accent-solid/60")}
+      className={cn(inputClass, invalid && "border-accent-deep")}
     >
       <option value="">{placeholder}</option>
       {options.map((option) => (
@@ -140,10 +140,10 @@ export function PillGroup({
             onClick={() => toggle(option.value)}
             aria-pressed={active}
             className={cn(
-              "rounded-full border px-4 py-1.5 text-sm transition-colors",
+              "min-h-11 rounded-full border px-4 text-sm font-medium transition-colors",
               active
-                ? "border-accent-solid bg-accent-solid/10 text-accent-solid"
-                : "border-hairline text-ink-soft hover:border-ink/30 hover:text-ink"
+                ? "border-ink bg-ink text-paper"
+                : "border-ink/25 text-ink hover:border-ink"
             )}
           >
             {option.label}
@@ -188,7 +188,7 @@ export function TagsInput({
       {value.map((item) => (
         <span
           key={item}
-          className="inline-flex items-center gap-1 rounded-full bg-accent-solid/10 px-2.5 py-1 text-xs text-accent-solid"
+          className="inline-flex items-center gap-1 rounded-full bg-accent-deep/10 px-2.5 py-1 text-xs text-accent-deep"
         >
           {item}
           <button

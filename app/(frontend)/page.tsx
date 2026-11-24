@@ -1,50 +1,43 @@
 import { getHomepage } from "@/lib/cms/homepage";
-import { getFeaturedPortfolioItems } from "@/lib/cms/portfolio";
+import { getFeaturedPortfolioItems, getVideoPortfolioItems } from "@/lib/cms/portfolio";
 import { getSiteSettings } from "@/lib/cms/settings";
-import { SERVICES } from "@/lib/constants";
-import { getTurnstileSiteKey } from "@/lib/env";
 import { FAQ } from "@/sections/faq";
 import { FeaturedWork } from "@/sections/featured-work";
 import { FinalCTA } from "@/sections/final-cta";
 import { Hero } from "@/sections/hero";
-import { Manifesto } from "@/sections/manifesto";
-import { Problem } from "@/sections/problem";
 import { Process } from "@/sections/process";
 import { Results } from "@/sections/results";
 import { Services } from "@/sections/services";
 import { Testimonials } from "@/sections/testimonials";
-import { ToolsStack } from "@/sections/tools-stack";
 import { TrustLogos } from "@/sections/trust-logos";
+import { Videos } from "@/sections/videos";
+import { Why } from "@/sections/why";
 
 export default async function Home() {
-  const [homepage, siteSettings, featuredWork] = await Promise.all([
+  const [homepage, siteSettings, featuredWork, videoWork] = await Promise.all([
     getHomepage(),
     getSiteSettings(),
     getFeaturedPortfolioItems(),
+    getVideoPortfolioItems(),
   ]);
-  const services = SERVICES.map((service) => service.title);
-  const turnstileSiteKey = getTurnstileSiteKey();
-  const linkedinUrl = siteSettings.sameAs.find((url) => url.includes("linkedin")) ?? null;
+  const instagramUrl = siteSettings.sameAs.find((url) => url.includes("instagram.com")) ?? null;
 
   return (
-    <main className="bg-dot-grid-light" style={{ backgroundColor: "var(--color-home-bg)" }}>
-      <Hero data={homepage.hero} stats={homepage.results.stats} />
-      <Results data={homepage.results} />
-      <Problem data={homepage.problem} />
-      <Manifesto data={homepage.manifesto} />
-      <Services data={homepage.services} />
-      <TrustLogos data={homepage.trustLogos} />
+    <main>
+      <Hero items={featuredWork} />
+      <TrustLogos items={featuredWork} />
       <FeaturedWork items={featuredWork} />
-      <ToolsStack />
+      <Videos items={videoWork} />
+      <Services data={homepage.services} />
+      <Why problem={homepage.problem} manifesto={homepage.manifesto} />
+      <Results data={homepage.results} />
       <Process data={homepage.process} />
       <Testimonials data={homepage.testimonials} />
       <FAQ data={homepage.faq} />
       <FinalCTA
         data={homepage.finalCta}
         contactEmail={siteSettings.contactEmail}
-        linkedinUrl={linkedinUrl}
-        services={services}
-        turnstileSiteKey={turnstileSiteKey}
+        instagramUrl={instagramUrl}
       />
     </main>
   );

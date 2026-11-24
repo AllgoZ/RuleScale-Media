@@ -1,83 +1,56 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------
+   RuleScale Media design system — one token set for every page.
+   Brand: Ink / Paper / Red, Archivo only. Red is used sparingly:
+   --color-accent for display accents, rules and marks; --color-accent-deep
+   (same hue, darker) for button fills and small red text so they pass AA.
+------------------------------------------------------------------- */
 :root {
   --color-paper: #f3f2f2;
+  --color-paper-2: #faf9f9;
   --color-surface: #eae8e6;
   --color-ink: #201e1d;
-  --color-ink-soft: #6f6b68;
+  --color-ink-soft: #625e5b;
   --color-accent: #ec3013;
-  --color-hairline: rgba(32, 30, 29, 0.1);
-
-  /* Homepage redesign only — a gradient namespace kept separate from
-     --color-accent's *variable* (so the blog and /contact pages, which
-     already reference text-accent/bg-accent, are unaffected) but the
-     gradient itself deliberately starts on the original brand red so the
-     new and original palettes are genuinely mixed, not just adjacent. */
-  --color-accent-from: #ec3013;
-  --color-accent-via: #a855f7;
-  --color-accent-to: #3b82f6;
-  --color-accent-solid: #8b5cf6;
-  --color-home-bg: #f7f8fc;
+  --color-accent-deep: #d1260b;
+  --color-hairline: rgba(32, 30, 29, 0.12);
+  --color-hairline-light: rgba(243, 242, 242, 0.16);
 
   --font-heading: var(--font-archivo);
   --font-body: var(--font-archivo);
-  --font-hand: var(--font-caveat);
 
-  --shadow-soft: 0 1px 2px rgba(32, 30, 29, 0.04), 0 8px 20px rgba(32, 30, 29, 0.05);
-  --shadow-lift: 0 4px 10px rgba(32, 30, 29, 0.06), 0 20px 44px rgba(32, 30, 29, 0.1);
+  --shadow-soft: 0 1px 2px rgba(32, 30, 29, 0.05), 0 8px 20px rgba(32, 30, 29, 0.06);
+  --shadow-lift: 0 4px 10px rgba(32, 30, 29, 0.07), 0 20px 44px rgba(32, 30, 29, 0.12);
 
-  --vh: 1dvh;
-  --safe-b: env(safe-area-inset-bottom, 0px);
-  --safe-t: env(safe-area-inset-top, 0px);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --header-h: 4.25rem;
+  --row-pad: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --row-pad: 2rem;
+  }
 }
 
 @theme inline {
   --color-paper: var(--color-paper);
+  --color-paper-2: var(--color-paper-2);
   --color-surface: var(--color-surface);
   --color-ink: var(--color-ink);
   --color-ink-soft: var(--color-ink-soft);
   --color-accent: var(--color-accent);
+  --color-accent-deep: var(--color-accent-deep);
   --color-hairline: var(--color-hairline);
-  --color-accent-from: var(--color-accent-from);
-  --color-accent-via: var(--color-accent-via);
-  --color-accent-to: var(--color-accent-to);
-  --color-accent-solid: var(--color-accent-solid);
-  --color-home-bg: var(--color-home-bg);
+  --color-hairline-light: var(--color-hairline-light);
 
   --font-sans: var(--font-body);
   --font-heading: var(--font-heading);
-  --font-hand: var(--font-hand);
 
   --shadow-soft: var(--shadow-soft);
   --shadow-lift: var(--shadow-lift);
-
-  --animate-float: float 8s ease-in-out infinite;
-  --animate-float-slow: float 12s ease-in-out infinite;
-  --animate-marquee: marquee 42s linear infinite;
-  --animate-draw: draw 1.4s ease forwards;
-
-  @keyframes float {
-    0%,
-    100% {
-      transform: translateY(0) rotate(var(--tw-rotate, 0deg));
-    }
-    50% {
-      transform: translateY(-6px) rotate(var(--tw-rotate, 0deg));
-    }
-  }
-  @keyframes marquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
-  }
-  @keyframes draw {
-    to {
-      stroke-dashoffset: 0;
-    }
-  }
 }
 
 @keyframes accordion-down {
@@ -98,182 +71,294 @@
 }
 
 html {
+  interpolate-size: allow-keywords;
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + 1rem);
 }
 
 body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-body);
-  position: relative;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
   background: var(--color-accent);
-  color: var(--color-paper);
+  color: #fff;
 }
 
-/* Global atmosphere: soft ambient light + vignette, sits under all content */
-.bg-atmosphere {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  background:
-    radial-gradient(60rem 40rem at 12% -10%, rgba(236, 48, 19, 0.05), transparent 60%),
-    radial-gradient(50rem 36rem at 110% 10%, rgba(32, 30, 29, 0.05), transparent 60%),
-    radial-gradient(80rem 60rem at 50% 120%, rgba(32, 30, 29, 0.04), transparent 60%);
+/* One consistent, visible keyboard focus indicator across the whole site. */
+:focus-visible {
+  outline: 2px solid var(--color-accent-deep);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.on-ink :focus-visible {
+  outline-color: var(--color-paper);
 }
 
-.bg-vignette {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 61;
-  box-shadow: inset 0 0 12rem rgba(32, 30, 29, 0.06);
+@layer components {
+  /* ---- Type scale ---- */
+  .text-display {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+    font-size: clamp(2.75rem, 1.4rem + 6.4vw, 7rem);
+  }
+  .text-editorial {
+    /* page-level H1 */
+    font-family: var(--font-heading);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    font-size: clamp(2.25rem, 1.3rem + 3.8vw, 4.75rem);
+  }
+  .text-section {
+    /* the one section-heading style, used by every section */
+    font-family: var(--font-heading);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    font-size: clamp(1.75rem, 1rem + 2vw, 2.75rem);
+    text-wrap: balance;
+  }
+  .text-lead {
+    font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+    line-height: 1.55;
+    color: var(--color-ink-soft);
+  }
+  .eyebrow {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+  }
+  .on-ink .eyebrow {
+    color: rgba(243, 242, 242, 0.7);
+  }
+
+  /* ---- Layout rhythm ---- */
+  .section {
+    padding-block: 5rem;
+  }
+  @media (min-width: 768px) {
+    .section {
+      padding-block: 7rem;
+    }
+  }
+  .on-ink {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .on-ink .text-lead,
+  .on-ink .muted {
+    color: rgba(243, 242, 242, 0.72);
+  }
+
+  /* Hero: two-tone background that splits exactly on the container's centre line. */
+  @media (min-width: 1024px) {
+    .split-bg {
+      background: linear-gradient(90deg, var(--color-paper) 50%, var(--color-accent) 50%);
+    }
+  }
+
+  .hairline {
+    border: 1px solid var(--color-hairline);
+  }
 }
 
-/* subtle paper grain, applied as a fixed full-page overlay */
-.grain-overlay {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  opacity: 0.3;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.03 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+/* ------------------------------------------------------------------
+   Motion (see Architecture files/animation-plan.md)
+   transform + opacity only. Everything is visible without JS; below-the-fold
+   blocks are hidden by components/ui/animation-observer.tsx after hydration.
+------------------------------------------------------------------- */
+
+/* A. Hero load-in: runs from CSS on first paint. The headline and the project
+   tiles use transform only, so the LCP candidate is never faded in. */
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+@keyframes hero-slide {
+  from {
+    transform: translateY(26px);
+  }
+}
+.hero-in {
+  animation: hero-rise 0.7s var(--ease-out) var(--d, 0s) backwards;
+}
+.hero-slide {
+  animation: hero-slide 0.85s var(--ease-out) var(--d, 0s) backwards;
 }
 
-.font-hand {
-  font-family: var(--font-hand);
+/* B. Scroll reveal. data-anim-state is set by the observer: "hidden" (below the
+   fold, waiting) then "in" (revealed). No state = visible (no JS, in view at load). */
+[data-anim="up"] {
+  --anim-from: translateY(28px);
+}
+[data-anim="fade"] {
+  --anim-from: none;
+}
+[data-anim="scale"] {
+  --anim-from: scale(0.96);
+}
+[data-anim="left"] {
+  --anim-from: translateX(-36px);
+}
+[data-anim="right"] {
+  --anim-from: translateX(36px);
+}
+[data-anim-step="1"] { --anim-delay: 0.07s; }
+[data-anim-step="2"] { --anim-delay: 0.14s; }
+[data-anim-step="3"] { --anim-delay: 0.21s; }
+[data-anim-step="4"] { --anim-delay: 0.28s; }
+[data-anim-step="5"] { --anim-delay: 0.35s; }
+
+[data-anim][data-anim-state="hidden"] {
+  opacity: 0;
+  transform: var(--anim-from);
+}
+[data-anim][data-anim-state="in"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.7s var(--ease-out) var(--anim-delay, 0s),
+    transform 0.8s var(--ease-out) var(--anim-delay, 0s);
 }
 
-.font-heading {
-  font-family: var(--font-heading);
+/* C. Page transition on client-side navigation (template.tsx). */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.page-enter {
+  animation: page-in 0.35s var(--ease-out) backwards;
 }
 
-/* Editorial display type — the hero headline is the hero, not a card */
-.text-display {
-  font-family: var(--font-heading);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 0.96;
-  font-size: clamp(2.25rem, 1.2rem + 6vw, 7.5rem);
+/* D. Header nav links: underline grows from the left. */
+.nav-link {
+  background-image: linear-gradient(var(--color-accent), var(--color-accent));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 2px;
+  padding-bottom: 4px;
+  transition:
+    background-size 0.3s var(--ease-out),
+    color 0.2s;
+}
+.nav-link:hover,
+.nav-link:focus-visible {
+  background-size: 100% 2px;
 }
 
-.text-editorial {
-  font-family: var(--font-heading);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.03;
-  font-size: clamp(2rem, 1.4rem + 3vw, 4rem);
+/* E. Smooth open/close for native <details> (Chromium/Safari with ::details-content;
+   elsewhere it simply opens instantly). */
+.details-smooth::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition:
+    block-size 0.4s var(--ease-out),
+    content-visibility 0.4s allow-discrete;
+}
+.details-smooth[open]::details-content {
+  block-size: auto;
 }
 
-.text-mega {
-  font-family: var(--font-heading);
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 0.9;
-  font-size: clamp(3.5rem, 2rem + 14vw, 13rem);
+/* Hero project wheel: the top and bottom of the stage dissolve, so a card rolling away (or waiting
+   below) fades out softly instead of being hard-cropped by the stage / the window edge. */
+.wheel-stage {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 72%, transparent 96%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 8%, #000 72%, transparent 96%);
 }
 
-/* A cursor-follow glow. Set --mx / --my (0-100) via inline style on the host. */
-.spotlight::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: var(--spotlight-opacity, 0);
-  transition: opacity 0.4s ease;
-  background: radial-gradient(
-    28rem circle at var(--mx, 50%) var(--my, 50%),
-    var(--spotlight-color, rgba(236, 48, 19, 0.1)),
-    transparent 70%
-  );
+@media (prefers-reduced-motion: reduce) {
+  /* Hero project wheel: no 3D, no pinned stage; a plain list of cards. */
+  .wheel-track {
+    height: auto !important;
+  }
+  .wheel-stage {
+    -webkit-mask-image: none;
+    mask-image: none;
+    position: static;
+    height: auto;
+    overflow: visible;
+    padding-block: 1.25rem;
+  }
+  .wheel-stage > ol {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    height: auto;
+    perspective: none;
+  }
+  .wheel-card {
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: auto !important;
+    --shade: 0 !important;
+  }
+  .hero-in,
+  .hero-slide,
+  .page-enter {
+    animation: none;
+  }
+  [data-anim],
+  [data-anim][data-anim-state] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .nav-link,
+  .details-smooth::details-content {
+    transition: none;
+  }
 }
 
-.hairline {
-  border: 1px solid var(--color-hairline);
+/* Slow marquee for the client band. Pauses on hover; static under reduced motion. */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 60s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
 }
 
-.svh {
-  min-height: 100svh;
-}
-
-.bg-dot-grid {
-  background-image: radial-gradient(rgba(243, 242, 242, 0.09) 1px, transparent 1px);
-  background-size: 28px 28px;
-}
-
-/* --- Homepage redesign (new gradient system, homepage sections only) --- */
-
-.bg-dot-grid-light {
-  background-image: radial-gradient(rgba(32, 30, 29, 0.16) 1.5px, transparent 1.5px);
-  background-size: 24px 24px;
-}
-
-.gradient-text {
-  background: linear-gradient(
-    90deg,
-    var(--color-accent-from),
-    var(--color-accent-via),
-    var(--color-accent-to)
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
+/* Giant outlined numerals (process steps). */
+.outline-num {
   color: transparent;
+  -webkit-text-stroke: 2px rgba(243, 242, 242, 0.32);
 }
 
-.gradient-bg {
-  background: linear-gradient(
-    90deg,
-    var(--color-accent-from),
-    var(--color-accent-via),
-    var(--color-accent-to)
-  );
-}
-
-/* Pure original red — used for secondary tag/pill accents on the redesigned
-   homepage, alongside the gradient, so both palettes stay visibly present
-   rather than the red being fully absorbed into the gradient. Reads the
-   existing --color-accent variable directly (not reassigning it), so the
-   blog/contact pages are unaffected. */
-.accent-red-bg {
-  background-color: var(--color-accent);
-}
-
-.accent-red-text {
-  color: var(--color-accent);
-}
-
-/* No `display` here on purpose — it's a plain (unlayered) CSS rule, and under
-   Tailwind v4's cascade layers, an unlayered display would always beat a
-   layered utility like `hidden`/`md:inline-flex`, silently defeating any
-   responsive visibility applied alongside this class. Callers add
-   `inline-flex` (or `hidden md:inline-flex`) explicitly instead. */
-.pill-badge {
-  align-items: center;
-  gap: 0.5rem;
-  border-radius: 9999px;
-  border: 1px solid var(--color-hairline);
-  background: #ffffff;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-ink);
+/* Locks background scroll while a modal dialog is open. */
+html.modal-open {
+  overflow: hidden;
 }
 
 /* Styles the un-classed markup RichText (Payload's Lexical -> JSX default
-   converters) produces for a blog article body — p/h2-h4/ul/ol/blockquote/a/img,
-   none of which carry Tailwind classes out of the box. */
+   converters) produces for blog article and case-study bodies. */
 .article-body {
-  color: var(--color-ink-soft);
-  font-size: 1.0625rem;
-  line-height: 1.75;
+  color: #3d3a38;
+  font-size: 1.125rem;
+  line-height: 1.8;
 }
 
 .article-body > * + * {
-  margin-top: 1.25em;
+  margin-top: 1.35em;
 }
 
 .article-body h2,
@@ -281,36 +366,39 @@ body {
 .article-body h4 {
   font-family: var(--font-heading);
   font-weight: 800;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
   color: var(--color-ink);
   scroll-margin-top: 6rem;
 }
 
 .article-body h2 {
-  margin-top: 2.5em;
-  font-size: 1.5rem;
+  margin-top: 2.6em;
+  font-size: 1.75rem;
 }
 
 .article-body h3 {
-  margin-top: 2em;
-  font-size: 1.25rem;
+  margin-top: 2.1em;
+  font-size: 1.35rem;
 }
 
 .article-body h4 {
-  margin-top: 1.5em;
-  font-size: 1.0625rem;
+  margin-top: 1.6em;
+  font-size: 1.125rem;
 }
 
 .article-body a {
   color: var(--color-ink);
+  font-weight: 500;
   text-decoration: underline;
-  text-decoration-color: var(--color-hairline);
-  text-underline-offset: 3px;
-  transition: text-decoration-color 0.2s ease;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  transition: color 0.2s ease;
 }
 
 .article-body a:hover {
-  text-decoration-color: var(--color-accent);
+  color: var(--color-accent-deep);
 }
 
 .article-body strong {
@@ -319,15 +407,16 @@ body {
 }
 
 .article-body blockquote {
-  border-left: 2px solid var(--color-accent);
+  border-left: 3px solid var(--color-accent);
   padding-left: 1.25rem;
-  font-style: italic;
+  font-size: 1.25rem;
+  font-weight: 500;
   color: var(--color-ink);
 }
 
 .article-body ul,
 .article-body ol {
-  padding-left: 1.25rem;
+  padding-left: 1.4rem;
 }
 
 .article-body ul {
@@ -339,7 +428,11 @@ body {
 }
 
 .article-body li + li {
-  margin-top: 0.4em;
+  margin-top: 0.45em;
+}
+
+.article-body li::marker {
+  color: var(--color-accent);
 }
 
 .article-body img,
@@ -347,8 +440,7 @@ body {
   display: block;
   width: 100%;
   height: auto;
-  border-radius: 1rem;
-  border: 1px solid var(--color-hairline);
+  border-radius: 6px;
 }
 
 .article-body code {
@@ -363,7 +455,43 @@ body {
   border-top: 1px solid var(--color-hairline);
 }
 
+.article-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.article-body th,
+.article-body td {
+  border-bottom: 1px solid var(--color-hairline);
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+}
+
+/* Reveal: one-time fade + rise. Content is visible by default (SSR, no-JS, above the fold);
+   the client hides only blocks that start below the fold, then fades them in once. */
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(var(--reveal-y, 12px));
+}
+.reveal-shown {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s),
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+    flex-wrap: wrap;
+    width: auto;
+    row-gap: 0.5rem;
+  }
+  .marquee-track [aria-hidden="true"] {
+    display: none;
+  }
   *,
   *::before,
   *::after {

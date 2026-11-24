@@ -1,5 +1,10 @@
 # RuleScale Media — Landing Page: System Status
 
+> **Superseded in part (2026-11-24):** this snapshot predates the 2026-11-22 redesign. Its homepage/section/design
+> descriptions (mobile CTA, doodles, gradient tokens, tools stack, case-studies section, hand-drawn elements, odometer
+> stats) are **no longer accurate**. For the current system read `../ARCHITECTURE.md`, `../CLAUDE.MD` and
+> `../handover.md`; the CMS/backend sections below are still broadly correct.
+
 Last updated: 2026-08-03
 Repo: https://github.com/AllgoZ/RuleScale-Media (branch `main`)
 

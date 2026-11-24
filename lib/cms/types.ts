@@ -279,12 +279,13 @@ export type PortfolioSummaryData = {
   services: string[];
   thumbnail: PortfolioThumbnail;
   liveWebsite: string;
+  /** Video source for `mediaType: "video"` items (empty for image projects). */
+  videoUrl: string;
   sortOrder: number;
   publishedAt: string | null;
 };
 
 export type PortfolioItemData = PortfolioSummaryData & {
-  videoUrl: string;
   caseStudyContent: PortfolioContent;
   seo: {
     metaTitle: string;

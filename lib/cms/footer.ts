@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { CACHE_TAGS } from "@/lib/cache/tags";
+import { INSTAGRAM_URL } from "@/lib/constants";
 import { getPayloadClient } from "./payload-client";
 import type { FooterData } from "./types";
 
@@ -21,7 +22,7 @@ const FALLBACK_FOOTER: FooterData = {
     { label: "Terms of Service", href: "/#top" },
   ],
   socialLinks: [
-    { platform: "instagram", url: "/#top" },
+    { platform: "instagram", url: INSTAGRAM_URL },
     { platform: "linkedin", url: "/#top" },
     { platform: "youtube", url: "/#top" },
   ],

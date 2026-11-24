@@ -41,10 +41,10 @@ export default async function CategoryArchivePage({ params, searchParams }: Para
   const posts = await getPublishedPosts({ page, categorySlug: slug });
 
   return (
-    <main className="py-16 md:py-24">
+    <main className="section">
       <Container>
         <Reveal>
-          <span className="font-hand -rotate-1 inline-block text-base text-accent">category</span>
+          <p className="eyebrow">category</p>
           <h1 className="text-editorial mt-2 text-ink text-balance">{category.title}</h1>
           {category.description ? (
             <p className="mt-4 max-w-xl text-lg text-ink-soft">{category.description}</p>

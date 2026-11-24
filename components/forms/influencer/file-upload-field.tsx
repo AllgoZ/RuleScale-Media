@@ -89,9 +89,9 @@ export function FileUploadField({
   return (
     <Field label={label} hint={hint}>
       {state === "done" && url ? (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-hairline bg-paper px-4 py-2.5 text-sm">
+        <div className="flex items-center justify-between gap-3 rounded-md border border-hairline bg-paper px-4 py-2.5 text-sm">
           <span className="flex min-w-0 items-center gap-2 text-ink">
-            <CheckCircle2 className="shrink-0 text-accent-solid" size={16} />
+            <CheckCircle2 className="shrink-0 text-accent-deep" size={16} />
             <span className="truncate">{fileName || "Uploaded"}</span>
           </span>
           <button
@@ -107,7 +107,7 @@ export function FileUploadField({
           </button>
         </div>
       ) : (
-        <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed border-hairline bg-paper px-4 py-2.5 text-sm text-ink-soft hover:border-accent-solid/40">
+        <label className="flex cursor-pointer items-center justify-between gap-3 rounded-md border border-dashed border-ink/30 bg-paper-2 px-4 py-3 text-sm text-ink-soft hover:border-ink">
           <span className="flex items-center gap-2">
             {state === "uploading" ? (
               <Loader2 className="animate-spin" size={16} />
@@ -125,7 +125,7 @@ export function FileUploadField({
           />
         </label>
       )}
-      {error ? <span className="text-xs text-accent-solid">{error}</span> : null}
+      {error ? <span className="text-xs text-accent-deep">{error}</span> : null}
     </Field>
   );
 }

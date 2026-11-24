@@ -41,15 +41,12 @@ export const SiteSettings: GlobalConfig = {
     {
       name: "contactEmail",
       type: "email",
-      defaultValue: "hello@rulescale.media",
+      defaultValue: "rulescalemedia@gmail.com",
     },
     {
       name: "sameAs",
       type: "array",
-      defaultValue: [
-        { url: "https://www.linkedin.com/company/rulescale-media" },
-        { url: "https://www.instagram.com/rulescalemedia" },
-      ],
+      defaultValue: [{ url: "https://www.instagram.com/rulescalemedia?lqvp=MXhocXAweWJ0cDJ2aw==" }],
       fields: [{ name: "url", type: "text", required: true }],
     },
   ],

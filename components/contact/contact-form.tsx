@@ -136,8 +136,8 @@ export function ContactForm({
 
   if (state === "success") {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-3xl border border-hairline bg-paper py-16 text-center">
-        <CheckCircle2 className="text-accent" size={40} />
+      <div className="flex flex-col items-center gap-4 rounded-md border border-hairline bg-paper-2 py-16 text-center">
+        <CheckCircle2 className="text-accent-deep" size={40} />
         <h2 className="font-heading text-2xl font-bold text-ink">Message sent.</h2>
         <p className="max-w-sm text-ink-soft">
           Thanks for reaching out — we&apos;ll get back to you within one business day.
@@ -219,10 +219,10 @@ export function ContactForm({
                 onClick={() => toggleService(service)}
                 aria-pressed={active}
                 className={cn(
-                  "rounded-full border px-4 py-1.5 text-sm transition-colors",
+                  "min-h-11 rounded-full border px-4 text-sm font-medium transition-colors",
                   active
-                    ? "border-accent bg-accent/10 text-accent"
-                    : "border-hairline text-ink-soft hover:border-ink/30 hover:text-ink"
+                    ? "border-ink bg-ink text-paper"
+                    : "border-ink/25 text-ink hover:border-ink"
                 )}
               >
                 {service}
@@ -258,7 +258,7 @@ export function ContactForm({
         <TurnstileWidget siteKey={turnstileSiteKey} onToken={setTurnstileToken} />
       ) : null}
 
-      {error ? <p className="text-sm text-accent">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm font-medium text-accent-deep">{error}</p> : null}
 
       <Button type="submit" variant="accent" size="lg" disabled={state === "submitting"} className="self-start">
         {state === "submitting" ? (
@@ -275,7 +275,7 @@ export function ContactForm({
 }
 
 const inputClass =
-  "w-full rounded-xl border border-hairline bg-paper px-4 py-2.5 text-sm text-ink placeholder:text-ink-soft/60 focus:border-accent/40 focus:outline-none";
+  "w-full rounded-md border border-ink/30 bg-paper-2 px-4 py-3 text-base text-ink placeholder:text-ink-soft focus:border-ink";
 
 function Field({
   label,
@@ -290,7 +290,7 @@ function Field({
     <label className="flex flex-col gap-1.5 text-sm">
       <span className="font-medium text-ink">
         {label}
-        {required ? <span className="text-accent"> *</span> : null}
+        {required ? <span className="text-accent-deep"> *</span> : null}
       </span>
       {children}
     </label>

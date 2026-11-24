@@ -29,33 +29,29 @@ export function Pagination({
 
   const atStart = currentPage <= 1;
   const atEnd = currentPage >= totalPages;
+  const arrow =
+    "flex h-11 w-11 items-center justify-center rounded-full border border-ink/25 text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper";
 
   return (
-    <nav aria-label="Pagination" className="flex items-center justify-center gap-2 pt-4">
+    <nav aria-label="Pagination" className="flex items-center justify-center gap-3 pt-4">
       <Link
         href={pageHref(Math.max(1, currentPage - 1))}
         aria-disabled={atStart}
         aria-label="Previous page"
-        className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-full border border-hairline text-ink-soft transition-colors hover:border-ink hover:text-ink",
-          atStart && "pointer-events-none opacity-40"
-        )}
+        className={cn(arrow, atStart && "pointer-events-none opacity-40")}
       >
-        <ChevronLeft size={16} />
+        <ChevronLeft size={18} />
       </Link>
-      <span className="px-3 text-sm text-ink-soft">
+      <span className="px-3 text-sm font-medium text-ink-soft">
         Page {currentPage} of {totalPages}
       </span>
       <Link
         href={pageHref(Math.min(totalPages, currentPage + 1))}
         aria-disabled={atEnd}
         aria-label="Next page"
-        className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-full border border-hairline text-ink-soft transition-colors hover:border-ink hover:text-ink",
-          atEnd && "pointer-events-none opacity-40"
-        )}
+        className={cn(arrow, atEnd && "pointer-events-none opacity-40")}
       >
-        <ChevronRight size={16} />
+        <ChevronRight size={18} />
       </Link>
     </nav>
   );

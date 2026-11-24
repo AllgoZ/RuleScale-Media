@@ -3,6 +3,9 @@
 import { Check, Copy, ExternalLink } from "lucide-react";
 import { useState } from "react";
 
+const iconButton =
+  "flex h-11 w-11 items-center justify-center rounded-full border border-ink/25 text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper";
+
 export function ShareButtons({ url, title }: { url: string; title: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -34,7 +37,7 @@ export function ShareButtons({ url, title }: { url: string; title: string }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="font-hand -rotate-1 mr-1 inline-block text-sm text-accent">share</span>
+      <span className="eyebrow mr-2">Share</span>
       {shareLinks.map((link) => (
         <a
           key={link.label}
@@ -42,18 +45,13 @@ export function ShareButtons({ url, title }: { url: string; title: string }) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label={link.label}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline text-ink-soft transition-colors hover:border-ink hover:text-ink"
+          className={iconButton}
         >
-          <ExternalLink size={15} />
+          <ExternalLink size={16} />
         </a>
       ))}
-      <button
-        type="button"
-        onClick={handleCopy}
-        aria-label="Copy link"
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-hairline text-ink-soft transition-colors hover:border-ink hover:text-ink"
-      >
-        {copied ? <Check size={15} className="text-accent" /> : <Copy size={15} />}
+      <button type="button" onClick={handleCopy} aria-label="Copy link" className={iconButton}>
+        {copied ? <Check size={16} /> : <Copy size={16} />}
       </button>
     </div>
   );

@@ -1,72 +1,108 @@
-import {
-  BarChart3,
-  Compass,
-  Globe,
-  LayoutTemplate,
-  Lightbulb,
-  Megaphone,
-  PenLine,
-  Search,
-  Share2,
-  Sparkles,
-  Target,
-  Video,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowUpRight, Plus } from "lucide-react";
+import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
-import type { ServicesData } from "@/lib/cms/types";
+import type { ServiceItemData, ServicesData } from "@/lib/cms/types";
 
-const ICONS: Record<string, LucideIcon> = {
-  layout: LayoutTemplate,
-  search: Search,
-  target: Target,
-  "share-2": Share2,
-  sparkles: Sparkles,
-  video: Video,
-  "pen-line": PenLine,
-  compass: Compass,
-  megaphone: Megaphone,
-  "bar-chart-3": BarChart3,
-  globe: Globe,
-  lightbulb: Lightbulb,
-};
+/**
+ * The CMS keeps one flat list of services. For scanning, they are grouped into
+ * three plain-English categories by service name. A service whose name isn't
+ * recognised falls into the last group, so nothing is dropped when an editor
+ * adds or renames one.
+ */
+const GROUPS = [
+  { title: "Build & get found", keys: ["website", "seo", "performance", "analytics"] },
+  { title: "Create & connect", keys: ["social", "content", "video", "influencer"] },
+  { title: "Plan & reach", keys: ["brand", "media buying", "localization", "consulting"] },
+] as const;
 
+function groupServices(items: ServiceItemData[]) {
+  const buckets: ServiceItemData[][] = GROUPS.map(() => []);
+  for (const item of items) {
+    const name = item.title.toLowerCase();
+    const index = GROUPS.findIndex((group) => group.keys.some((key) => name.includes(key)));
+    buckets[index === -1 ? GROUPS.length - 1 : index].push(item);
+  }
+  return buckets;
+}
+
+/** The stored intro still tells visitors to "tap any line" (from the old accordion). */
+const stripTapHint = (text: string) => text.replace(/\s*Tap any line[^.]*\./i, "").trim();
+
+/**
+ * Editorial service menu: three large numbered groups. Collapsed, each shows its
+ * service names on one line; open, it shows every description. Built on native
+ * <details name="…"> so it is keyboard/screen-reader accessible without JS and
+ * every description stays in the page HTML for search engines.
+ */
 export function Services({ data }: { data: ServicesData }) {
-  return (
-    <section id="services" className="py-20 md:py-28">
-      <Container>
-        <Reveal className="mx-auto max-w-2xl text-center">
-          <span className="pill-badge inline-flex">
-            <span className="gradient-bg h-1.5 w-1.5 rounded-full" />
-            {data.eyebrow}
-          </span>
-          <h2 className="mt-4 font-heading text-3xl font-extrabold tracking-tight text-ink text-balance md:text-4xl">
-            {data.heading}
-          </h2>
-          <p className="mt-3 text-base text-ink-soft">{data.description}</p>
-        </Reveal>
+  const buckets = groupServices(data.items);
+  const description = stripTapHint(data.description);
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {data.items.map((service, index) => {
-            const Icon = ICONS[service.icon];
-            return (
-              <Reveal key={service.title} delay={(index % 6) * 0.06}>
-                <div className="h-full rounded-[24px] border border-hairline bg-white p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift">
-                  <span className="gradient-bg flex h-12 w-12 items-center justify-center rounded-full text-white">
-                    <Icon size={20} strokeWidth={1.75} />
-                  </span>
-                  <h3 className="mt-5 font-heading text-lg font-bold text-ink">{service.title}</h3>
-                  <p className="mt-2 text-sm text-ink-soft">{service.description}</p>
-                  {service.note ? (
-                    <span className="mt-4 inline-block rounded-full bg-[var(--color-accent)]/10 px-3 py-1 text-xs font-medium text-[var(--color-accent)]">
-                      {service.note}
+  return (
+    <section id="services" aria-labelledby="services-heading" className="section bg-paper">
+      <Container>
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-x-16">
+          {/* Intro: top padding equals the first row's, so both columns start on one line. */}
+          <Reveal className="lg:sticky lg:top-28 lg:col-span-4 lg:self-start lg:pt-[var(--row-pad)]">
+            <p className="eyebrow">{data.eyebrow}</p>
+            <h2 id="services-heading" className="text-section mt-3">
+              {data.heading}
+            </h2>
+            {description ? <p className="text-lead mt-5 max-w-sm">{description}</p> : null}
+            <Link
+              href="/contact"
+              className="mt-8 inline-flex min-h-11 items-center gap-2 font-heading font-semibold text-ink underline decoration-accent decoration-2 underline-offset-4 hover:text-accent-deep"
+            >
+              Discuss your project
+              <ArrowUpRight size={18} />
+            </Link>
+          </Reveal>
+
+          <div className="flex flex-col gap-3 lg:col-span-8">
+            {GROUPS.map((group, groupIndex) =>
+              buckets[groupIndex].length ? (
+                <details
+                  key={group.title}
+                  name="service-groups"
+                  open={groupIndex === 0}
+                  data-anim="up"
+                  data-anim-step={groupIndex + 1}
+                  className="details-smooth group transition-colors open:bg-white"
+                >
+                  {/* One column template shared by the summary and the expanded content. */}
+                  <summary className="grid cursor-pointer list-none grid-cols-[2rem_1fr_auto] items-start gap-x-4 p-[var(--row-pad)] marker:hidden md:grid-cols-[2.5rem_1fr_auto] md:gap-x-6 [&::-webkit-details-marker]:hidden">
+                    <span className="pt-2 font-heading text-sm font-bold text-accent-deep">
+                      {String(groupIndex + 1).padStart(2, "0")}
                     </span>
-                  ) : null}
-                </div>
-              </Reveal>
-            );
-          })}
+                    <span>
+                      <span className="block font-heading text-[clamp(1.75rem,1rem+2.4vw,3rem)] font-extrabold leading-none tracking-[-0.035em]">
+                        {group.title}
+                      </span>
+                      <span className="mt-3 block text-[15px] text-ink-soft group-open:hidden">
+                        {buckets[groupIndex].map((service) => service.title).join("  /  ")}
+                      </span>
+                    </span>
+                    <Plus
+                      size={28}
+                      aria-hidden="true"
+                      className="transition-transform duration-300 group-open:rotate-45 group-open:text-accent-deep"
+                    />
+                  </summary>
+                  <div className="grid grid-cols-[2rem_1fr_auto] gap-x-4 px-[var(--row-pad)] pb-[var(--row-pad)] md:grid-cols-[2.5rem_1fr_auto] md:gap-x-6">
+                    <div className="col-start-2 grid gap-x-10 gap-y-7 sm:grid-cols-2">
+                      {buckets[groupIndex].map((service) => (
+                        <div key={service.title}>
+                          <h3 className="font-heading text-lg font-bold tracking-tight">{service.title}</h3>
+                          <p className="mt-1 text-[15px] leading-relaxed text-ink-soft">{service.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </details>
+              ) : null
+            )}
+          </div>
         </div>
       </Container>
     </section>

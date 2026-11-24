@@ -1,18 +1,31 @@
 import type { Metadata } from "next";
 import { RichText } from "@payloadcms/richtext-lexical/react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { Reveal } from "@/components/ui/reveal";
 import { transformImage } from "@/lib/cloudinary";
-import { getPortfolioItemBySlug, getRelatedPortfolioItems } from "@/lib/cms/portfolio";
+import { getAllPortfolioItems, getPortfolioItemBySlug, getRelatedPortfolioItems } from "@/lib/cms/portfolio";
 import { getSiteSettings } from "@/lib/cms/settings";
 import { SITE_URL } from "@/lib/constants";
 import { breadcrumbSchema, creativeWorkSchema } from "@/lib/schema";
 
 type Params = { params: Promise<{ slug: string }> };
+
+// Prerender every published image case study at build (see blog/[slug] for the rationale).
+export const revalidate = 900;
+
+export async function generateStaticParams() {
+  try {
+    const items = await getAllPortfolioItems();
+    return items.filter((item) => item.mediaType === "image").map((item) => ({ slug: item.slug }));
+  } catch {
+    return [];
+  }
+}
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
@@ -63,7 +76,7 @@ export default async function WorkItemPage({ params }: Params) {
   ];
 
   return (
-    <main className="py-16 md:py-24" style={{ backgroundColor: "var(--color-home-bg)" }}>
+    <main className="section">
       {jsonLd.map((schema, index) => (
         <script
           key={index}
@@ -72,100 +85,106 @@ export default async function WorkItemPage({ params }: Params) {
         />
       ))}
 
-      <Container className="max-w-3xl">
-        <Reveal>
-          <div className="flex items-center justify-between text-sm text-ink-soft">
-            <span>{item.client}</span>
-            {item.category ? (
-              <span className="pill-badge inline-flex">{item.category}</span>
-            ) : null}
+      <Container>
+        <Reveal className="grid gap-10 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-8">
+            <p className="eyebrow">{item.category || "Case study"}</p>
+            <h1 className="text-editorial mt-5 text-balance">{item.resultHeadline || item.title}</h1>
+            {item.description ? <p className="text-lead mt-6 max-w-2xl">{item.description}</p> : null}
           </div>
-          <h1 className="mt-4 font-heading text-3xl font-extrabold tracking-tight text-ink text-balance md:text-4xl">
-            {item.resultHeadline || item.title}
-          </h1>
-          {item.description ? (
-            <p className="mt-4 max-w-xl text-lg text-ink-soft">{item.description}</p>
-          ) : null}
-          {item.liveWebsite ? (
-            <Link
-              href={item.liveWebsite}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-ink hover:text-[var(--color-accent)]"
-            >
-              Visit live site
-              <ArrowUpRight size={16} />
-            </Link>
-          ) : null}
+          <dl className="grid gap-6 self-end border-t-2 border-ink pt-5 text-[15px] sm:grid-cols-2 lg:col-span-4 lg:grid-cols-1">
+            <div>
+              <dt className="eyebrow">Client</dt>
+              <dd className="mt-2 font-heading text-lg font-bold text-ink">{item.title}</dd>
+            </div>
+            {item.services.length ? (
+              <div>
+                <dt className="eyebrow">Services</dt>
+                <dd className="mt-2 text-ink">{item.services.join(", ")}</dd>
+              </div>
+            ) : null}
+            {item.liveWebsite ? (
+              <div>
+                <dt className="eyebrow">Website</dt>
+                <dd className="mt-1">
+                  <Link
+                    href={item.liveWebsite}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-11 items-center gap-1.5 font-semibold text-ink underline decoration-accent decoration-2 underline-offset-4 hover:text-accent-deep"
+                  >
+                    Visit live site
+                    <ArrowUpRight size={16} aria-hidden="true" />
+                  </Link>
+                </dd>
+              </div>
+            ) : null}
+          </dl>
         </Reveal>
 
         {item.thumbnail ? (
-          <Reveal
-            delay={0.1}
-            className="relative mt-10 aspect-[16/9] overflow-hidden rounded-3xl border border-hairline"
-          >
+          <div className="relative mt-12 aspect-[16/9] overflow-hidden rounded-md bg-surface">
             <Image
               src={item.thumbnail.url}
-              alt={item.title}
+              alt={`${item.title}: ${item.category || "project"} by RuleScale Media`}
               fill
-              sizes="(min-width: 768px) 768px, 100vw"
+              sizes="(min-width: 1280px) 1176px, 100vw"
               priority
               className="object-cover"
             />
-          </Reveal>
+          </div>
         ) : null}
       </Container>
 
-      <Container className="mt-12 max-w-3xl">
-        {item.services.length ? (
-          <div className="mb-10 flex flex-wrap gap-2">
-            {item.services.map((service) => (
-              <span
-                key={service}
-                className="rounded-full bg-ink/[0.04] px-3 py-1 text-xs font-medium text-ink-soft"
-              >
-                {service}
-              </span>
-            ))}
-          </div>
-        ) : null}
+      {item.caseStudyContent ? (
+        <Container className="mt-16">
+          <RichText data={item.caseStudyContent} className="article-body max-w-3xl" />
+        </Container>
+      ) : null}
 
-        {item.caseStudyContent ? (
-          <RichText data={item.caseStudyContent} className="article-body" />
-        ) : null}
+      <Container className="mt-16">
+        <div className="on-ink flex flex-col items-start gap-6 rounded-md p-8 md:flex-row md:items-center md:justify-between md:p-10">
+          <p className="font-heading text-2xl font-extrabold tracking-tight">
+            Want results like this?
+          </p>
+          <Button asChild variant="accent" size="lg" className="hover:bg-paper hover:text-ink">
+            <Link href="/contact">
+              Start a project
+              <ArrowRight size={18} />
+            </Link>
+          </Button>
+        </div>
       </Container>
 
       {related.length ? (
-        <Container className="mt-16 max-w-5xl border-t border-hairline pt-14">
-          <Reveal>
-            <h2 className="font-heading text-2xl font-extrabold text-ink">Related work</h2>
-          </Reveal>
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {related.map((relatedItem, index) => (
-              <Reveal key={relatedItem.id} delay={index * 0.08}>
-                <Link
-                  href={`/work/${relatedItem.slug}`}
-                  className="group block overflow-hidden rounded-2xl border border-hairline bg-white shadow-soft transition-shadow duration-300 hover:shadow-lift"
-                >
-                  <div className="relative aspect-[16/10] overflow-hidden bg-ink/[0.04]">
-                    {relatedItem.thumbnail ? (
-                      <Image
-                        src={relatedItem.thumbnail.url}
-                        alt={relatedItem.title}
-                        fill
-                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : null}
-                  </div>
-                  <div className="p-5">
-                    <p className="text-xs text-ink-soft">{relatedItem.client}</p>
-                    <h3 className="mt-1 font-heading text-base font-bold text-ink">
-                      {relatedItem.resultHeadline || relatedItem.title}
-                    </h3>
-                  </div>
-                </Link>
-              </Reveal>
+        <Container className="mt-20 border-t border-hairline pt-14">
+          <h2 className="font-heading text-3xl font-extrabold tracking-tight text-ink">Related work</h2>
+          <div className="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+            {related.map((relatedItem) => (
+              <article key={relatedItem.id} className="group relative">
+                <div className="relative aspect-[16/10] overflow-hidden rounded-md bg-surface">
+                  {relatedItem.thumbnail ? (
+                    <Image
+                      src={relatedItem.thumbnail.url}
+                      alt={`${relatedItem.title}: ${relatedItem.category || "project"} by RuleScale Media`}
+                      fill
+                      sizes="(min-width: 1024px) 32vw, (min-width: 640px) 50vw, 100vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                    />
+                  ) : null}
+                </div>
+                <h3 className="mt-4 font-heading text-xl font-extrabold tracking-tight text-ink">
+                  <Link
+                    href={`/work/${relatedItem.slug}`}
+                    className="after:absolute after:inset-0 after:content-['']"
+                  >
+                    {relatedItem.title}
+                  </Link>
+                </h3>
+                <p className="mt-1 text-sm text-ink-soft">
+                  {relatedItem.resultHeadline || relatedItem.category}
+                </p>
+              </article>
             ))}
           </div>
         </Container>

@@ -42,7 +42,7 @@ export default async function AuthorArchivePage({ params, searchParams }: Params
   const posts = await getPublishedPosts({ page, authorSlug: slug });
 
   return (
-    <main className="py-16 md:py-24">
+    <main className="section">
       <Container>
         <Reveal className="flex items-center gap-4">
           {author.avatar ? (
@@ -60,9 +60,7 @@ export default async function AuthorArchivePage({ params, searchParams }: Params
             </span>
           )}
           <div>
-            <span className="font-hand -rotate-1 inline-block text-base text-accent">
-              {author.role || "author"}
-            </span>
+            <p className="eyebrow">{author.role || "author"}</p>
             <h1 className="text-editorial mt-1 text-ink text-balance">{author.name}</h1>
           </div>
         </Reveal>

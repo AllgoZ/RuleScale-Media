@@ -32,8 +32,8 @@ export function ProgressBar({
               aria-current={active}
               className={cn(
                 "h-1.5 flex-1 rounded-full transition-colors",
-                done && "gradient-bg",
-                active && "gradient-bg",
+                done && "bg-accent-deep",
+                active && "bg-accent-deep",
                 !done && !active && "bg-hairline",
                 index > step && "cursor-not-allowed"
               )}

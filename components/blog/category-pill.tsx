@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+/** Small category label. Plain text style (not a chip) so cards stay quiet. */
 export function CategoryPill({
   label,
   href,
@@ -10,19 +11,19 @@ export function CategoryPill({
   href?: string;
   className?: string;
 }) {
-  const pillClassName = cn(
-    "inline-flex items-center rounded-full border border-hairline px-3 py-1 font-hand text-sm text-accent transition-colors",
-    href && "hover:border-accent/40",
+  const labelClassName = cn(
+    "text-[11px] font-semibold uppercase tracking-[0.12em] text-accent-deep",
+    href && "relative z-10 hover:underline",
     className
   );
 
   if (href) {
     return (
-      <Link href={href} className={pillClassName}>
+      <Link href={href} className={labelClassName}>
         {label}
       </Link>
     );
   }
 
-  return <span className={pillClassName}>{label}</span>;
+  return <span className={labelClassName}>{label}</span>;
 }

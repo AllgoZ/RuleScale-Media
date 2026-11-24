@@ -3,6 +3,7 @@ import { cache } from "react";
 import { CACHE_TAGS } from "@/lib/cache/tags";
 import {
   CONTACT_EMAIL,
+  INSTAGRAM_URL,
   SITE_DESCRIPTION,
   SITE_NAME,
   SITE_TAGLINE,
@@ -17,10 +18,7 @@ const FALLBACK_SITE_SETTINGS: SiteSettingsData = {
   description: SITE_DESCRIPTION,
   url: SITE_URL,
   contactEmail: CONTACT_EMAIL,
-  sameAs: [
-    "https://www.linkedin.com/company/rulescale-media",
-    "https://www.instagram.com/rulescalemedia",
-  ],
+  sameAs: [INSTAGRAM_URL],
 };
 
 const FALLBACK_SEO_SETTINGS: SEOSettingsData = {

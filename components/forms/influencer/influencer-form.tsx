@@ -163,14 +163,14 @@ export function InfluencerForm() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="flex flex-col items-center gap-4 rounded-3xl border border-hairline bg-home-bg py-16 text-center"
+        className="flex flex-col items-center gap-4 rounded-md border border-hairline bg-paper-2 py-16 text-center"
       >
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.1 }}
         >
-          <CheckCircle2 className="text-accent-solid" size={48} />
+          <CheckCircle2 className="text-accent-deep" size={48} />
         </motion.div>
         <h2 className="font-heading text-2xl font-bold text-ink">Application received.</h2>
         <p className="max-w-sm text-ink-soft">
@@ -217,7 +217,7 @@ export function InfluencerForm() {
         />
       </div>
 
-      {submitError ? <p className="text-sm text-accent-solid">{submitError}</p> : null}
+      {submitError ? <p className="text-sm text-accent-deep">{submitError}</p> : null}
 
       <div className="flex items-center justify-between gap-4">
         <Button type="button" variant="ghost" onClick={goBack} disabled={step === 0}>

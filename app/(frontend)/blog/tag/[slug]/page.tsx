@@ -41,10 +41,10 @@ export default async function TagArchivePage({ params, searchParams }: Params) {
   const posts = await getPublishedPosts({ page, tagSlug: slug });
 
   return (
-    <main className="py-16 md:py-24">
+    <main className="section">
       <Container>
         <Reveal>
-          <span className="font-hand -rotate-1 inline-block text-base text-accent">tag</span>
+          <p className="eyebrow">tag</p>
           <h1 className="text-editorial mt-2 text-ink text-balance">#{tag.title}</h1>
         </Reveal>
 

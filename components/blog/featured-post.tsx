@@ -1,58 +1,44 @@
 import { ArrowRight } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Reveal } from "@/components/ui/reveal";
 import type { PostSummaryData } from "@/lib/cms/types";
 import { AuthorByline } from "./author-byline";
 import { CategoryPill } from "./category-pill";
+import { PostCover } from "./post-cover";
 
 export function FeaturedPost({ post }: { post: PostSummaryData }) {
   return (
-    <Reveal>
-      <article className="group relative grid overflow-hidden rounded-3xl border border-hairline bg-paper shadow-soft lg:grid-cols-2">
-        <Link
-          href={`/blog/${post.slug}`}
-          className="absolute inset-0 z-10"
-          aria-label={post.title}
+    <article className="group relative grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
+      <div className="lg:col-span-7">
+        <PostCover
+          post={post}
+          priority
+          sizes="(min-width: 1024px) 58vw, 100vw"
+          className="aspect-[16/10]"
         />
-        <div className="relative aspect-[16/10] overflow-hidden bg-ink/[0.04] lg:aspect-auto">
-          {post.featuredImage ? (
-            <Image
-              src={post.featuredImage.url}
-              alt={post.featuredImage.alt || post.title}
-              fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              priority
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : null}
-        </div>
-        <div className="flex flex-col justify-center gap-4 p-8 lg:p-10">
-          <span className="font-hand -rotate-1 inline-block self-start text-base text-accent">
-            featured
-          </span>
-          {post.category ? (
-            <CategoryPill label={post.category.title} className="self-start" />
-          ) : null}
-          <h2 className="font-heading text-2xl font-extrabold leading-tight text-ink sm:text-3xl">
+      </div>
+      <div className="flex flex-col gap-4 lg:col-span-5">
+        <p className="eyebrow">Featured</p>
+        {post.category ? <CategoryPill label={post.category.title} className="self-start" /> : null}
+        <h2 className="font-heading text-3xl font-extrabold leading-[1.05] tracking-[-0.03em] text-ink text-balance md:text-4xl">
+          <Link
+            href={`/blog/${post.slug}`}
+            className="after:absolute after:inset-0 after:content-['']"
+          >
             {post.title}
-          </h2>
-          <p className="text-base text-ink-soft">{post.excerpt}</p>
-          <AuthorByline
-            author={post.author}
-            publishedDate={post.publishedDate}
-            readingTime={post.readingTime}
-            linkAuthor={false}
-          />
-          <Button variant="ghost" size="default" asChild className="relative z-20 mt-2 self-start">
-            <Link href={`/blog/${post.slug}`}>
-              Read article
-              <ArrowRight size={16} />
-            </Link>
-          </Button>
-        </div>
-      </article>
-    </Reveal>
+          </Link>
+        </h2>
+        <p className="text-base leading-relaxed text-ink-soft">{post.excerpt}</p>
+        <AuthorByline
+          author={post.author}
+          publishedDate={post.publishedDate}
+          readingTime={post.readingTime}
+          linkAuthor={false}
+        />
+        <span className="mt-1 inline-flex items-center gap-2 font-heading font-semibold text-ink underline decoration-accent decoration-2 underline-offset-4 group-hover:text-accent-deep">
+          Read article
+          <ArrowRight size={16} aria-hidden="true" />
+        </span>
+      </div>
+    </article>
   );
 }
