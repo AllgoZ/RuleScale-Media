@@ -1,4 +1,4 @@
-// Brand mark: claude files/logo.png, served from /public/logo.png.
+// Brand mark: claude files/logo2.png, served from /public/logo.png.
 // `inverted` is kept for call-site compatibility; the mark is the same on light and dark surfaces.
 export function LogoMark({
   className,

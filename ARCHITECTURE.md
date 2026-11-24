@@ -120,6 +120,8 @@ page / generateMetadata ──► lib/cms/<thing>.ts getter
 - `getPayloadClient()` memoises one Payload instance per process.
 
 ### Database connection cap (critical)
+> **Open issue (2026-11-24):** a Vercel build after the first push reported a Postgres error while loading the homepage during
+> static generation (log truncated; cause unconfirmed, most likely this cap). See `handover.md` gap 0 before changing anything here.
 Supabase session pooler: **15 clients, shared by local dev, builds and production**. Mitigations in
 the code: `next.config.ts` sets `experimental.cpus: 1` and `staticGenerationMaxConcurrency: 1` so
 generating ~93 pages uses few connections (a 2 × 4 setup exhausted the pool and baked broken pages).
@@ -157,7 +159,7 @@ export, Cloudinary upload field. CMS `hero` and `trustLogos` fields exist but ar
   surface, real project mockups, big type only where it earns it.
 - One `Container` (1280px; 20/32/48px padding), one `.section` rhythm, one heading class per level,
   12-column grid placement instead of margins/absolute positioning.
-- **Logo:** `public/logo.png` (the `claude files/logo.png` ring + bolt on an ink tile) via
+- **Logo:** `public/logo.png` (the `claude files/logo2.png` ring + bolt on a brand-red tile, 160x160) via
   `components/doodles/logo-mark.tsx` (`<img>`); same file as favicon (`favicon.ico`, `icon.png`) and
   embedded in `opengraph-image.tsx`.
 - **Motion** (plan: `Architecture files/animation-plan.md`; rules: `CLAUDE.MD`): CSS-first, transform/opacity

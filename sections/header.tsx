@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
+import { ChevronRight, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LogoMark } from "@/components/doodles/logo-mark";
@@ -111,45 +111,56 @@ export function Header({
             aria-expanded={open}
             aria-controls="mobile-menu"
           >
-            {open ? <X size={22} /> : <Menu size={22} />}
+            {open ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </Container>
 
       {open ? (
-        <div
-          id="mobile-menu"
-          ref={panelRef}
-          className="fixed inset-x-0 bottom-0 top-[var(--header-h)] overflow-y-auto bg-paper lg:hidden"
-        >
-          <Container className="flex min-h-full flex-col pb-10 pt-6">
-            <nav aria-label="Mobile" className="flex flex-col">
-              {PRIMARY_NAV.map((link) => (
+        <div className="fixed inset-x-0 bottom-0 top-[var(--header-h)] lg:hidden">
+          {/* Dimmed page behind the panel; tapping it closes the menu (Esc and the toggle still work). */}
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
+            onClick={() => close(true)}
+            className="absolute inset-0 cursor-default bg-ink/40"
+          />
+          <div
+            id="mobile-menu"
+            ref={panelRef}
+            className="menu-enter relative max-h-full overflow-y-auto border-b border-hairline bg-paper shadow-lift"
+          >
+            <Container className="pb-6 pt-2">
+              <nav aria-label="Mobile" className="flex flex-col">
+                {PRIMARY_NAV.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => close(false)}
+                    className="flex min-h-[3.25rem] items-center justify-between border-b border-hairline font-heading text-[1.0625rem] font-semibold tracking-tight text-ink transition-colors hover:text-accent-deep"
+                  >
+                    {link.label}
+                    <ChevronRight size={18} aria-hidden="true" className="text-ink-soft" />
+                  </Link>
+                ))}
+              </nav>
+              <div className="mt-5 flex flex-col gap-1">
+                <Button asChild variant="accent" className="w-full">
+                  <Link href={ctaHref} onClick={() => close(false)}>
+                    {PRIMARY_CTA.label}
+                  </Link>
+                </Button>
                 <Link
-                  key={link.href}
-                  href={link.href}
+                  href="/form/influencer"
                   onClick={() => close(false)}
-                  className="border-b border-hairline py-4 font-heading text-3xl font-extrabold tracking-tight text-ink"
+                  className="flex min-h-11 items-center justify-center text-sm font-medium text-ink-soft hover:text-ink"
                 >
-                  {link.label}
+                  Creator? Join the network
                 </Link>
-              ))}
-            </nav>
-            <div className="mt-8 flex flex-col gap-3">
-              <Button asChild variant="accent" size="lg" className="w-full">
-                <Link href={ctaHref} onClick={() => close(false)}>
-                  {PRIMARY_CTA.label}
-                </Link>
-              </Button>
-              <Link
-                href="/form/influencer"
-                onClick={() => close(false)}
-                className="py-2 text-center text-sm font-medium text-ink-soft hover:text-ink"
-              >
-                Creator? Join the network
-              </Link>
-            </div>
-          </Container>
+              </div>
+            </Container>
+          </div>
         </div>
       ) : null}
     </header>

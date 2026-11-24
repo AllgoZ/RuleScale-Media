@@ -6,6 +6,30 @@ why, and (for the non-obvious ones) how it was diagnosed. Add new entries at the
 
 ---
 
+## 2026-11-24 (second push) - Red logo + compact mobile menu committed and pushed
+
+- Committed and pushed to `main` after `05d35cd`: the `logo2.png` logo (including the source file `claude files/logo2.png`), the
+  compact mobile menu, and the doc updates below. Still not committed on purpose: `l.html`, `live.html`, `sites/`, the 6 MB
+  reference PDF. Pre-push checks: `tsc` 0 errors, eslint 0 errors (same 24 migration warnings).
+- **Known open issue carried into this push:** the Vercel build error from the first push (DB error while loading the homepage
+  during static generation) is unresolved; see `handover.md` gap 0.
+
+---
+
+## 2026-11-24 (after the push) - Red logo + compact mobile menu
+
+- **Logo** switched to `claude files/logo2.png` (red tile): `public/logo.png`, `favicon.ico`, `icon.png` replaced (the
+  header/footer/blog-cover mark and the Open Graph image read `/logo.png`, so they follow). Comment in `logo-mark.tsx` updated.
+  `claude files/logo2.png` is now the source file and must be committed.
+- **Mobile menu** (`sections/header.tsx`): the full-screen sheet with 3xl extra-bold links became a compact dropdown panel
+  under the header (links 17px semibold with chevrons, regular-height CTA, dimmed backdrop that closes on tap, short slide-in
+  `.menu-enter`, toggle icon 22 -> 20px). Behaviour unchanged: Esc, focus trap, focus return, scroll lock, link taps close.
+  Verified at 390 and 342 wide (Esc, backdrop tap, toggle, Tab trap, link navigation, scroll-lock release; no errors).
+- Open: the Vercel build error reported after the push (DB error during static generation; the log pasted was cut off before
+  the actual error line) has not been investigated yet.
+
+---
+
 ## 2026-11-24 (shipped) - Committed and pushed to `main`
 
 - One commit containing the whole 2026-11-22 redesign (3 iterations), the new logo, the performance pass,

@@ -243,6 +243,17 @@ body {
   animation: page-in 0.35s var(--ease-out) backwards;
 }
 
+/* Mobile menu panel: short fade + slide down. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+.menu-enter {
+  animation: menu-in 0.25s var(--ease-out) backwards;
+}
+
 /* D. Header nav links: underline grows from the left. */
 .nav-link {
   background-image: linear-gradient(var(--color-accent), var(--color-accent));
@@ -308,7 +319,8 @@ body {
   }
   .hero-in,
   .hero-slide,
-  .page-enter {
+  .page-enter,
+  .menu-enter {
     animation: none;
   }
   [data-anim],

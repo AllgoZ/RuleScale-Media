@@ -5,7 +5,8 @@ a senior Next.js engineer, working on the RuleScale Media marketing site.
 > project wheel and the contact/Instagram update were **committed and pushed to `main`**
 > (https://github.com/AllgoZ/RuleScale-Media) on this date; Vercel deploys on push, so confirm the deployment in
 > the Vercel dashboard and run the post-deploy checklist in `handover.md` (production serves cached CMS reads,
-> so save Site Settings and Footer once in `/admin`). This file is the creative brief, brand direction,
+> so save Site Settings and Footer once in `/admin`). **A Vercel build error (Postgres error while loading the homepage
+> during static generation) was reported after the first push and is still unresolved — see `handover.md` gap 0.** This file is the creative brief, brand direction,
 > layout and performance rules for all future work; it describes the *redesigned* site. For current state,
 > what is unverified and what to do next, read `handover.md` first. For how the system is put together
 > (routes, rendering modes, data flow, caching, CMS, build constraints), read `ARCHITECTURE.md`. For dated
@@ -62,13 +63,14 @@ Google/Meta" logo strips. The older "10% hand-crafted warmth" idea was supersede
 BRAND SYSTEM (use this)
 -----------------------------------
 
-**Logo (changed 2026-11-24):** the site's mark is the supplied PNG `claude files/logo.png` — the
-ring + lightning-bolt "S" monogram on an ink (`#201e1d`) tile. It is served from `public/logo.png`
+**Logo (changed 2026-11-24, switched to the red tile later that day):** the site's mark is the supplied PNG
+`claude files/logo2.png` (160x160) — the ring + lightning-bolt "S" monogram (white ring, ink bolt) on a brand-red
+(`#ec3013`) tile. It is served from `public/logo.png`
 and rendered by `components/doodles/logo-mark.tsx` (a plain `<img>`; the `inverted` prop is kept only
 for call-site compatibility). The same file is the favicon (`app/(frontend)/favicon.ico` and
 `icon.png`) and is embedded in the generated Open Graph image (`opengraph-image.tsx`). To change the
-logo, replace those files — do not reintroduce the old inline-SVG mark. (`claude files/logo2.png`,
-a red-tile variant, was tried and not used.) The giant cropped ring + bolt in
+logo, replace those files — do not reintroduce the old inline-SVG mark. (`claude files/logo.png`,
+the ink-tile variant, was used earlier the same day; it is still in the repo.) The giant cropped ring + bolt in
 `components/doodles/brand-device.tsx` is a separate decorative device, not the logo file.
 
 Palette, from the brand mark (`prompts/RuleScale Media logo design with color.pdf`):

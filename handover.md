@@ -17,14 +17,15 @@ share ONE database.
 
 ## State at handover
 
-**Everything below was committed and pushed to `main` on 2026-11-24** (one large commit on top of
-`c9a1f04`, the Content API). Vercel deploys on push to `main`, so the redesigned site should now be live at
+**Everything below was committed and pushed to `main` on 2026-11-24** in two commits on top of `c9a1f04` (the Content
+API): `05d35cd` (the whole redesign / performance / motion / wheel / contact change) and a follow-up (red `logo2.png`
+logo + compact mobile menu). Vercel deploys on push to `main`, so the redesigned site should now be live at
 https://www.rulescale.in — **I could not see the deployment from here: confirm it in the Vercel dashboard** (build
 log: no `EMAXCONN` / `falling back to constants.ts`) and run the post-deploy checklist at the end of this file.
 Production serves cached CMS reads (no expiry), so after the deploy open `/admin` -> Site Settings and Footer and
 click Save once so the new contact email / Instagram link appear. Deliberately **not committed** (not part of this
 work): `l.html` / `live.html` (old HTML snapshots from 2026-11-11), `sites/` (blog drafts + keyword database),
-`claude files/logo2.png` (unused logo variant), `redesign-handoff/RuleScale-current-site-visual-reference.pdf`
+`redesign-handoff/RuleScale-current-site-visual-reference.pdf`
 (6 MB), and the git-ignored `media/`.
 
 ### 1. Frontend redesign (2026-11-22, three iterations, frontend-only)
@@ -38,12 +39,14 @@ Prompts in `prompts/redesignui.md`, `redesignv2.md`, `redesignv3.md`; plans in `
 3. Layout system fix: one container, one section rhythm, one heading class, 12-column grid placement.
 
 ### 2. New logo (2026-11-24)
-The mark is now the supplied PNG `claude files/logo.png` (ring + bolt on an ink `#201e1d` tile), copied
+The mark is now the supplied PNG `claude files/logo2.png` (ring + bolt on a brand-red `#ec3013` tile, 160x160; it was
+`logo.png` — the ink-tile variant — earlier on 2026-11-24 and was switched back), copied
 to `public/logo.png`, rendered by `components/doodles/logo-mark.tsx` as a plain `<img>` (used by header,
 footer and the blog cover), and used as favicon (`app/(frontend)/favicon.ico`, `icon.png`; the old
 generated `icon.tsx` was deleted) and inside the Open Graph image (`opengraph-image.tsx` reads
-`public/logo.png`). `claude files/logo2.png` (red tile) was tried and not used. Because the PNG has a dark
-tile baked in, it shows as a dark square on the light header; a transparent version would avoid that.
+`public/logo.png`). Because the PNG has a coloured tile baked in, it shows as a red square on the light header; a transparent
+version would avoid that. The file is only 160px, so it may look soft on very high-density screens / the favicon;
+a larger export would fix that.
 Not changed on purpose: `lib/schema/index.ts` still points `logo`/`image` at `/icon.svg` (404 — see gaps)
 and Payload's admin still shows its default branding.
 
@@ -141,6 +144,17 @@ additive data-layer change from the redesign: `videoUrl` in `PortfolioSummaryDat
 6. **Logo tile**: confirm a dark square logo on the light header is what you want (see "New logo").
 
 ## Unverified / known gaps
+
+0. **OPEN: a Vercel build error was reported after the first push** (a Postgres error during static generation:
+   `[cms] Failed to load homepage from Payload, falling back to constants.ts  Error: Failed query: select "homepage"."id", ...`).
+   The pasted log was cut off before the real cause line, and Vercel is not reachable from this environment, so it has **not been
+   investigated or fixed**. Most likely cause (unconfirmed): the Supabase session pooler's 15-client cap (`EMAXCONNSESSION`),
+   shared with live traffic and any local dev server, being hit during the Vercel build. The app deliberately survives it (CMS
+   getters fall back), so the build may still complete but would bake degraded pages (placeholder homepage, 404 posts) that heal
+   after the 15-minute revalidate or a CMS save. To resolve: read the first `error:` line of the Vercel build log; if it is
+   `EMAXCONNSESSION`, lower the Payload pool size (`pool.max` in `payload.config.ts`, currently the pg default of 10 per
+   instance) and/or move `DATABASE_URL` to the transaction pooler for builds; `next.config.ts` already pins the build to 1
+   worker / concurrency 1. Check the deployed site's homepage content before trusting it.
 
 1. **No published video items**: the homepage video band is hidden and `/work/videos` shows its empty
    state, so `/work/videos/[slug]` prerendering and the wall are proven only on an earlier fixture.
